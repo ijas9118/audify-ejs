@@ -28,16 +28,13 @@ const {
   toggleCouponStatus,
   toggleOfferStatus,
 } = require("../controllers/adminController");
-const categoryRouter = require("./categoryRouter");
-const productRouter = require("./productRouter");
+const categoryRoutes = require("./categoryRoutes");
+const productRoutes = require("./productRoutes");
 
 // Admin Home Route
 router.get("/", adminAuth, getAdminHome);
-
 router.post("/sales-report", adminAuth, getSalesReport);
-
 router.get("/sales-data", adminAuth, getSalesData);
-
 router.get("/best-sellers", getBestSellers);
 
 // Admin Authentication Routes
@@ -53,17 +50,15 @@ router.get("/users", adminAuth, getUsers);
 router.post("/users/toggle-status/:id", adminAuth, toggleUserStatus);
 
 // Product Management Route
-router.use("/products", productRouter);
+router.use("/products", productRoutes);
 
 // Order Management Route
 router.get("/orders", adminAuth, getOrders);
-
 router.post("/orders/update-status/:id", adminAuth, updateOrderStatus);
-
 router.get("/orders/view/:id", adminAuth, viewOrder);
 
 // Category Management Route
-router.use("/category", categoryRouter);
+router.use("/category", categoryRoutes);
 
 // Coupon Management Route
 router.get("/coupon", adminAuth, getCoupons);

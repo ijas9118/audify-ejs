@@ -4,11 +4,11 @@ const session = require("express-session");
 const cors = require('cors')
 require("dotenv").config();
 const { notFound, errorHandler } = require("./middleware/errorHandler");
-const userRouter = require("./routes/userRoute");
-const adminRouter = require("./routes/adminRoute");
-const shopRouter = require('./routes/shopRouter');
-const accountRouter = require('./routes/accountRouter')
-const checkoutRouter = require('./routes/checkoutRouter')
+const userRoutes = require("./routes/userRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const shopRoutes = require('./routes/shopRoutes');
+const accountRoutes = require('./routes/accountRoutes')
+const checkoutRoutes = require('./routes/checkoutRoutes')
 
 const app = express();
 
@@ -43,11 +43,11 @@ app.use(
   })
 );
 
-app.use("/", userRouter);
-app.use("/admin", adminRouter);
-app.use("/shop", shopRouter);
-app.use("/account", accountRouter);
-app.use("/checkout", checkoutRouter);
+app.use("/", userRoutes);
+app.use("/admin", adminRoutes);
+app.use("/shop", shopRoutes);
+app.use("/account", accountRoutes);
+app.use("/checkout", checkoutRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
