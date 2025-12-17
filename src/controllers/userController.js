@@ -56,9 +56,9 @@ const addToCart = async (userId, productId, quantity) => {
   return cart;
 };
 
-exports.successGoogleLogin = async (req , res) => { 
-	if(!req.user) 
-		res.redirect('/failure'); 
+exports.successGoogleLogin = async (req, res) => {
+  if (!req.user)
+    res.redirect('/failure');
   try {
     let user = await User.findOne({ email: req.user.email });
 
@@ -83,8 +83,8 @@ exports.successGoogleLogin = async (req , res) => {
   }
 }
 
-exports.failureGoogleLogin = (req , res) => { 
-	res.send("Error"); 
+exports.failureGoogleLogin = (req, res) => {
+  res.send("Error");
 }
 
 exports.sendOtp = asyncHandler(async (req, res) => {
@@ -459,7 +459,7 @@ exports.getProduct = asyncHandler(async (req, res) => {
     isAdmin: false,
     product: {
       ...product.toObject(),
-      discountedPrice 
+      discountedPrice
     },
     relatedProducts: relatedProductsWithDiscounts,
   });
@@ -549,7 +549,7 @@ exports.updatePassword = asyncHandler(async (req, res) => {
   }
 })
 
-exports.resetPassword  = asyncHandler(async (req, res) => {
+exports.resetPassword = asyncHandler(async (req, res) => {
   const { newPassword, confirmPassword } = req.body;
   const email = req.session.email; // Assuming user ID is stored in session
 
@@ -564,7 +564,7 @@ exports.resetPassword  = asyncHandler(async (req, res) => {
   }
 
   try {
-    const user = await User.find({email});
+    const user = await User.find({ email });
     const userId = user[0]._id;
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -818,14 +818,14 @@ exports.deleteItemFromCart = asyncHandler(async (req, res) => {
 exports.getWishList = asyncHandler(async (req, res) => {
   try {
     const userId = req.session.user;
-    
+
     // Check if userId exists
     if (!userId) {
       return res.status(401).send('Unauthorized'); // or redirect to login
     }
 
     const user = await User.findById(userId).populate('wishlist');
-    
+
     const wishlist = user.wishlist.map(product => ({
       _id: product._id,
       name: product.name,
@@ -896,7 +896,7 @@ exports.addToWishlist = asyncHandler(async (req, res) => {
 exports.removeWishlist = asyncHandler(async (req, res) => {
   try {
     const userId = req.session.user;
-    const productId = req.params.id; 
+    const productId = req.params.id;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -926,82 +926,101 @@ exports.downloadInvoice = async (req, res) => {
   const orderId = req.params.id;
 
   try {
-      const order = await Order.findById(orderId).populate({ 
-          path: "orderItems", 
-          populate: "product" 
-      });
-      
-      if (!order) {
-          return res.status(404).send("Order not found");
-      }
+    const order = await Order.findById(orderId).populate({
+      path: "orderItems",
+      populate: "product"
+    });
 
-      // Create a PDF document
-      const doc = new PDFDocument({ margin: 50 });
-      res.setHeader("Content-disposition", `attachment; filename=invoice-${orderId}.pdf`);
-      res.setHeader("Content-type", "application/pdf");
+    if (!order) {
+      return res.status(404).send("Order not found");
+    }
 
-      // Pipe the PDF into the response
-      doc.pipe(res);
+    // Create a PDF document
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader("Content-disposition", `attachment; filename=invoice-${orderId}.pdf`);
+    res.setHeader("Content-type", "application/pdf");
 
-      // Header
-      doc.fillColor("#5a31a8").fontSize(26).text("INVOICE", { align: "center" });
-      doc.moveDown();
-      doc.fillColor("#000").fontSize(14).text(`Invoice for Order ID: ${orderId}`, { align: "center" });
-      doc.moveDown(2);
+    // Pipe the PDF into the response
+    doc.pipe(res);
 
-      // Order details
-      doc.fillColor("#333").fontSize(12).text(`Order Date: ${moment(order.dateOrdered).format("MMMM Do, YYYY")}`);
-      doc.text(`Payment Method: ${order.paymentMethod}`);
-      doc.text(`Total Amount: ${order.totalAmount}`);
-      doc.text(`Discount Applied: ${order.discountApplied}`);
-      doc.text(`Final Total: ${order.finalTotal}`);
-      doc.moveDown();
+    // Header
+    doc.fillColor("#5a31a8").fontSize(26).text("INVOICE", { align: "center" });
+    doc.moveDown();
+    doc.fillColor("#000").fontSize(14).text(`Invoice for Order ID: ${orderId}`, { align: "center" });
+    doc.moveDown(2);
 
-      // Shipping Address
-      doc.fillColor("#5a31a8").fontSize(14).text("Shipping Address:", { underline: true });
-      doc.fillColor("#000").fontSize(12).text(`Name: ${order.name}`);
-      doc.text(`Mobile: ${order.mobile}`);
-      if (order.alternateMobile) {
-          doc.text(`Alternate Mobile: ${order.alternateMobile}`);
-      }
-      doc.text(`Location: ${order.location}, ${order.city}, ${order.state} - ${order.zip}`);
-      doc.moveDown();
+    // Order details
+    doc.fillColor("#333").fontSize(12).text(`Order Date: ${moment(order.dateOrdered).format("MMMM Do, YYYY")}`);
+    doc.text(`Payment Method: ${order.paymentMethod}`);
+    doc.text(`Total Amount: ${order.totalAmount}`);
+    doc.text(`Discount Applied: ${order.discountApplied}`);
+    doc.text(`Final Total: ${order.finalTotal}`);
+    doc.moveDown();
 
-      // Ordered Items Header
-      doc.fillColor("#5a31a8").fontSize(14).text("Ordered Items:", { underline: true });
-      doc.moveDown();
+    // Shipping Address
+    doc.fillColor("#5a31a8").fontSize(14).text("Shipping Address:", { underline: true });
+    doc.fillColor("#000").fontSize(12).text(`Name: ${order.name}`);
+    doc.text(`Mobile: ${order.mobile}`);
+    if (order.alternateMobile) {
+      doc.text(`Alternate Mobile: ${order.alternateMobile}`);
+    }
+    doc.text(`Location: ${order.location}, ${order.city}, ${order.state} - ${order.zip}`);
+    doc.moveDown();
 
-      // Table Header
-      const tableTop = doc.y;
-      doc.fillColor("#5a31a8").fontSize(12).text("Product", 50, tableTop);
-      doc.text("Quantity", 300, tableTop);
-      doc.text("Price", 450, tableTop);
-      doc.moveDown(2);
+    // Ordered Items Header
+    doc.fillColor("#5a31a8").fontSize(14).text("Ordered Items:", { underline: true });
+    doc.moveDown();
 
-      // Table Rows
-      doc.fillColor("#000").fontSize(12);
-      const rowHeight = 20; // Define a fixed height for the rows
-      order.orderItems.forEach(item => {
-          const productDetails = item.product.name;
-          const quantity = item.quantity;
-          const price = item.product.price;
+    // Table Header
+    const tableTop = doc.y;
+    doc.fillColor("#5a31a8").fontSize(12).text("Product", 50, tableTop);
+    doc.text("Quantity", 300, tableTop);
+    doc.text("Price", 450, tableTop);
+    doc.moveDown(2);
 
-          // Move to a new y position for each row
-          doc.text(productDetails, 50, doc.y); // Product name at x=50
-          doc.text(quantity.toString(), 300, doc.y); // Quantity at x=300
-          doc.text(`${price}`, 450, doc.y); // Price at x=450
+    // Table Rows
+    doc.fillColor("#000").fontSize(12);
+    const rowHeight = 20; // Define a fixed height for the rows
+    order.orderItems.forEach(item => {
+      const productDetails = item.product.name;
+      const quantity = item.quantity;
+      const price = item.product.price;
 
-          // Move the y position down for the next row
-          doc.moveDown(rowHeight / 14); // Adjust the movement as necessary for spacing
-      });
+      // Move to a new y position for each row
+      doc.text(productDetails, 50, doc.y); // Product name at x=50
+      doc.text(quantity.toString(), 300, doc.y); // Quantity at x=300
+      doc.text(`${price}`, 450, doc.y); // Price at x=450
+
+      // Move the y position down for the next row
+      doc.moveDown(rowHeight / 14); // Adjust the movement as necessary for spacing
+    });
 
 
-      // Finalize the PDF and end the stream
-      doc.moveDown(10);
-      doc.fillColor("#5a31a8").fontSize(12).text("Thank you for your order!", { align: "center" });
-      doc.end();
+    // Finalize the PDF and end the stream
+    doc.moveDown(10);
+    doc.fillColor("#5a31a8").fontSize(12).text("Thank you for your order!", { align: "center" });
+    doc.end();
   } catch (error) {
-      console.error(error);
-      res.status(500).send("Internal Server Error");
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+exports.searchProducts = async (req, res) => {
+  const query = req.query.query || '';
+
+  try {
+    let products;
+    if (query === '') {
+      products = await Product.find();
+
+    } else {
+      const regex = new RegExp('^' + query, 'i');
+      products = await Product.find({ name: { $regex: regex } });
+    }
+
+    res.json(products);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ error: 'Server Error' });
   }
 };

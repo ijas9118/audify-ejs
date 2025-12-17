@@ -299,7 +299,7 @@ exports.toggleCouponStatus = asyncHandler(async (req, res) => {
 
   try {
     const coupon = await Coupon.findById(id);
-    
+
     if (!coupon) {
       return res.status(404).json({ success: false, message: "Coupon not found" });
     }
@@ -819,5 +819,26 @@ exports.getBestSellers = async (req, res) => {
   } catch (error) {
     console.error('Error fetching best sellers:', error);
     res.status(500).json({ error: 'Failed to fetch best sellers' });
+  }
+};
+exports.getOfferCategories = async (req, res) => {
+  try {
+    const categories = await Category.find({});
+    res.json(categories);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching categories" });
+  }
+};
+
+exports.getOfferProducts = async (req, res) => {
+  try {
+    const products = await Product.find({});
+    res.json(products);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching products" });
   }
 };

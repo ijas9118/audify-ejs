@@ -15,31 +15,14 @@ const {
   addToWishlist,
   getWishList,
   removeWishlist,
+  searchProducts,
 } = require("../controllers/userController");
 
 router.get("/", getShop);
 
 router.post("/", filterShop);
 
-router.get('/search-products', async (req, res) => {
-  const query = req.query.query || '';
-
-  try {
-    let products;
-    if (query === '') {
-      products = await Product.find();
-
-    } else {
-      const regex = new RegExp('^' + query, 'i');
-      products = await Product.find({ name: { $regex: regex } });
-    }
-
-    res.json(products);
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ error: 'Server Error' });
-  }
-});
+router.get('/search-products', searchProducts);
 
 
 router.get("/cart", userAuth, getCart);

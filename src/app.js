@@ -4,11 +4,7 @@ const session = require("express-session");
 const cors = require('cors')
 require("dotenv").config();
 const { notFound, errorHandler } = require("./middleware/errorHandler");
-const userRoutes = require("./routes/userRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const shopRoutes = require('./routes/shopRoutes');
-const accountRoutes = require('./routes/accountRoutes')
-const checkoutRoutes = require('./routes/checkoutRoutes')
+const routes = require("./routes");
 
 const app = express();
 
@@ -43,11 +39,7 @@ app.use(
   })
 );
 
-app.use("/", userRoutes);
-app.use("/admin", adminRoutes);
-app.use("/shop", shopRoutes);
-app.use("/account", accountRoutes);
-app.use("/checkout", checkoutRoutes);
+app.use("/", routes);
 
 app.use(notFound);
 app.use(errorHandler);

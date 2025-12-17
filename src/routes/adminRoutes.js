@@ -27,6 +27,8 @@ const {
   getBestSellers,
   toggleCouponStatus,
   toggleOfferStatus,
+  getOfferCategories,
+  getOfferProducts,
 } = require("../controllers/adminController");
 const categoryRoutes = require("./categoryRoutes");
 const productRoutes = require("./productRoutes");
@@ -74,26 +76,8 @@ router.put("/coupon/toggle-status/:id", adminAuth, toggleCouponStatus);
 // Offer Management Route
 router.get("/offer", adminAuth, getOffers);
 router.post("/offer", adminAuth, addOffer);
-router.get("/offer/categories", async (req, res) => {
-  try {
-    const categories = await Category.find({});
-    res.json(categories);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Error fetching categories" });
-  }
-});
-router.get("/offer/products", async (req, res) => {
-  try {
-    const products = await Product.find({});
-    res.json(products);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Error fetching products" });
-  }
-});
+router.get("/offer/categories", getOfferCategories);
+router.get("/offer/products", getOfferProducts);
 
 router.post("/offer/update/:id", adminAuth, updateOffer);
 
