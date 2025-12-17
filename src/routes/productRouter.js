@@ -8,7 +8,7 @@ const {
   getProducts,
   getProductById,
   updateProduct,
-} = require("../controller/productController");
+} = require("../controllers/productController");
 
 // Product Management Route
 router.get("/", adminAuth, getProducts);

@@ -1,6 +1,5 @@
 const express = require("express");
 const path = require("node:path");
-const connectDB = require("./config/db");
 const session = require("express-session");
 const cors = require('cors')
 require("dotenv").config();
@@ -11,9 +10,7 @@ const shopRouter = require('./routes/shopRouter');
 const accountRouter = require('./routes/accountRouter')
 const checkoutRouter = require('./routes/checkoutRouter')
 
-const PORT = process.env.PORT || 3000;
 const app = express();
-connectDB();
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -55,6 +52,4 @@ app.use("/checkout", checkoutRouter);
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+module.exports = app;

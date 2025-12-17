@@ -2,11 +2,10 @@
   "name": "audify",
   "version": "1.0.0",
   "description": "E-commerce website for audio products",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "author": "Ijas Ahammed",
   "license": "ISC",

@@ -15,7 +15,7 @@ const {
   addToWishlist,
   getWishList,
   removeWishlist,
-} = require("../controller/userController");
+} = require("../controllers/userController");
 
 router.get("/", getShop);
 

@@ -27,7 +27,7 @@ const {
   getBestSellers,
   toggleCouponStatus,
   toggleOfferStatus,
-} = require("../controller/adminController");
+} = require("../controllers/adminController");
 const categoryRouter = require("./categoryRouter");
 const productRouter = require("./productRouter");
 

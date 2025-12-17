@@ -5,7 +5,7 @@ const {
   cancelOrder,
   getOrderHistory,
   getOrderDetail,
-} = require("../controller/checkoutController");
+} = require("../controllers/checkoutController");
 const {
   getUserAccount,
   getAddresses,
@@ -19,7 +19,7 @@ const {
   walletTransactions,
   updatePassword,
   downloadInvoice,
-} = require("../controller/userController");
+} = require("../controllers/userController");
 
 router.get("/", userAuth, getUserAccount);
 

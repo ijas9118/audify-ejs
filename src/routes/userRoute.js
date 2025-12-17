@@ -14,7 +14,7 @@ const {
   successGoogleLogin,
   failureGoogleLogin,
   resetPassword,
-} = require("../controller/userController");
+} = require("../controllers/userController");
 
 router.use(passport.initialize()); 
 router.use(passport.session());

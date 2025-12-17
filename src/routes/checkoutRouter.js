@@ -11,7 +11,7 @@ const {
   paymentSelection,
   confirmPayment,
   walletPayment,
-} = require("../controller/checkoutController");
+} = require("../controllers/checkoutController");
 
 router.get("/", userAuth, getCheckoutPage);
 
