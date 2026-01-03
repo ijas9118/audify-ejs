@@ -4,6 +4,7 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel');
 const Address = require('../models/address');
 const Order = require('../models/order');
+const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 exports.getUserAccount = asyncHandler(async (req, res) => {
   const id = req.session.user;
@@ -28,8 +29,8 @@ exports.updateUserAccount = asyncHandler(async (req, res) => {
   });
   if (existingUser) {
     return res
-      .status(400)
-      .json({ success: false, message: 'Email is already in use' });
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ success: false, message: RESPONSE_MESSAGES.EMAIL_IN_USE });
   }
 
   const updatedUser = await User.findByIdAndUpdate(req.params.id, {
@@ -37,12 +38,14 @@ exports.updateUserAccount = asyncHandler(async (req, res) => {
   });
 
   if (!updatedUser) {
-    return res.status(404).json({ success: false, message: 'User not found' });
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ success: false, message: RESPONSE_MESSAGES.USER_NOT_FOUND });
   }
 
   res
-    .status(200)
-    .json({ success: true, message: 'Account updated successfully' });
+    .status(StatusCodes.OK)
+    .json({ success: true, message: RESPONSE_MESSAGES.ACCOUNT_UPDATED });
 });
 
 exports.getAddresses = asyncHandler(async (req, res) => {
@@ -75,7 +78,7 @@ exports.getAddressDetails = asyncHandler(async (req, res) => {
     landmark: address.landmark || '',
     zip: address.zip,
   };
-  res.status(200).json(result);
+  res.status(StatusCodes.OK).json(result);
 });
 
 exports.addAddress = asyncHandler(async (req, res) => {
@@ -116,10 +119,12 @@ exports.updateDefaultAddress = asyncHandler(async (req, res) => {
       $set: { isDefault: true },
     });
 
-    res.status(200).send('Default address updated successfully');
+    res.status(StatusCodes.OK).send(RESPONSE_MESSAGES.DEFAULT_ADDRESS_UPDATED);
   } catch (error) {
     console.error('Error updating default address:', error);
-    res.status(500).send('Internal Server Error');
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send(RESPONSE_MESSAGES.SERVER_ERROR);
   }
 });
 
@@ -160,10 +165,12 @@ exports.deleteAddress = asyncHandler(async (req, res) => {
   const result = await Address.findByIdAndDelete(addressId);
 
   if (!result) {
-    return res.status(404).send('Address not found');
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .send(RESPONSE_MESSAGES.ADDRESS_NOT_FOUND);
   }
 
-  res.status(200).send('Address deleted successfully');
+  res.status(StatusCodes.OK).send(RESPONSE_MESSAGES.ADDRESS_DELETED);
 });
 
 exports.walletTransactions = asyncHandler(async (req, res) => {
@@ -172,7 +179,9 @@ exports.walletTransactions = asyncHandler(async (req, res) => {
   const user = await User.findById(userId);
 
   if (!user) {
-    return res.status(404).json({ success: false, message: 'User not found' });
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ success: false, message: RESPONSE_MESSAGES.USER_NOT_FOUND });
   }
 
   res.render('layout', {
@@ -195,7 +204,9 @@ exports.downloadInvoice = async (req, res) => {
     });
 
     if (!order) {
-      return res.status(404).send('Order not found');
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .send(RESPONSE_MESSAGES.ORDER_NOT_FOUND);
     }
 
     // Create a PDF document
@@ -284,6 +295,8 @@ exports.downloadInvoice = async (req, res) => {
     doc.end();
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal Server Error');
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send(RESPONSE_MESSAGES.SERVER_ERROR);
   }
 };

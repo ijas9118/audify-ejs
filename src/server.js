@@ -1,6 +1,6 @@
 const app = require('./app');
 const connectDB = require('./config/db');
-require('dotenv').config();
+require('./config/validateEnv'); // Validate env vars
 
 const PORT = process.env.PORT || 3000;
 connectDB();

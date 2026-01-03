@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Product = require('../models/products');
 const Category = require('../models/categories');
 const cloudinary = require('../config/cloudinary');
+const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 // Render Product Management Page
 exports.getProducts = asyncHandler(async (req, res) => {
@@ -40,8 +41,8 @@ exports.addProduct = asyncHandler(async (req, res) => {
     : [];
 
   if (!mainImageFile || supportImageFiles.length !== 2) {
-    return res.status(400).json({
-      message: 'Please provide exactly one main image and two support images.',
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: RESPONSE_MESSAGES.MISSING_IMAGES,
     });
   }
 
@@ -82,15 +83,17 @@ exports.addProduct = asyncHandler(async (req, res) => {
 
   // Check if all required fields are provided
   if (!name || !price || !categoryId || !stock) {
-    return res.status(400).json({ message: 'Please fill all required fields' });
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: RESPONSE_MESSAGES.MISSING_REQUIRED_FIELDS });
   }
 
   // Check if a product with the same name already exists
   const existingProduct = await Product.findOne({ name });
   if (existingProduct) {
     return res
-      .status(400)
-      .json({ message: 'Product with this name already exists' });
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: RESPONSE_MESSAGES.PRODUCT_EXISTS });
   }
 
   // Create a new product document
@@ -121,8 +124,8 @@ exports.toggleProductStatus = asyncHandler(async (req, res) => {
   const product = await Product.findById(productId);
 
   if (!product) {
-    res.status(404);
-    throw new Error('Product not found');
+    res.status(StatusCodes.NOT_FOUND);
+    throw new Error(RESPONSE_MESSAGES.PRODUCT_NOT_FOUND);
   }
 
   // Toggle the isActive field
@@ -142,8 +145,8 @@ exports.getProductById = asyncHandler(async (req, res) => {
   // Fetch product details
   const product = await Product.findById(id).populate('categoryId');
   if (!product) {
-    res.status(404);
-    throw new Error('Product not found');
+    res.status(StatusCodes.NOT_FOUND);
+    throw new Error(RESPONSE_MESSAGES.PRODUCT_NOT_FOUND);
   }
 
   // Fetch categories for the dropdown
@@ -168,7 +171,9 @@ exports.updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(productId);
 
   if (!product) {
-    return res.status(404).json({ message: 'Product not found' });
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ message: RESPONSE_MESSAGES.PRODUCT_NOT_FOUND });
   }
 
   // Handle image upload if new images are provided

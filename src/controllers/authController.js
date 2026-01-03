@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const authService = require('../services/authService');
+const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 exports.successGoogleLogin = async (req, res) => {
   if (!req.user) res.redirect('/failure');
@@ -47,7 +48,7 @@ exports.sendOtp = asyncHandler(async (req, res) => {
       activePage: 'home',
     });
   } else {
-    throw new Error('User Already Exists');
+    throw new Error(RESPONSE_MESSAGES.USER_ALREADY_EXISTS);
   }
 });
 
@@ -55,8 +56,8 @@ exports.resendOtp = asyncHandler(async (req, res) => {
   const { email } = req.session.tempUser;
   if (!email) {
     return res
-      .status(400)
-      .json({ error: 'No user data in session. Please sign up again.' });
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: RESPONSE_MESSAGES.NO_SESSION_DATA });
   }
 
   const { otp, otpExpiry } = await authService.sendOtp(email);
@@ -64,7 +65,7 @@ exports.resendOtp = asyncHandler(async (req, res) => {
   req.session.otp = otp;
   req.session.otpExpiry = otpExpiry;
 
-  res.json({ message: 'New OTP sent successfully!' });
+  res.json({ message: RESPONSE_MESSAGES.OTP_RESENT });
 });
 
 exports.verifyAndSignUp = asyncHandler(async (req, res) => {
@@ -93,7 +94,7 @@ exports.verifyAndSignUp = asyncHandler(async (req, res) => {
         title: 'Verify OTP',
         header: 'partials/header',
         viewName: 'users/verifyOtp',
-        error: 'Invalid OTP',
+        error: RESPONSE_MESSAGES.INVALID_OTP,
         isAdmin: false,
         activePage: 'home',
       });
@@ -103,7 +104,7 @@ exports.verifyAndSignUp = asyncHandler(async (req, res) => {
       title: 'Verify OTP',
       header: 'partials/header',
       viewName: 'users/verifyOtp',
-      error: 'OTP has expired. Please sign up again.',
+      error: RESPONSE_MESSAGES.OTP_EXPIRED,
       isAdmin: false,
       activePage: 'home',
     });
@@ -120,15 +121,15 @@ exports.loginUser = asyncHandler(async (req, res) => {
     findUser.status === 'Active'
   ) {
     req.session.user = findUser._id;
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Login successful',
+      message: RESPONSE_MESSAGES.LOGIN_SUCCESS,
       redirectUrl: '/',
     });
   } else {
-    res.status(401).json({
+    res.status(StatusCodes.UNAUTHORIZED).json({
       success: false,
-      message: 'Invalid Credentials',
+      message: RESPONSE_MESSAGES.INVALID_CREDENTIALS,
     });
   }
 });
@@ -136,7 +137,9 @@ exports.loginUser = asyncHandler(async (req, res) => {
 exports.logoutUser = asyncHandler(async (req, res) => {
   req.session.destroy((err) => {
     if (err) {
-      return res.status(500).json({ message: 'Failed to log out' });
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Failed to log out' });
     }
     res.redirect('/login');
   });
@@ -148,10 +151,14 @@ exports.updatePassword = asyncHandler(async (req, res) => {
 
   try {
     await authService.updatePassword(userId, newPassword);
-    res.status(200).json({ message: 'Password updated successfully' });
+    res
+      .status(StatusCodes.OK)
+      .json({ message: RESPONSE_MESSAGES.PASSWORD_UPDATE_SUCCESS });
   } catch (error) {
     console.error('Error updating password:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 });
 
@@ -160,18 +167,26 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   const { email } = req.session;
 
   if (!email) {
-    return res.status(401).json({ error: 'Unauthorized access' });
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ error: RESPONSE_MESSAGES.UNAUTHORIZED });
   }
 
   if (newPassword !== confirmPassword) {
-    return res.status(400).json({ error: 'Passwords do not match' });
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: RESPONSE_MESSAGES.PASSWORD_MISMATCH });
   }
 
   try {
     await authService.resetPassword(email, newPassword);
-    res.status(200).json({ message: 'Password updated successfully' });
+    res
+      .status(StatusCodes.OK)
+      .json({ message: RESPONSE_MESSAGES.PASSWORD_UPDATE_SUCCESS });
   } catch (error) {
     console.error('Error updating password:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 });

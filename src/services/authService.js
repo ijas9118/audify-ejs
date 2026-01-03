@@ -49,8 +49,12 @@ exports.sendOtp = async (email) => {
   const otp = crypto.randomInt(100000, 999999);
   const otpExpiry = Date.now() + 5 * 60 * 1000;
 
+  if (!process.env.EMAIL_USER) {
+    throw new Error('EMAIL_USER environment variable is not defined');
+  }
+
   const mailOptions = {
-    from: process.env.EMAIL_USER || 'ahammedijas9118@gmail.com', // Fallback for safety, but prefers env
+    from: process.env.EMAIL_USER,
     to: email,
     subject: 'Your OTP for Signup',
     text: `Your OTP is ${otp}. It will expire in 5 minutes.`,

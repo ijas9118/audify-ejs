@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const productService = require('../services/productService');
+const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 exports.getShop = asyncHandler(async (req, res) => {
   const category = '';
@@ -59,7 +60,9 @@ exports.getProduct = asyncHandler(async (req, res) => {
   const details = await productService.getProductDetails(req.params.id);
 
   if (!details) {
-    return res.status(404).send('Product not found');
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .send(RESPONSE_MESSAGES.PRODUCT_NOT_FOUND);
   }
 
   res.render('layout', {
@@ -77,18 +80,24 @@ exports.getStock = asyncHandler(async (req, res) => {
   try {
     const { productId } = req.query;
     if (!productId) {
-      return res.status(400).json({ error: 'Product ID is required' });
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: 'Product ID is required' });
     }
 
     const stock = await productService.getStock(productId);
     if (stock === null) {
-      return res.status(404).json({ error: 'Product not found' });
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ error: RESPONSE_MESSAGES.PRODUCT_NOT_FOUND });
     }
 
     res.json({ stock });
   } catch (error) {
     console.error('Error fetching stock information:', error);
-    res.status(500).json({ error: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: RESPONSE_MESSAGES.ERROR_FETCHING_STOCK });
   }
 });
 
@@ -96,12 +105,16 @@ exports.getWishList = asyncHandler(async (req, res) => {
   try {
     const userId = req.session.user;
     if (!userId) {
-      return res.status(401).send('Unauthorized');
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .send(RESPONSE_MESSAGES.UNAUTHORIZED);
     }
 
     const user = await productService.getWishlist(userId);
     if (!user) {
-      return res.status(404).send('User not found');
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .send(RESPONSE_MESSAGES.USER_NOT_FOUND);
     }
 
     const wishlist = user.wishlist.map((product) => ({
@@ -122,7 +135,9 @@ exports.getWishList = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching wishlist:', error);
-    res.status(500).send('Server error');
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send(RESPONSE_MESSAGES.ERROR_FETCHING_WISHLIST);
   }
 });
 
@@ -132,27 +147,32 @@ exports.addToWishlist = asyncHandler(async (req, res) => {
 
   if (!userId || !productId) {
     return res
-      .status(400)
+      .status(StatusCodes.BAD_REQUEST)
       .json({ message: 'User ID and Product ID are required' });
   }
 
   try {
     const user = await productService.addToWishlist(userId, productId);
-    res
-      .status(200)
-      .json({ message: 'Product added to wishlist', wishlist: user.wishlist });
+    res.status(StatusCodes.OK).json({
+      message: RESPONSE_MESSAGES.PRODUCT_ADDED_TO_WISHLIST,
+      wishlist: user.wishlist,
+    });
   } catch (error) {
     if (error.message === 'Product is already in the wishlist') {
-      return res.status(400).json({ message: error.message });
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: error.message });
     }
     if (
       error.message === 'Product not found' ||
       error.message === 'User not found'
     ) {
-      return res.status(404).json({ message: error.message });
+      return res.status(StatusCodes.NOT_FOUND).json({ message: error.message });
     }
     console.error(error);
-    res.status(500).json({ message: 'Server error', error });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: RESPONSE_MESSAGES.SERVER_ERROR, error });
   }
 });
 
@@ -167,16 +187,18 @@ exports.removeWishlist = asyncHandler(async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: RESPONSE_MESSAGES.USER_NOT_FOUND });
     }
 
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Product removed from wishlist successfully',
+      message: RESPONSE_MESSAGES.PRODUCT_REMOVED_FROM_WISHLIST,
     });
   } catch (error) {
     console.error('Error removing product from wishlist:', error);
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'An error occurred while removing the product from wishlist',
       error: error.message,
@@ -191,6 +213,8 @@ exports.searchProducts = async (req, res) => {
     res.json(products);
   } catch (error) {
     console.error('Error fetching products:', error);
-    res.status(500).json({ error: 'Server Error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: RESPONSE_MESSAGES.ERROR_FETCHING_PRODUCTS });
   }
 };

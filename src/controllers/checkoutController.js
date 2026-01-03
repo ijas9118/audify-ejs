@@ -7,6 +7,7 @@ const Order = require('../models/order');
 const Product = require('../models/products');
 const Coupon = require('../models/coupon');
 const User = require('../models/userModel');
+const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 exports.getCheckoutPage = asyncHandler(async (req, res) => {
   const userId = req.session.user;
@@ -30,20 +31,20 @@ exports.applyCoupon = asyncHandler(async (req, res) => {
     const cart = await Cart.findById(cartId);
     if (!cart) {
       return res
-        .status(404)
-        .json({ success: false, message: 'Cart not found' });
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.CART_NOT_FOUND });
     }
 
     const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
     if (!coupon) {
       return res
-        .status(400)
-        .json({ success: false, message: 'Invalid or expired coupon code' });
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: RESPONSE_MESSAGES.INVALID_COUPON });
     }
 
     const currentDate = new Date();
     if (currentDate < coupon.validFrom || currentDate > coupon.validUntil) {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: `Coupon ${couponCode} is not valid at this time.`,
       });
@@ -62,9 +63,9 @@ exports.applyCoupon = asyncHandler(async (req, res) => {
     }
 
     if (cart.appliedCoupon) {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
-        message: 'A coupon has already been applied to this cart.',
+        message: RESPONSE_MESSAGES.COUPON_ALREADY_APPLIED,
       });
     }
 
@@ -89,7 +90,7 @@ exports.applyCoupon = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error('Error applying coupon:', error);
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'An error occurred while applying the coupon',
     });
@@ -102,14 +103,14 @@ exports.removeCoupon = asyncHandler(async (req, res) => {
     const cart = await Cart.findById(cartId);
     if (!cart) {
       return res
-        .status(404)
-        .json({ success: false, message: 'Cart not found' });
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.CART_NOT_FOUND });
     }
 
     if (!cart.appliedCoupon) {
       return res
-        .status(400)
-        .json({ success: false, message: 'No coupon applied to this cart.' });
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: RESPONSE_MESSAGES.NO_COUPON_APPLIED });
     }
 
     cart.appliedCoupon = null;
@@ -130,12 +131,12 @@ exports.removeCoupon = asyncHandler(async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Coupon removed successfully',
+      message: RESPONSE_MESSAGES.COUPON_REMOVED,
       finalTotal: cart.finalTotal,
     });
   } catch (error) {
     console.error('Error removing coupon:', error);
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'An error occurred while removing the coupon',
     });
@@ -154,13 +155,13 @@ exports.razorPay = asyncHandler(async (req, res) => {
     const order = await razorpay.orders.create(options);
 
     if (!order) {
-      return res.status(500).send('Error');
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Error');
     }
 
-    res.status(200).json({ order, orderData });
+    res.status(StatusCodes.OK).json({ order, orderData });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error');
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Error');
   }
 });
 
@@ -170,13 +171,13 @@ exports.confirmPayment = asyncHandler(async (req, res) => {
   const order = await Order.findById(orderId);
   if (!order) {
     return res
-      .status(404)
-      .json({ success: false, message: 'Order not found!' });
+      .status(StatusCodes.NOT_FOUND)
+      .json({ success: false, message: RESPONSE_MESSAGES.ORDER_NOT_FOUND });
   }
 
   if (paymentMethod === 'COD') {
     if (order.finalTotal > 1000) {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: 'Cash on Delivery is not available for orders above ₹1000.',
       });
@@ -187,9 +188,9 @@ exports.confirmPayment = asyncHandler(async (req, res) => {
   order.status = 'Processed';
 
   await order.save();
-  res.status(200).json({
+  res.status(StatusCodes.OK).json({
     success: true,
-    message: 'Payment confirmed, order updated successfully',
+    message: RESPONSE_MESSAGES.PAYMENT_CONFIRMED,
     order,
   });
 });
@@ -203,24 +204,23 @@ exports.walletPayment = asyncHandler(async (req, res) => {
     const user = await User.findById(userId);
     if (!user) {
       return res
-        .status(404)
-        .json({ success: false, message: 'User not found!' });
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.USER_NOT_FOUND });
     }
 
     // Find the order
     const order = await Order.findById(orderId);
     if (!order) {
       return res
-        .status(404)
-        .json({ success: false, message: 'Order not found!' });
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.ORDER_NOT_FOUND });
     }
 
     // Check if the wallet balance is sufficient
     if (user.walletBalance < order.finalTotal) {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
-        message:
-          'Insufficient wallet balance. Please use a different payment method.',
+        message: RESPONSE_MESSAGES.INSUFFICIENT_WALLET_BALANCE,
       });
     }
 
@@ -250,13 +250,13 @@ exports.walletPayment = asyncHandler(async (req, res) => {
     );
     await order.save();
 
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
       success: true,
       message: 'Payment confirmed using wallet, order updated successfully',
       order,
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: `Error processing wallet payment ${error.message}`,
       error: error.message,
@@ -281,11 +281,15 @@ exports.placeOrder = asyncHandler(async (req, res) => {
     const cart = await Cart.findOne({ user: userId });
 
     if (!cart) {
-      return res.status(400).json({ message: 'Cart not found' });
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: RESPONSE_MESSAGES.CART_NOT_FOUND });
     }
 
     if (cart.items.length === 0) {
-      return res.status(400).json({ message: 'Cart is empty' });
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: RESPONSE_MESSAGES.CART_EMPTY });
     }
 
     const orderItems = await Promise.all(
@@ -298,7 +302,9 @@ exports.placeOrder = asyncHandler(async (req, res) => {
 
         const product = await Product.findById(item.productId);
         if (!product) {
-          return res.status(404).json({ message: 'Product not found' });
+          return res
+            .status(StatusCodes.NOT_FOUND)
+            .json({ message: RESPONSE_MESSAGES.PRODUCT_NOT_FOUND });
         }
 
         const updatedStock = product.stock - item.quantity;
@@ -339,15 +345,15 @@ exports.placeOrder = asyncHandler(async (req, res) => {
 
     await Cart.deleteOne({ user: userId });
 
-    res.status(201).json({
+    res.status(StatusCodes.CREATED).json({
       success: true,
-      message: 'Order placed successfully',
+      message: RESPONSE_MESSAGES.ORDER_PLACED,
       orderId: placedOrder._id,
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'Error placing the order',
+      message: RESPONSE_MESSAGES.ERROR_PLACING_ORDER,
       error: error.message,
     });
   }
@@ -367,7 +373,9 @@ exports.paymentSelection = asyncHandler(async (req, res) => {
     const user = await User.findById(req.session.user).select('walletBalance');
 
     if (!order) {
-      return res.status(404).send('Order not found');
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .send(RESPONSE_MESSAGES.ORDER_NOT_FOUND);
     }
 
     res.render('layout', {
@@ -380,7 +388,7 @@ exports.paymentSelection = asyncHandler(async (req, res) => {
       walletBalance: user.walletBalance,
     });
   } catch (error) {
-    res.status(500).send('Error fetching order');
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Error fetching order');
   }
 });
 
@@ -397,7 +405,9 @@ exports.orderSuccessPage = asyncHandler(async (req, res) => {
       .exec();
 
     if (!order) {
-      return res.status(404).send('Order not found');
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .send(RESPONSE_MESSAGES.ORDER_NOT_FOUND);
     }
 
     res.render('layout', {
@@ -410,7 +420,9 @@ exports.orderSuccessPage = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching order:', error);
-    res.status(500).send('Server Error');
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send(RESPONSE_MESSAGES.SERVER_ERROR);
   }
 });
 
@@ -455,7 +467,9 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
     const order = await Order.findById(orderId);
 
     if (!order) {
-      return res.status(404).send('Order not found');
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .send(RESPONSE_MESSAGES.ORDER_NOT_FOUND);
     }
 
     if (order.status === 'Shipped' || order.status === 'Delivered') {
@@ -466,7 +480,7 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
     } else if (order.status === 'Pending' || order.status === 'Processed') {
       const user = await User.findById(order.user);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error(RESPONSE_MESSAGES.USER_NOT_FOUND);
       }
 
       await User.findByIdAndUpdate(order.user, {
@@ -483,15 +497,15 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
 
       await Order.findByIdAndUpdate(orderId, { status: 'Cancelled' });
     } else {
-      res
-        .status(400)
-        .json({ message: 'Order cannot be cancelled in its current status' });
+      res.status(StatusCodes.BAD_REQUEST).json({
+        message: RESPONSE_MESSAGES.ORDER_CANNOT_BE_CANCELLED,
+      });
     }
 
-    return res.status(200).json({
-      message: 'Order cancelled successfully',
+    return res.status(StatusCodes.OK).json({
+      message: RESPONSE_MESSAGES.ORDER_CANCELLED,
     });
   } catch (error) {
-    return res.status(400).json({ message: error.message });
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
 });

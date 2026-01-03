@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const cartService = require('../services/cartService');
+const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 exports.getCart = asyncHandler(async (req, res) => {
   const userId = req.session.user;
@@ -19,14 +20,18 @@ exports.getCartItemID = asyncHandler(async (req, res) => {
   const userId = req.session.user;
 
   if (!userId) {
-    return res.status(400).json({ error: 'User ID is required' });
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: RESPONSE_MESSAGES.USER_ID_REQUIRED });
   }
 
   try {
     const cart = await cartService.getCartWithProductDetails(userId);
 
     if (!cart) {
-      return res.status(404).json({ error: 'Cart not found' });
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ error: RESPONSE_MESSAGES.CART_NOT_FOUND });
     }
 
     // Extract product IDs and quantities
@@ -40,7 +45,9 @@ exports.getCartItemID = asyncHandler(async (req, res) => {
     res.json({ products });
   } catch (error) {
     console.error('Error fetching cart items:', error);
-    res.status(500).json({ error: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 });
 
@@ -49,10 +56,14 @@ exports.addToCart = asyncHandler(async (req, res) => {
   const productId = req.params.id;
   try {
     await cartService.addToCart(userId, productId, 1);
-    res.status(200).json({ message: 'Item added to cart successfully' });
+    res
+      .status(StatusCodes.OK)
+      .json({ message: RESPONSE_MESSAGES.ITEM_ADDED_TO_CART });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Failed to add item to cart' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: RESPONSE_MESSAGES.FAILED_TO_ADD_TO_CART });
   }
 });
 
@@ -71,9 +82,13 @@ exports.deleteItemFromCart = asyncHandler(async (req, res) => {
 
   try {
     const cart = await cartService.removeItemFromCart(userId, productId);
-    res.status(200).json({ message: 'Item removed successfully', cart });
+    res
+      .status(StatusCodes.OK)
+      .json({ message: RESPONSE_MESSAGES.ITEM_REMOVED_FROM_CART, cart });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 });

@@ -7,6 +7,7 @@ const Offer = require('../models/offer');
 const Product = require('../models/products');
 const Category = require('../models/categories');
 const Coupon = require('../models/coupon');
+const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 // ============================
 //  Admin Authentication Controllers
@@ -30,7 +31,7 @@ exports.loginAdmin = asyncHandler(async (req, res) => {
 
     res.redirect('/admin');
   } else {
-    throw new Error('Invalid Credentials');
+    throw new Error(RESPONSE_MESSAGES.INVALID_CREDENTIALS);
   }
 });
 
@@ -48,7 +49,9 @@ exports.getAdminHome = asyncHandler(async (req, res) => {
 exports.logoutAdmin = asyncHandler(async (req, res) => {
   req.session.destroy((err) => {
     if (err) {
-      return res.status(500).json({ message: 'Failed to log out' });
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ message: RESPONSE_MESSAGES.FAILED_TO_LOGOUT });
     }
     res.redirect('/admin/login');
   });
@@ -63,7 +66,7 @@ exports.getUsers = asyncHandler(async (req, res) => {
   const users = await User.find();
 
   if (!users) {
-    throw new Error('Failed to fetch users');
+    throw new Error(RESPONSE_MESSAGES.FAILED_TO_FETCH_USERS);
   }
 
   res.render('layout', {
@@ -82,8 +85,8 @@ exports.toggleUserStatus = asyncHandler(async (req, res) => {
   // Find user by ID
   const user = await User.findById(userId);
   if (!user) {
-    res.status(404);
-    throw new Error('User not found');
+    res.status(StatusCodes.NOT_FOUND);
+    throw new Error(RESPONSE_MESSAGES.USER_NOT_FOUND);
   }
 
   // Determine the new status
@@ -97,8 +100,8 @@ exports.toggleUserStatus = asyncHandler(async (req, res) => {
 
   // Check if the update was successful
   if (result.modifiedCount === 0) {
-    res.status(404);
-    throw new Error('User not found or status not changed');
+    res.status(StatusCodes.NOT_FOUND);
+    throw new Error(RESPONSE_MESSAGES.USER_NOT_FOUND);
   }
 
   // Redirect back to user management page
@@ -133,14 +136,16 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 
     if (!updatedOrder) {
       return res
-        .status(404)
-        .json({ success: false, message: 'Order not found' });
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.ORDER_NOT_FOUND });
     }
 
-    res.status(200).json({ success: true, order: updatedOrder });
+    res.status(StatusCodes.OK).json({ success: true, order: updatedOrder });
   } catch (error) {
     console.error('Error updating order status:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 });
 
@@ -191,17 +196,18 @@ exports.addCoupon = asyncHandler(async (req, res) => {
 
     // Validate required fields
     if (!code || !discountType || !discountValue || !validFrom || !validUntil) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Missing required fields' });
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: RESPONSE_MESSAGES.MISSING_REQUIRED_FIELDS,
+      });
     }
 
     const existingCoupon = await Coupon.findOne({ code });
 
     if (existingCoupon) {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
-        message: 'A coupon with this code already exists',
+        message: RESPONSE_MESSAGES.COUPON_EXISTS,
       });
     }
 
@@ -223,13 +229,13 @@ exports.addCoupon = asyncHandler(async (req, res) => {
 
     // Send a success response
     res
-      .status(201)
-      .json({ success: true, message: 'Coupon added successfully!' });
+      .status(StatusCodes.CREATED)
+      .json({ success: true, message: RESPONSE_MESSAGES.COUPON_ADDED });
   } catch (error) {
     console.error('Error adding coupon:', error);
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'An error occurred while adding the coupon',
+      message: RESPONSE_MESSAGES.ERROR_ADDING_COUPON,
     });
   }
 });
@@ -252,7 +258,9 @@ exports.updateCoupon = async (req, res) => {
     const coupon = await Coupon.findById(id);
 
     if (!coupon) {
-      return res.status(404).json({ message: 'Coupon not found' });
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
     }
 
     coupon.code = code || coupon.code;
@@ -266,12 +274,16 @@ exports.updateCoupon = async (req, res) => {
     coupon.isActive = isActive !== undefined ? isActive : coupon.isActive;
     await coupon.save();
 
-    res
-      .status(200)
-      .json({ success: true, message: 'Coupon updated successfully', coupon });
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: RESPONSE_MESSAGES.COUPON_UPDATED,
+      coupon,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -282,14 +294,18 @@ exports.deleteCoupon = async (req, res) => {
     const result = await Coupon.findByIdAndDelete(couponId);
 
     if (!result) {
-      return res.status(404).json({ message: 'Coupon not found' });
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
     }
 
-    res.status(200).json({ message: 'Coupon deleted successfully' });
+    res
+      .status(StatusCodes.OK)
+      .json({ message: RESPONSE_MESSAGES.COUPON_DELETED });
   } catch (error) {
     console.error('Error deleting coupon:', error);
     res
-      .status(500)
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ message: 'An error occurred while deleting the coupon' });
   }
 };
@@ -302,18 +318,24 @@ exports.toggleCouponStatus = asyncHandler(async (req, res) => {
 
     if (!coupon) {
       return res
-        .status(404)
-        .json({ success: false, message: 'Coupon not found' });
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
     }
 
     coupon.isActive = !coupon.isActive;
 
     await coupon.save();
 
-    res.json({ success: true, message: 'Coupon status updated', coupon });
+    res.json({
+      success: true,
+      message: RESPONSE_MESSAGES.COUPON_STATUS_UPDATED,
+      coupon,
+    });
   } catch (error) {
     console.error('Error updating coupon status:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 });
 
@@ -350,9 +372,10 @@ exports.addOffer = asyncHandler(async (req, res) => {
 
     // Validate required fields
     if (!type || !discountType || !discountValue || !validFrom || !validUntil) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Missing required fields' });
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: RESPONSE_MESSAGES.MISSING_REQUIRED_FIELDS,
+      });
     }
 
     // Create a new offer document
@@ -385,13 +408,13 @@ exports.addOffer = asyncHandler(async (req, res) => {
 
     // Send a success response
     res
-      .status(201)
-      .json({ success: true, message: 'Offer added successfully!' });
+      .status(StatusCodes.CREATED)
+      .json({ success: true, message: RESPONSE_MESSAGES.OFFER_ADDED });
   } catch (error) {
     console.error('Error adding offer:', error);
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'An error occurred while adding the offer',
+      message: RESPONSE_MESSAGES.ERROR_ADDING_OFFER,
     });
   }
 });
@@ -413,7 +436,9 @@ exports.updateOffer = async (req, res) => {
     const offer = await Offer.findById(id);
 
     if (!offer) {
-      return res.status(404).json({ message: 'Offer not found' });
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: RESPONSE_MESSAGES.OFFER_NOT_FOUND });
     }
 
     // Update the offer details
@@ -429,12 +454,16 @@ exports.updateOffer = async (req, res) => {
     await offer.save();
 
     // Send success response
-    res
-      .status(200)
-      .json({ success: true, message: 'Offer updated successfully', offer });
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: RESPONSE_MESSAGES.OFFER_UPDATED,
+      offer,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -445,20 +474,20 @@ exports.deleteOffer = asyncHandler(async (req, res) => {
     const offer = await Offer.findById(offerId);
 
     if (!offer) {
-      return res.status(404).json({
+      return res.status(StatusCodes.NOT_FOUND).json({
         success: false,
-        message: 'Offer not found',
+        message: RESPONSE_MESSAGES.OFFER_NOT_FOUND,
       });
     }
 
     await Offer.deleteOne({ _id: offerId });
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Offer deleted successfully',
+      message: RESPONSE_MESSAGES.OFFER_DELETED,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'An error occurred while deleting the offer',
     });
@@ -474,8 +503,8 @@ exports.toggleOfferStatus = async (req, res) => {
 
     if (!offer) {
       return res
-        .status(404)
-        .json({ success: false, message: 'Offer not found' });
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.OFFER_NOT_FOUND });
     }
 
     // Toggle the status field between 'active' and 'expired'
@@ -487,7 +516,9 @@ exports.toggleOfferStatus = async (req, res) => {
     res.json({ success: true, offer });
   } catch (error) {
     console.error('Error updating offer:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -622,7 +653,9 @@ exports.getSalesReport = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 });
 
@@ -713,7 +746,9 @@ exports.getSalesData = async (req, res) => {
         const endDate = new Date(req.query.endDate);
 
         if (Number.isNaN(startDate) || Number.isNaN(endDate)) {
-          return res.status(400).json({ message: 'Invalid date range' });
+          return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({ message: 'Invalid date range' });
         }
 
         match = {
@@ -779,7 +814,9 @@ exports.getSalesData = async (req, res) => {
     res.json({ labels, values });
   } catch (error) {
     console.error('Error fetching sales data:', error);
-    res.status(500).json({ message: 'Server error' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -815,7 +852,7 @@ exports.getBestSellers = async (req, res) => {
       },
     ]);
 
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
       topProducts: topProducts.map((product) => ({
         name: product.name,
         image: product.images.main,
@@ -828,17 +865,21 @@ exports.getBestSellers = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching best sellers:', error);
-    res.status(500).json({ error: 'Failed to fetch best sellers' });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: RESPONSE_MESSAGES.FAILED_TO_FETCH_DATA });
   }
 };
+
 exports.getOfferCategories = async (req, res) => {
   try {
     const categories = await Category.find({});
     res.json(categories);
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: 'Error fetching categories' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: RESPONSE_MESSAGES.FAILED_TO_FETCH_DATA,
+    });
   }
 };
 
@@ -847,8 +888,9 @@ exports.getOfferProducts = async (req, res) => {
     const products = await Product.find({});
     res.json(products);
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: 'Error fetching products' });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: RESPONSE_MESSAGES.FAILED_TO_FETCH_DATA,
+    });
   }
 };

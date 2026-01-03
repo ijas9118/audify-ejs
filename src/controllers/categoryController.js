@@ -1,13 +1,14 @@
 const asyncHandler = require('express-async-handler');
 const Category = require('../models/categories');
 const Product = require('../models/products');
+const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 // Render Category Management Page
 exports.getCategory = asyncHandler(async (req, res) => {
   const categories = await Category.find();
 
   if (!categories) {
-    throw new Error('Failed to fetch users');
+    throw new Error(RESPONSE_MESSAGES.FAILED_TO_FETCH_DATA);
   }
 
   res.render('layout', {
@@ -24,21 +25,26 @@ exports.addCategory = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
 
   if (!name) {
-    return res.status(400).json({ message: 'Category name is required' });
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: RESPONSE_MESSAGES.CATEGORY_NAME_REQUIRED });
   }
 
   const existingCategory = await Category.findOne({ name });
 
   if (existingCategory) {
-    return res.status(400).json({ message: 'Category already exists' });
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: RESPONSE_MESSAGES.CATEGORY_EXISTS });
   }
 
   const newCategory = new Category({ name, description });
   await newCategory.save();
 
-  res
-    .status(201)
-    .json({ message: 'Category added successfully', category: newCategory });
+  res.status(StatusCodes.CREATED).json({
+    message: RESPONSE_MESSAGES.CATEGORY_ADDED,
+    category: newCategory,
+  });
 });
 
 // Unlist Category
@@ -48,8 +54,8 @@ exports.toggleCategoryStatus = asyncHandler(async (req, res) => {
   const category = await Category.findById(categoryId);
 
   if (!category) {
-    res.status(404);
-    throw new Error('Category not found');
+    res.status(StatusCodes.NOT_FOUND);
+    throw new Error(RESPONSE_MESSAGES.CATEGORY_NOT_FOUND);
   }
 
   category.isActive = !category.isActive;
@@ -67,9 +73,9 @@ exports.deleteCategory = asyncHandler(async (req, res) => {
   const category = await Category.findById(categoryId);
 
   if (!category) {
-    return res.status(404).json({
+    return res.status(StatusCodes.NOT_FOUND).json({
       success: false,
-      message: 'Category not found',
+      message: RESPONSE_MESSAGES.CATEGORY_NOT_FOUND,
     });
   }
 
@@ -77,7 +83,7 @@ exports.deleteCategory = asyncHandler(async (req, res) => {
   const products = await Product.countDocuments({ categoryId });
 
   if (products > 0) {
-    return res.status(400).json({
+    return res.status(StatusCodes.BAD_REQUEST).json({
       success: false,
       message: `Cannot delete category. There are ${products} product(s) associated with this category.`,
     });
@@ -85,9 +91,9 @@ exports.deleteCategory = asyncHandler(async (req, res) => {
 
   // Delete the category
   await Category.findByIdAndDelete(categoryId);
-  res.status(200).json({
+  res.status(StatusCodes.OK).json({
     success: true,
-    message: 'Category deleted successfully',
+    message: RESPONSE_MESSAGES.CATEGORY_DELETED,
   });
 });
 
@@ -98,8 +104,8 @@ exports.getCategoryDetail = asyncHandler(async (req, res) => {
   // Fetch category details
   const category = await Category.findById(id);
   if (!category) {
-    res.status(404);
-    throw new Error('Category not found');
+    res.status(StatusCodes.NOT_FOUND);
+    throw new Error(RESPONSE_MESSAGES.CATEGORY_NOT_FOUND);
   }
 
   // Render the edit page with product details and categories
@@ -119,7 +125,9 @@ exports.updateCategory = asyncHandler(async (req, res) => {
 
   const category = await Category.findById(id);
   if (!category) {
-    return res.status(404).json({ message: 'Category not found' });
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ message: RESPONSE_MESSAGES.CATEGORY_NOT_FOUND });
   }
 
   category.name = name;
@@ -127,8 +135,8 @@ exports.updateCategory = asyncHandler(async (req, res) => {
 
   await category.save();
 
-  res.status(200).json({
-    message: 'Category updated successfully',
+  res.status(StatusCodes.OK).json({
+    message: RESPONSE_MESSAGES.CATEGORY_UPDATED,
     category: { name: category.name, description: category.description },
   });
 });
