@@ -1,17 +1,17 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const cartSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     items: [
       {
         productId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
+          ref: 'Product',
           required: true,
         },
         image: {
@@ -63,12 +63,14 @@ const cartSchema = new mongoose.Schema(
   }
 );
 
-cartSchema.methods.calculateTotals = function () {
-  this.total = this.items.reduce((acc, item) => acc + item.subtotal, 0) + (this.items.length === 0 ? 0 : this.shippingCharge);
+cartSchema.methods.calculateTotals = function calculateTotals() {
+  this.total =
+    this.items.reduce((acc, item) => acc + item.subtotal, 0) +
+    (this.items.length === 0 ? 0 : this.shippingCharge);
   this.finalTotal = this.total + (this.total === 0 ? 0 : this.shippingCharge); // apply discount
   return this.finalTotal;
 };
 
-const Cart = mongoose.model("Cart", cartSchema);
+const Cart = mongoose.model('Cart', cartSchema);
 
 module.exports = Cart;

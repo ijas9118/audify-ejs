@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema(
   {
@@ -19,7 +19,7 @@ const productSchema = new mongoose.Schema(
     },
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
+      ref: 'Category',
       required: true,
     },
     images: {
@@ -30,10 +30,10 @@ const productSchema = new mongoose.Schema(
       supports: {
         type: [String],
         validate: {
-          validator: function (v) {
+          validator(v) {
             return v.length === 2;
           },
-          message: "Supports images must be exactly 2",
+          message: 'Supports images must be exactly 2',
         },
         required: true,
       },
@@ -45,7 +45,7 @@ const productSchema = new mongoose.Schema(
     },
     offerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Offer",
+      ref: 'Offer',
       default: null,
     },
     popularity: {
@@ -55,7 +55,7 @@ const productSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     isOutOfStock: {
       type: Boolean,
-      default: false, 
+      default: false,
     },
   },
   {
@@ -63,4 +63,4 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Product", productSchema);
+module.exports = mongoose.model('Product', productSchema);

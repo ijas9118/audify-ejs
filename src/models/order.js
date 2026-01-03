@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const orderSchema = mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     name: {
@@ -14,41 +14,41 @@ const orderSchema = mongoose.Schema(
     mobile: {
       type: Number,
       require: true,
-      match: [/^\d{10}$/, "Please provide a valid 10-digit mobile number"],
+      match: [/^\d{10}$/, 'Please provide a valid 10-digit mobile number'],
     },
     alternateMobile: {
       type: Number,
-      match: [/^\d{10}$/, "Please provide a valid 10-digit mobile number"],
+      match: [/^\d{10}$/, 'Please provide a valid 10-digit mobile number'],
     },
     location: {
       type: String,
-      required: [true, "Location is required"],
+      required: [true, 'Location is required'],
     },
     city: {
       type: String,
-      required: [true, "City is required"],
+      required: [true, 'City is required'],
     },
     state: {
       type: String,
-      required: [true, "State is required"],
+      required: [true, 'State is required'],
     },
     landmark: {
       type: String,
     },
     zip: {
       type: String,
-      required: [true, "ZIP Code is required"],
+      required: [true, 'ZIP Code is required'],
     },
     orderItems: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "OrderItem",
+        ref: 'OrderItem',
         required: true,
       },
     ],
     paymentMethod: {
       type: String,
-      enum: ["Razorpay", "Wallet", "COD"],
+      enum: ['Razorpay', 'Wallet', 'COD'],
     },
     shippingCharge: {
       type: Number,
@@ -71,8 +71,8 @@ const orderSchema = mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Pending", "Processed", "Shipped", "Delivered", "Cancelled"],
-      default: "Pending",
+      enum: ['Pending', 'Processed', 'Shipped', 'Delivered', 'Cancelled'],
+      default: 'Pending',
     },
     dateOrdered: {
       type: Date,
@@ -86,4 +86,4 @@ const orderSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Order", orderSchema);
+module.exports = mongoose.model('Order', orderSchema);

@@ -1,21 +1,21 @@
-const Category = require("../models/categories");
-const Product = require("../models/products");
-const asyncHandler = require("express-async-handler");
+const asyncHandler = require('express-async-handler');
+const Category = require('../models/categories');
+const Product = require('../models/products');
 
 // Render Category Management Page
 exports.getCategory = asyncHandler(async (req, res) => {
   const categories = await Category.find();
 
   if (!categories) {
-    throw new Error("Failed to fetch users");
+    throw new Error('Failed to fetch users');
   }
 
-  res.render("layout", {
-    title: "Category Management",
-    viewName: "admin/categoryManagement",
-    activePage: "category",
+  res.render('layout', {
+    title: 'Category Management',
+    viewName: 'admin/categoryManagement',
+    activePage: 'category',
     isAdmin: true,
-    categories: categories,
+    categories,
   });
 });
 
@@ -24,13 +24,13 @@ exports.addCategory = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
 
   if (!name) {
-    return res.status(400).json({ message: "Category name is required" });
+    return res.status(400).json({ message: 'Category name is required' });
   }
 
   const existingCategory = await Category.findOne({ name });
 
   if (existingCategory) {
-    return res.status(400).json({ message: "Category already exists" });
+    return res.status(400).json({ message: 'Category already exists' });
   }
 
   const newCategory = new Category({ name, description });
@@ -38,7 +38,7 @@ exports.addCategory = asyncHandler(async (req, res) => {
 
   res
     .status(201)
-    .json({ message: "Category added successfully", category: newCategory });
+    .json({ message: 'Category added successfully', category: newCategory });
 });
 
 // Unlist Category
@@ -49,14 +49,14 @@ exports.toggleCategoryStatus = asyncHandler(async (req, res) => {
 
   if (!category) {
     res.status(404);
-    throw new Error("Category not found");
+    throw new Error('Category not found');
   }
 
   category.isActive = !category.isActive;
 
   await category.save();
 
-  res.redirect("/admin/category");
+  res.redirect('/admin/category');
 });
 
 // Controller to delete a category
@@ -69,12 +69,12 @@ exports.deleteCategory = asyncHandler(async (req, res) => {
   if (!category) {
     return res.status(404).json({
       success: false,
-      message: "Category not found",
+      message: 'Category not found',
     });
   }
 
   // Count products associated with this category
-  const products = await Product.countDocuments({ categoryId: categoryId });
+  const products = await Product.countDocuments({ categoryId });
 
   if (products > 0) {
     return res.status(400).json({
@@ -87,7 +87,7 @@ exports.deleteCategory = asyncHandler(async (req, res) => {
   await Category.findByIdAndDelete(categoryId);
   res.status(200).json({
     success: true,
-    message: "Category deleted successfully",
+    message: 'Category deleted successfully',
   });
 });
 
@@ -99,14 +99,14 @@ exports.getCategoryDetail = asyncHandler(async (req, res) => {
   const category = await Category.findById(id);
   if (!category) {
     res.status(404);
-    throw new Error("Category not found");
+    throw new Error('Category not found');
   }
 
   // Render the edit page with product details and categories
-  res.render("layout", {
-    title: "Edit Category",
-    viewName: "admin/editCategory",
-    activePage: "category",
+  res.render('layout', {
+    title: 'Edit Category',
+    viewName: 'admin/editCategory',
+    activePage: 'category',
     isAdmin: true,
     category,
   });
@@ -115,11 +115,11 @@ exports.getCategoryDetail = asyncHandler(async (req, res) => {
 // Update category details
 exports.updateCategory = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
-  const id = req.params.id;
+  const { id } = req.params;
 
-  let category = await Category.findById(id);
+  const category = await Category.findById(id);
   if (!category) {
-    return res.status(404).json({ message: "Category not found" });
+    return res.status(404).json({ message: 'Category not found' });
   }
 
   category.name = name;
@@ -128,7 +128,7 @@ exports.updateCategory = asyncHandler(async (req, res) => {
   await category.save();
 
   res.status(200).json({
-    message: "Category updated successfully",
+    message: 'Category updated successfully',
     category: { name: category.name, description: category.description },
   });
 });

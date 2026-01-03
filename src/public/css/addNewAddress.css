@@ -38,7 +38,9 @@ body {
   align-items: center;
   background-color: #f9f9f9;
   cursor: pointer;
-  transition: background-color 0.3s, border-color 0.3s;
+  transition:
+    background-color 0.3s,
+    border-color 0.3s;
 }
 .add-address-card:hover {
   background-color: #e9ecef;
@@ -49,7 +51,6 @@ body {
   border: 1px solid rgba(200, 150, 255, 0.3); /* Optional: Add a light purple border */
   transition: all 0.3s;
 }
-
 
 .icons {
   position: absolute;
@@ -99,5 +100,3 @@ body {
 .d-flex {
   align-items: center;
 }
-
-

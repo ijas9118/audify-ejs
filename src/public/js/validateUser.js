@@ -1,7 +1,7 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('signupForm');
 
-  form.addEventListener('submit', function(event) {
+  form.addEventListener('submit', (event) => {
     event.preventDefault();
 
     // Clear previous error messages
@@ -54,6 +54,5 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('emailError').style.display = 'none';
     document.getElementById('passwordError').textContent = '';
     document.getElementById('passwordError').style.display = 'none';
-
   }
 });

@@ -1,49 +1,50 @@
-const express = require("express");
+const express = require('express');
+
 const router = express.Router();
-const Product = require('../models/products')
-const userAuth = require("../middleware/userAuth");
+
+const userAuth = require('../middleware/userAuth');
 const {
-  getShop,
-  filterShop,
   getCart,
   updateCart,
   addToCart,
   deleteItemFromCart,
+  getCartItemID,
+} = require('../controllers/cartController');
+const {
+  getShop,
+  filterShop,
   getProduct,
   getStock,
-  getCartItemID,
   addToWishlist,
   getWishList,
   removeWishlist,
   searchProducts,
-} = require("../controllers/userController");
+} = require('../controllers/shopController');
 
-router.get("/", getShop);
+router.get('/', getShop);
 
-router.post("/", filterShop);
+router.post('/', filterShop);
 
 router.get('/search-products', searchProducts);
 
+router.get('/cart', userAuth, getCart);
 
-router.get("/cart", userAuth, getCart);
+router.get('/cart-item-id', userAuth, getCartItemID);
 
-router.get("/cart-item-id", userAuth, getCartItemID);
+router.post('/cart/updateQuantity', userAuth, updateCart);
 
-router.post("/cart/updateQuantity", userAuth, updateCart);
+router.get('/cart/:id', userAuth, addToCart);
 
-router.get("/cart/:id", userAuth, addToCart);
+router.delete('/cart/:id', userAuth, deleteItemFromCart);
 
-router.delete("/cart/:id", userAuth, deleteItemFromCart);
-
-// Wishlist 
+// Wishlist
 router.post('/wishlist/add/:id', userAuth, addToWishlist);
 router.get('/wishlist', userAuth, getWishList);
 router.get('/wishlist/remove/:id', userAuth, removeWishlist);
 
 // Get the stock of a product
-router.get("/stock", userAuth, getStock);
+router.get('/stock', userAuth, getStock);
 
-router.get("/:id", getProduct);
-
+router.get('/:id', getProduct);
 
 module.exports = router;

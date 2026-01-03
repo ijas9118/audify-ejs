@@ -1,7 +1,7 @@
 async function addToWishList(productId) {
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top",
+    position: 'top',
     showConfirmButton: false,
     timer: 2500,
     timerProgressBar: true,
@@ -21,29 +21,29 @@ async function addToWishList(productId) {
 
     if (response.ok) {
       Toast.fire({
-        icon: "success",
+        icon: 'success',
         title: 'Product added to wishlist!',
       });
     } else {
       alert(data.message || 'Failed to add product to wishlist');
       Toast.fire({
-        icon: "error",
+        icon: 'error',
         title: data.message || 'Failed to add product to wishlist',
       });
     }
   } catch (error) {
     console.error('Error:', error);
     Toast.fire({
-      icon: "error",
+      icon: 'error',
       title: 'An error occurred. Please try again.',
     });
   }
 }
 
 async function addToCartFromWishlist(productId) {
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top",
+    position: 'top',
     showConfirmButton: false,
     timer: 2500,
     timerProgressBar: true,
@@ -63,29 +63,29 @@ async function addToCartFromWishlist(productId) {
 
     if (response.ok) {
       await Toast.fire({
-        icon: "success",
+        icon: 'success',
         title: 'Product added to cart!',
       });
       removeProduct(productId);
     } else {
       Toast.fire({
-        icon: "error",
+        icon: 'error',
         title: data.message || 'Failed to add product to cart',
       });
     }
   } catch (error) {
     console.error('Error:', error);
     Toast.fire({
-      icon: "error",
+      icon: 'error',
       title: 'An error occurred. Please try again.',
     });
   }
 }
 
 async function removeProduct(productId) {
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top",
+    position: 'top',
     showConfirmButton: false,
     timer: 2500,
     timerProgressBar: true,
@@ -107,14 +107,14 @@ async function removeProduct(productId) {
       window.location.reload();
     } else {
       Toast.fire({
-        icon: "error",
+        icon: 'error',
         title: data.message,
       });
     }
   } catch (error) {
     console.error('Error:', error);
     Toast.fire({
-      icon: "error",
+      icon: 'error',
       title: 'An error occurred. Please try again.',
     });
   }

@@ -1,9 +1,9 @@
 function changeQuantity(productId, change) {
   const quantityInput = document.getElementById(`quantity-${productId}`);
-  let newQuantity = parseInt(quantityInput.value) + change;
-  let Toast = Swal.mixin({
+  let newQuantity = parseInt(quantityInput.value, 10) + change;
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top", // Adjust position as needed
+    position: 'top', // Adjust position as needed
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -26,7 +26,7 @@ function changeQuantity(productId, change) {
       if (newQuantity > maxQuantity) {
         newQuantity = maxQuantity;
         Toast.fire({
-          icon: "error",
+          icon: 'error',
           title: `Maximum available quantity for this item is ${maxQuantity}`,
         });
       }
@@ -35,26 +35,26 @@ function changeQuantity(productId, change) {
     })
     .catch(() => {
       Toast.fire({
-        icon: "error",
-        title: "Error fetching stock information",
+        icon: 'error',
+        title: 'Error fetching stock information',
       });
     });
 }
 
 function updateQuantityInDatabase(productId, newQuantity) {
-  fetch("/shop/cart/updateQuantity", {
-    method: "POST",
+  fetch('/shop/cart/updateQuantity', {
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      productId: productId,
+      productId,
       quantity: newQuantity,
     }),
   })
     .then((response) => {
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        throw new Error('Network response was not ok');
       }
       return response.json();
     })
@@ -62,41 +62,41 @@ function updateQuantityInDatabase(productId, newQuantity) {
       updateCartUI(cart);
     })
     .catch((error) => {
-      console.error("Error updating cart:", error);
+      console.error('Error updating cart:', error);
     });
 }
 
 function addToCart(productId) {
   fetch(`/shop/cart/${productId}`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   })
     .then((response) => response.json())
     .then((data) => {
-      if (data.message === "Item added to cart successfully") {
+      if (data.message === 'Item added to cart successfully') {
         Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: "Item successfully added to your cart!",
-          confirmButtonColor: "#4a2c77",
+          icon: 'success',
+          title: 'Success!',
+          text: 'Item successfully added to your cart!',
+          confirmButtonColor: '#4a2c77',
         });
       } else {
         Swal.fire({
-          icon: "error",
-          title: "Oops!",
-          text: data.message || "Failed to add item to cart",
-          confirmButtonColor: "#4a2c77",
+          icon: 'error',
+          title: 'Oops!',
+          text: data.message || 'Failed to add item to cart',
+          confirmButtonColor: '#4a2c77',
         });
       }
     })
     .catch((error) => {
       Swal.fire({
-        icon: "error",
-        title: "Error!",
-        text: "An error occurred while adding the item to your cart",
-        confirmButtonColor: "#4a2c77",
+        icon: 'error',
+        title: 'Error!',
+        text: 'An error occurred while adding the item to your cart',
+        confirmButtonColor: '#4a2c77',
       });
     });
 }
@@ -119,7 +119,7 @@ function updateCartUI(cart) {
 
   // Update cart summary
   const subtotalSummaryElement = document.querySelector(
-    ".cart-summary .d-flex.justify-content-between span:nth-of-type(2)"
+    '.cart-summary .d-flex.justify-content-between span:nth-of-type(2)'
   );
   if (subtotalSummaryElement) {
     subtotalSummaryElement.textContent = `${cart.items
@@ -128,14 +128,14 @@ function updateCartUI(cart) {
   }
 
   const shippingChargeElement = document.querySelector(
-    ".cart-summary .d-flex.justify-content-between:nth-of-type(2) span:nth-of-type(2)"
+    '.cart-summary .d-flex.justify-content-between:nth-of-type(2) span:nth-of-type(2)'
   );
   if (shippingChargeElement) {
     shippingChargeElement.textContent = `${cart.shippingCharge.toFixed(2)}`;
   }
 
   const totalElement = document.querySelector(
-    ".cart-summary .total span:nth-of-type(2)"
+    '.cart-summary .total span:nth-of-type(2)'
   );
   if (totalElement) {
     totalElement.textContent = `₹${cart.total.toFixed(2)}`;
@@ -143,9 +143,9 @@ function updateCartUI(cart) {
 }
 
 function deleteItem(productId) {
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top",
+    position: 'top',
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -156,9 +156,9 @@ function deleteItem(productId) {
   });
 
   fetch(`/shop/cart/${productId}`, {
-    method: "DELETE",
+    method: 'DELETE',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       // Include any required authentication tokens or cookies here
     },
   })
@@ -166,32 +166,32 @@ function deleteItem(productId) {
     .then((data) => {
       console.log(data.message);
 
-      if (data.message === "Item removed successfully") {
+      if (data.message === 'Item removed successfully') {
         // Optionally update the UI or redirect the user
         document.querySelector(`[data-product-id="${productId}"]`).remove();
         Toast.fire({
-          icon: "info",
-          title: "Item removed from cart",
+          icon: 'info',
+          title: 'Item removed from cart',
         });
         updateCartUI(data.cart);
       } else {
         Toast.fire({
-          icon: "error",
-          title: "Failed to remove item",
+          icon: 'error',
+          title: 'Failed to remove item',
         });
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
-      alert("An error occurred while removing the item");
+      console.error('Error:', error);
+      alert('An error occurred while removing the item');
     });
 }
 
 async function verifyStock() {
   let hasStockIssue = false;
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top",
+    position: 'top',
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -206,11 +206,12 @@ async function verifyStock() {
 
     if (products === null || products.length === 0) {
       Toast.fire({
-        icon: "warning",
-        title: "Your cart is empty",
+        icon: 'warning',
+        title: 'Your cart is empty',
       });
       hasStockIssue = true;
     } else {
+      /* eslint-disable no-await-in-loop, no-restricted-syntax */
       for (const product of products) {
         const { productId, quantity, name } = product;
         const response = await fetch(`/shop/stock?productId=${productId}`);
@@ -224,13 +225,13 @@ async function verifyStock() {
 
         if (maxQuantity === 0) {
           Toast.fire({
-            icon: "warning",
+            icon: 'warning',
             title: `${name} is out of stock.`,
           });
           hasStockIssue = true;
         } else if (quantity > maxQuantity) {
           Toast.fire({
-            icon: "warning",
+            icon: 'warning',
             title: `${name} only has ${maxQuantity} available, but you want ${quantity}.`,
           });
           hasStockIssue = true;
@@ -238,36 +239,36 @@ async function verifyStock() {
       }
 
       if (!hasStockIssue) {
-        window.location.href = "/checkout";
+        window.location.href = '/checkout';
       }
     }
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
     Toast.fire({
-      icon: "error",
-      title: "An error occurred while verifying stock.",
+      icon: 'error',
+      title: 'An error occurred while verifying stock.',
     });
-    alert("An error occurred while fetching product IDs and quantities.");
+    alert('An error occurred while fetching product IDs and quantities.');
   }
 }
 
 async function getProductIdsFromCart() {
   try {
-    const response = await fetch("/shop/cart-item-id", {
-      method: "GET",
+    const response = await fetch('/shop/cart-item-id', {
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
     const data = await response.json();
 
     if (!data || !Array.isArray(data.products)) {
-      throw new Error("Invalid response format");
+      throw new Error('Invalid response format');
     }
 
     return data.products;
   } catch (error) {
-    console.error("Error fetching product IDs from cart:", error.message);
+    console.error('Error fetching product IDs from cart:', error.message);
     throw error;
   }
 }

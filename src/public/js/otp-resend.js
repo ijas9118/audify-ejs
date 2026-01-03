@@ -21,16 +21,16 @@ const startCountdown = () => {
 window.onload = startCountdown;
 
 function resendOtp() {
-  event.preventDefault(); 
+  event.preventDefault();
 
   resendButton.style.display = 'none';
   countdownTime = 15;
   countdownElement.innerHTML = countdownTime;
   resendMessage.style.display = 'block';
 
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top",
+    position: 'top',
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -43,26 +43,26 @@ function resendOtp() {
   fetch('/signup/resend-otp', {
     method: 'GET',
   })
-  .then(response => response.json())
-  .then(data => {
-    if (data.message) {
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.message) {
+        Toast.fire({
+          icon: 'success',
+          title: `${data.message}`,
+        });
+      } else if (data.error) {
+        Toast.fire({
+          icon: 'error',
+          title: `${data.message}`,
+        });
+      }
+      startCountdown();
+    })
+    .catch((error) => {
+      console.error('Error:', error);
       Toast.fire({
-        icon: "success",
-        title: `${data.message}`,
+        icon: 'error',
+        title: 'Error sending OTP. Please try again.',
       });
-    } else if (data.error) {
-      Toast.fire({
-        icon: "error",
-        title: `${data.message}`,
-      });
-    }
-    startCountdown();
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    Toast.fire({
-      icon: "error",
-      title: 'Error sending OTP. Please try again.',
     });
-  });
 }

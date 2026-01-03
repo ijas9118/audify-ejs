@@ -1,13 +1,15 @@
-const slider = document.getElementById("price-slider");
-const minPriceValue = document.getElementById("minPriceValue");
-const maxPriceValue = document.getElementById("maxPriceValue");
-const minPriceInput = document.getElementById("minPrice");
-const maxPriceInput = document.getElementById("maxPrice");
+const slider = document.getElementById('price-slider');
+const minPriceValue = document.getElementById('minPriceValue');
+const maxPriceValue = document.getElementById('maxPriceValue');
+const minPriceInput = document.getElementById('minPrice');
+const maxPriceInput = document.getElementById('maxPrice');
 
 // Get initial values from the data attributes
 const sliderConfig = document.getElementById('slider-config');
-const initialMinPrice = parseFloat(sliderConfig.getAttribute('data-min-price')) || 200;
-const initialMaxPrice = parseFloat(sliderConfig.getAttribute('data-max-price')) || 5000;
+const initialMinPrice =
+  parseFloat(sliderConfig.getAttribute('data-min-price')) || 200;
+const initialMaxPrice =
+  parseFloat(sliderConfig.getAttribute('data-max-price')) || 5000;
 
 noUiSlider.create(slider, {
   start: [initialMinPrice, initialMaxPrice], // Initial values
@@ -17,41 +19,43 @@ noUiSlider.create(slider, {
     max: 10000, // Adjust according to your maximum price
   },
   format: {
-    to: function (value) {
+    to(value) {
       return `₹${Math.round(value)}`;
     },
-    from: function (value) {
-      return Number(value.replace("₹", ""));
+    from(value) {
+      return Number(value.replace('₹', ''));
     },
   },
 });
 
-slider.noUiSlider.on("update", function (values, handle) {
+slider.noUiSlider.on('update', (values, handle) => {
+  const [min, max] = values;
   if (handle === 0) {
-    minPriceValue.innerHTML = values[0];
-    minPriceInput.value = values[0].replace("₹", ""); // Update hidden input
+    minPriceValue.innerHTML = min;
+    minPriceInput.value = min.replace('₹', ''); // Update hidden input
   } else {
-    maxPriceValue.innerHTML = values[1];
-    maxPriceInput.value = values[1].replace("₹", ""); // Update hidden input
+    maxPriceValue.innerHTML = max;
+    maxPriceInput.value = max.replace('₹', ''); // Update hidden input
   }
 });
 
 // Initialize displayed values with the initial slider values
-minPriceValue.innerHTML = slider.noUiSlider.get()[0];
-maxPriceValue.innerHTML = slider.noUiSlider.get()[1];
-minPriceInput.value = slider.noUiSlider.get()[0].replace("₹", "");
-maxPriceInput.value = slider.noUiSlider.get()[1].replace("₹", "");
+const [initialMin, initialMax] = slider.noUiSlider.get();
+minPriceValue.innerHTML = initialMin;
+maxPriceValue.innerHTML = initialMax;
+minPriceInput.value = initialMin.replace('₹', '');
+maxPriceInput.value = initialMax.replace('₹', '');
 
 function previewImage(event, previewId) {
   const reader = new FileReader();
   reader.onload = function () {
     const output = document.getElementById(previewId);
     output.src = reader.result;
-    output.style.display = "block";
+    output.style.display = 'block';
   };
   reader.readAsDataURL(event.target.files[0]);
 }
 
 function updateMainImage(src) {
-  document.getElementById("mainImage").src = src;
+  document.getElementById('mainImage').src = src;
 }

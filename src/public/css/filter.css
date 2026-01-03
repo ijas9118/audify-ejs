@@ -14,10 +14,10 @@
 }
 
 .btn-outline-dark-purple:hover,
-  .btn-check:checked + .btn-outline-dark-purple {
-    background-color: #5a2b81;
-    color: white;
-  }
+.btn-check:checked + .btn-outline-dark-purple {
+  background-color: #5a2b81;
+  color: white;
+}
 
 .card-title {
   font-weight: bold;

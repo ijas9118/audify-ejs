@@ -1,16 +1,16 @@
 document
-  .getElementById("addCategoryForm")
-  .addEventListener("submit", async function (e) {
+  .getElementById('addCategoryForm')
+  .addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const categoryName = document.getElementById("categoryName").value;
+    const categoryName = document.getElementById('categoryName').value;
     const categoryDescription = document.getElementById(
-      "categoryDescription"
+      'categoryDescription'
     ).value;
 
-    let Toast = Swal.mixin({
+    const Toast = Swal.mixin({
       toast: true,
-      position: "top",
+      position: 'top',
       showConfirmButton: false,
       timer: 2500,
       timerProgressBar: true,
@@ -21,10 +21,10 @@ document
     });
 
     try {
-      const response = await fetch("/admin/category", {
-        method: "POST",
+      const response = await fetch('/admin/category', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: categoryName,
@@ -35,34 +35,34 @@ document
       const result = await response.json();
       if (response.ok) {
         await Toast.fire({
-          icon: "success",
+          icon: 'success',
           title: result.message,
         });
 
         const modal = bootstrap.Modal.getInstance(
-          document.getElementById("addCategoryModal")
+          document.getElementById('addCategoryModal')
         );
         modal.hide();
 
         window.location.reload();
       } else {
         Toast.fire({
-          icon: "error",
+          icon: 'error',
           title: result.message,
         });
       }
     } catch (error) {
       Toast.fire({
-        icon: "error",
-        title: "Something went wrong, please try again.",
+        icon: 'error',
+        title: 'Something went wrong, please try again.',
       });
     }
   });
 
 async function handleCategoryUpdate(categoryId) {
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top",
+    position: 'top',
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -86,25 +86,25 @@ async function handleCategoryUpdate(categoryId) {
 
   try {
     const response = await fetch(`/admin/category/edit/${categoryId}`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
       Toast.fire({
-        icon: "error",
-        title: "An error occurred while updating the category.",
+        icon: 'error',
+        title: 'An error occurred while updating the category.',
       });
     }
 
-    const result = await response.json(); 
+    const result = await response.json();
 
     if (response.ok) {
       await Toast.fire({
-        icon: "success",
+        icon: 'success',
         title: result.message,
       });
       const modal = bootstrap.Modal.getInstance(
@@ -114,14 +114,14 @@ async function handleCategoryUpdate(categoryId) {
       window.location.reload();
     } else {
       Toast.fire({
-        icon: "error",
+        icon: 'error',
         title: result.message,
       });
     }
   } catch (error) {
     Toast.fire({
-      icon: "error",
-      title: "An error occurred while updating the category.",
+      icon: 'error',
+      title: 'An error occurred while updating the category.',
     });
   }
 }
@@ -161,18 +161,14 @@ async function handleCategoryDelete(categoryId) {
     // Handle the response
     if (result.success) {
       // Show success message with SweetAlert
-      await Swal.fire(
-        'Deleted!',
-        'Category deleted successfully!',
-        'success'
-      );
+      await Swal.fire('Deleted!', 'Category deleted successfully!', 'success');
 
       window.location.reload();
     } else {
       // Show error message with SweetAlert
       await Swal.fire(
         'Error!',
-        'Error deleting category: ' + result.message,
+        `Error deleting category: ${result.message}`,
         'error'
       );
     }
@@ -186,4 +182,3 @@ async function handleCategoryDelete(categoryId) {
     );
   }
 }
-

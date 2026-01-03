@@ -22,7 +22,11 @@ body {
 }
 .btn-outline-light:hover {
   color: #6f42c1 !important;
-  background-color: rgb(236, 236, 236) !important; /* Light background on hover */
+  background-color: rgb(
+    236,
+    236,
+    236
+  ) !important; /* Light background on hover */
   border-color: #6f42c1 !important;
 }
 
@@ -61,11 +65,11 @@ body {
 }
 .form-select {
   background-color: #5d666e;
-  color: #ffffff; 
+  color: #ffffff;
   border: 1px solid #495057;
 }
 .form-select option {
-  background-color: #343a40; 
+  background-color: #343a40;
   color: #ffffff;
 }
 

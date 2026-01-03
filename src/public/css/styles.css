@@ -7,14 +7,14 @@ a {
 }
 
 .btn-custom {
-  background-color: #0C4BB1 !important; 
-  border-color: #0C4BB1 !important; 
-  color: #fff !important; 
+  background-color: #0c4bb1 !important;
+  border-color: #0c4bb1 !important;
+  color: #fff !important;
 }
 
 .btn-custom:hover {
-  background-color: #0A3F91 !important; 
-  border-color: #0A3F91 !important; 
+  background-color: #0a3f91 !important;
+  border-color: #0a3f91 !important;
 }
 
 /* Filter Slider */
@@ -53,13 +53,11 @@ a {
   border: none; /* Removes any border */
 }
 
-
 /* Remove any additional shadows on the handle */
 .noUi-handle:before,
 .noUi-handle:after {
   display: none; /* Hide the default before and after pseudo-elements */
 }
-
 
 .card-link {
   text-decoration: none; /* Remove underline */

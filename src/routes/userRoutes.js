@@ -1,9 +1,10 @@
-const express = require("express");
+const express = require('express');
+
 const router = express.Router();
-const userAuth = require("../middleware/userAuth");
-const passport = require("passport");
-const User = require('../models/userModel.js')
-require('../services/passport.js')
+const passport = require('passport');
+const userAuth = require('../middleware/userAuth');
+const User = require('../models/userModel');
+require('../services/passport');
 
 const {
   sendOtp,
@@ -14,85 +15,87 @@ const {
   successGoogleLogin,
   failureGoogleLogin,
   resetPassword,
-} = require("../controllers/userController");
+} = require('../controllers/authController');
 
 router.use(passport.initialize());
 router.use(passport.session());
 
 // Google OAuth routes
-router.get('/auth/google', passport.authenticate('google', {
-  scope:
-    ['email', 'profile']
-}));
+router.get(
+  '/auth/google',
+  passport.authenticate('google', {
+    scope: ['email', 'profile'],
+  })
+);
 
-// Auth Callback 
-router.get('/auth/google/callback',
+// Auth Callback
+router.get(
+  '/auth/google/callback',
   passport.authenticate('google', {
     successRedirect: '/success',
-    failureRedirect: '/failure'
-  }));
+    failureRedirect: '/failure',
+  })
+);
 
-// Success 
+// Success
 router.get('/success', successGoogleLogin);
 
-// failure 
+// failure
 router.get('/failure', failureGoogleLogin);
 
-router.get("/", (req, res) => {
-  res.render("layout", {
-    title: "Audify",
-    header: req.session.user ? "partials/login_header" : "partials/header",
-    viewName: "users/home",
-    activePage: "home",
+router.get('/', (req, res) => {
+  res.render('layout', {
+    title: 'Audify',
+    header: req.session.user ? 'partials/login_header' : 'partials/header',
+    viewName: 'users/home',
+    activePage: 'home',
     isAdmin: false,
   });
 });
 
-router.get("/signup", (req, res) => {
+router.get('/signup', (req, res) => {
   if (req.session.user) {
-    return res.redirect("/");
+    return res.redirect('/');
   }
-  res.render("layout", {
-    title: "Sign Up",
-    header: "partials/header",
-    viewName: "users/signup",
-    activePage: "home",
+  res.render('layout', {
+    title: 'Sign Up',
+    header: 'partials/header',
+    viewName: 'users/signup',
+    activePage: 'home',
     isAdmin: false,
   });
 });
 
-router.post("/signup", sendOtp);
+router.post('/signup', sendOtp);
 
-router.get("/signup/resend-otp", resendOtp);
+router.get('/signup/resend-otp', resendOtp);
 
-router.post("/verify-otp", verifyAndSignUp);
+router.post('/verify-otp', verifyAndSignUp);
 
-router.get("/login", (req, res) => {
+router.get('/login', (req, res) => {
   if (req.session.user) {
-    return res.redirect("/");
+    return res.redirect('/');
   }
-  res.render("layout", {
-    title: "Login",
-    header: "partials/header",
-    viewName: "users/login",
-    activePage: "home",
+  res.render('layout', {
+    title: 'Login',
+    header: 'partials/header',
+    viewName: 'users/login',
+    activePage: 'home',
     isAdmin: false,
   });
 });
 
-router.post("/login", loginUser);
+router.post('/login', loginUser);
 
 router.get('/login/forgot-password', (req, res) => {
-  res.render("layout", {
-    title: "Login",
-    header: "partials/header",
-    viewName: "users/forgotPassword",
-    activePage: "home",
+  res.render('layout', {
+    title: 'Login',
+    header: 'partials/header',
+    viewName: 'users/forgotPassword',
+    activePage: 'home',
     isAdmin: false,
   });
 });
-
-router.post('/login/reset-password', resetPassword)
 
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
@@ -103,11 +106,11 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(404).send('Email not found');
     }
 
-    res.render("layout", {
-      title: "Login",
-      header: "partials/header",
-      viewName: "users/resetPassword",
-      activePage: "home",
+    res.render('layout', {
+      title: 'Login',
+      header: 'partials/header',
+      viewName: 'users/resetPassword',
+      activePage: 'home',
       isAdmin: false,
     });
   } catch (err) {
@@ -115,6 +118,8 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-router.post("/logout", userAuth, logoutUser);
+router.post('/login/reset-password', resetPassword);
+
+router.post('/logout', userAuth, logoutUser);
 
 module.exports = router;

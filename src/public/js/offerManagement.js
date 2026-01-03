@@ -1,18 +1,18 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const offerTypeSelect = document.getElementById("offerType");
+document.addEventListener('DOMContentLoaded', () => {
+  const offerTypeSelect = document.getElementById('offerType');
   const productCategorySection = document.getElementById(
-    "productCategorySection"
+    'productCategorySection'
   );
-  const referralSection = document.getElementById("referralSection");
-  const productOrCategorySelect = document.getElementById("productOrCategory");
+  const referralSection = document.getElementById('referralSection');
+  const productOrCategorySelect = document.getElementById('productOrCategory');
 
   function fetchOptions(offerType) {
     const url =
-      offerType === "product"
-        ? "/admin/offer/products"
-        : offerType === "category"
-        ? "/admin/offer/categories"
-        : null;
+      offerType === 'product'
+        ? '/admin/offer/products'
+        : offerType === 'category'
+          ? '/admin/offer/categories'
+          : null;
 
     if (url) {
       fetch(url)
@@ -20,13 +20,13 @@ document.addEventListener("DOMContentLoaded", function () {
         .then((data) => {
           const options = data
             .map((item) => `<option value="${item._id}">${item.name}</option>`)
-            .join("");
+            .join('');
           productOrCategorySelect.innerHTML = `<option value="" selected>Select ${
             offerType.charAt(0).toUpperCase() + offerType.slice(1)
           }</option>${options}`;
         })
         .catch((error) => {
-          console.error("Error fetching options:", error);
+          console.error('Error fetching options:', error);
           productOrCategorySelect.innerHTML =
             '<option value="" selected>Error loading options</option>';
         });
@@ -36,45 +36,45 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  offerTypeSelect.addEventListener("change", function () {
+  offerTypeSelect.addEventListener('change', () => {
     const offerType = offerTypeSelect.value;
 
     // Show or hide referral section based on offer type
-    if (offerType === "referral") {
-      referralSection.classList.remove("d-none");
+    if (offerType === 'referral') {
+      referralSection.classList.remove('d-none');
     } else {
-      referralSection.classList.add("d-none");
+      referralSection.classList.add('d-none');
     }
 
     // Show product/category section and update options
-    if (offerType === "product" || offerType === "category") {
-      productCategorySection.style.display = "block";
+    if (offerType === 'product' || offerType === 'category') {
+      productCategorySection.style.display = 'block';
       fetchOptions(offerType);
     } else {
-      productCategorySection.style.display = "none";
+      productCategorySection.style.display = 'none';
       productOrCategorySelect.innerHTML =
         '<option value="" selected>Select Product or Category</option>';
     }
   });
 
-  document.querySelector("form").addEventListener("submit", function (event) {
+  document.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
     addOffer();
   });
 
-  document.querySelectorAll(".edit-offer-form").forEach((form) => {
-    form.addEventListener("submit", function (event) {
+  document.querySelectorAll('.edit-offer-form').forEach((form) => {
+    form.addEventListener('submit', function (event) {
       event.preventDefault();
-      const offerId = this.dataset.offerId; 
+      const { offerId } = this.dataset;
       updateOffer(offerId);
     });
   });
 });
 
 function addOffer() {
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top", // Adjust position as needed
+    position: 'top', // Adjust position as needed
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -83,28 +83,28 @@ function addOffer() {
       toast.onmouseleave = Swal.resumeTimer;
     },
   });
-  const offerType = document.getElementById("offerType").value;
-  const productOrCategory = document.getElementById("productOrCategory").value;
-  const discountType = document.getElementById("discountType").value;
-  const discountValue = document.getElementById("discountValue").value;
+  const offerType = document.getElementById('offerType').value;
+  const productOrCategory = document.getElementById('productOrCategory').value;
+  const discountType = document.getElementById('discountType').value;
+  const discountValue = document.getElementById('discountValue').value;
   const maxDiscountAmount =
-    document.getElementById("maxDiscountAmount").value || null;
-  const minCartValue = document.getElementById("minCartValue").value || null;
-  const validFrom = document.getElementById("validFrom").value;
-  const validUntil = document.getElementById("validUntil").value;
+    document.getElementById('maxDiscountAmount').value || null;
+  const minCartValue = document.getElementById('minCartValue').value || null;
+  const validFrom = document.getElementById('validFrom').value;
+  const validUntil = document.getElementById('validUntil').value;
   const referrerBonus =
-    offerType === "referral"
-      ? document.getElementById("referrerBonus").value || null
+    offerType === 'referral'
+      ? document.getElementById('referrerBonus').value || null
       : null;
   const refereeBonus =
-    offerType === "referral"
-      ? document.getElementById("refereeBonus").value || null
+    offerType === 'referral'
+      ? document.getElementById('refereeBonus').value || null
       : null;
 
   const offerData = {
     type: offerType,
-    product: offerType === "product" ? productOrCategory : undefined,
-    category: offerType === "category" ? productOrCategory : undefined,
+    product: offerType === 'product' ? productOrCategory : undefined,
+    category: offerType === 'category' ? productOrCategory : undefined,
     discountType,
     discountValue,
     maxDiscountAmount,
@@ -112,15 +112,15 @@ function addOffer() {
     validFrom,
     validUntil,
     referralBonus:
-      offerType === "referral"
+      offerType === 'referral'
         ? { referrer: referrerBonus, referee: refereeBonus }
         : undefined,
   };
 
-  fetch("/admin/offer", {
-    method: "POST",
+  fetch('/admin/offer', {
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(offerData),
   })
@@ -128,34 +128,34 @@ function addOffer() {
     .then(async (data) => {
       if (data.success) {
         await Toast.fire({
-          icon: "success",
+          icon: 'success',
           title: `${data.message}`,
         });
         const modal = bootstrap.Modal.getInstance(
-          document.getElementById("addOfferModal")
+          document.getElementById('addOfferModal')
         );
         modal.hide();
         window.location.reload();
       } else {
         Toast.fire({
-          icon: "error",
+          icon: 'error',
           title: `${data.message}`,
         });
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
+      console.error('Error:', error);
       Toast.fire({
-        icon: "error",
-        title: "An error occurred while adding the offer.",
+        icon: 'error',
+        title: 'An error occurred while adding the offer.',
       });
     });
 }
 
 function updateOffer(offerId) {
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top", // Adjust position as needed
+    position: 'top', // Adjust position as needed
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -166,12 +166,15 @@ function updateOffer(offerId) {
   });
   const offerType = document.getElementById(`offerType${offerId}`).value;
   const discountType = document.getElementById(`discountType${offerId}`).value;
-  const discountValue = document.getElementById(`discountValue${offerId}`).value;
+  const discountValue = document.getElementById(
+    `discountValue${offerId}`
+  ).value;
   const maxDiscountAmount =
     document.getElementById(`maxDiscount${offerId}`).value || null;
   const validFrom = document.getElementById(`validFrom${offerId}`).value;
   const validUntil = document.getElementById(`validUntil${offerId}`).value;
-  const minCartValue = document.getElementById(`minCartValue${offerId}`).value || null;
+  const minCartValue =
+    document.getElementById(`minCartValue${offerId}`).value || null;
 
   const offerData = {
     type: offerType,
@@ -184,9 +187,9 @@ function updateOffer(offerId) {
   };
 
   fetch(`/admin/offer/update/${offerId}`, {
-    method: "POST", 
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(offerData),
   })
@@ -194,7 +197,7 @@ function updateOffer(offerId) {
     .then((data) => {
       if (data.success) {
         Toast.fire({
-          icon: "success",
+          icon: 'success',
           title: `${data.message}`,
         });
         const modal = bootstrap.Modal.getInstance(
@@ -204,24 +207,24 @@ function updateOffer(offerId) {
         window.location.reload();
       } else {
         Toast.fire({
-          icon: "error",
+          icon: 'error',
           title: `${data.message}`,
         });
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
+      console.error('Error:', error);
       Toast.fire({
-        icon: "error",
-        title: "An error occurred while adding the offer.",
+        icon: 'error',
+        title: 'An error occurred while adding the offer.',
       });
     });
 }
 
 function deleteOffer(offerId) {
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top", // Adjust position as needed
+    position: 'top', // Adjust position as needed
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -231,58 +234,62 @@ function deleteOffer(offerId) {
     },
   });
   Swal.fire({
-    title: "Are you sure?",
+    title: 'Are you sure?',
     text: "You won't be able to revert this!",
-    icon: "warning",
+    icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Yes, delete it!",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      fetch(`/admin/offer/delete/${offerId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            Toast.fire({
-              icon: "success",
-              title: "Offer deleted successfully!",
-            });
-
-            // Remove the row from the table (simple way)
-            const offerRow = document.querySelector(`tr[data-offer-id="${offerId}"]`);
-            if (offerRow) {
-              offerRow.remove();
-            }
-          } else {
-            Toast.fire({
-              icon: "error",
-              title: "Error: " + data.message,
-            });
-          }
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, delete it!',
+  })
+    .then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/admin/offer/delete/${offerId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         })
-    }
-  }).catch((error) => {
-    console.error("Error:", error);
-    Toast.fire({
-      icon: "error",
-      title: "An error occurred while deleting the offer.",
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              Toast.fire({
+                icon: 'success',
+                title: 'Offer deleted successfully!',
+              });
+
+              // Remove the row from the table (simple way)
+              const offerRow = document.querySelector(
+                `tr[data-offer-id="${offerId}"]`
+              );
+              if (offerRow) {
+                offerRow.remove();
+              }
+            } else {
+              Toast.fire({
+                icon: 'error',
+                title: `Error: ${data.message}`,
+              });
+            }
+          });
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      Toast.fire({
+        icon: 'error',
+        title: 'An error occurred while deleting the offer.',
+      });
     });
-  });
 }
 
 async function toggleOfferStatus(offerId) {
   try {
     const response = await fetch(`/admin/offer/toggle/${offerId}`, {
-      method: "PUT",
+      method: 'PUT',
       headers: {
-        "Content-Type": "application/json",
-      }
+        'Content-Type': 'application/json',
+      },
     });
 
     const result = await response.json();
@@ -292,13 +299,15 @@ async function toggleOfferStatus(offerId) {
       const badge = document.getElementById(`statusDisplay${offerId}`);
       const newStatus = result.offer.status; // Get the updated value from the response
 
-      badge.classList.remove(newStatus === 'active' ? 'bg-danger' : 'bg-success');
+      badge.classList.remove(
+        newStatus === 'active' ? 'bg-danger' : 'bg-success'
+      );
       badge.classList.add(newStatus === 'active' ? 'bg-success' : 'bg-danger');
       badge.textContent = newStatus;
     } else {
-      console.error("Error updating status:", result.message);
+      console.error('Error updating status:', result.message);
     }
   } catch (error) {
-    console.error("Error toggling offer status:", error);
+    console.error('Error toggling offer status:', error);
   }
 }

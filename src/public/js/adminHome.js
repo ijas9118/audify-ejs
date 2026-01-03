@@ -1,20 +1,20 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const filterDropdown = document.getElementById("filterDropdown");
-  const customDateRange = document.getElementById("customDateRange");
-  const startDateInput = document.getElementById("startDate");
-  const endDateInput = document.getElementById("endDate");
-  const applyButton = customDateRange.querySelector("button");
+document.addEventListener('DOMContentLoaded', () => {
+  const filterDropdown = document.getElementById('filterDropdown');
+  const customDateRange = document.getElementById('customDateRange');
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
+  const applyButton = customDateRange.querySelector('button');
 
   let tableData;
   let summaryData;
 
   // Function to render sales report data into the table
   const renderTable = (data) => {
-    const tbody = document.querySelector("table tbody");
-    tbody.innerHTML = ""; // Clear existing table rows
+    const tbody = document.querySelector('table tbody');
+    tbody.innerHTML = ''; // Clear existing table rows
 
     data.forEach((item) => {
-      const row = document.createElement("tr");
+      const row = document.createElement('tr');
       row.innerHTML = ` 
         <td>${item.date}</td>
         <td>₹${item.totalSalesRevenue.toFixed(2)}</td>
@@ -29,31 +29,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Function to update the summary information
   const updateSummary = (summary) => {
-    document.querySelector(
-      "#totalSalesCount"
-    ).textContent = `${summary.totalSalesCount} Orders`;
-    document.querySelector(
-      "#overallOrderAmount"
-    ).textContent = `₹${summary.overallOrderAmount.toFixed(2)}`;
-    document.querySelector(
-      "#overallDiscount"
-    ).textContent = `₹${summary.overallDiscount.toFixed(2)}`;
+    document.querySelector('#totalSalesCount').textContent =
+      `${summary.totalSalesCount} Orders`;
+    document.querySelector('#overallOrderAmount').textContent =
+      `₹${summary.overallOrderAmount.toFixed(2)}`;
+    document.querySelector('#overallDiscount').textContent =
+      `₹${summary.overallDiscount.toFixed(2)}`;
     summaryData = summary; // Store summary data for PDF generation
   };
 
   // Function to fetch sales report
-  const fetchSalesReport = async (filter, startDate = "", endDate = "") => {
+  const fetchSalesReport = async (filter, startDate = '', endDate = '') => {
     try {
-      const response = await fetch("/admin/sales-report", {
-        method: "POST",
+      const response = await fetch('/admin/sales-report', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ filter, startDate, endDate }),
       });
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        throw new Error('Network response was not ok');
       }
 
       const data = await response.json();
@@ -63,25 +60,25 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTable(data.data); // Render sales report data in the table
         updateSummary(data.summary); // Update summary information
       } else {
-        console.error("Error fetching sales report:", data.message);
+        console.error('Error fetching sales report:', data.message);
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error);
     }
   };
 
   // Event listener for dropdown items
-  document.querySelectorAll(".dropdown-item").forEach((item) => {
-    item.addEventListener("click", function () {
-      const selectedFilter = this.getAttribute("data-value");
+  document.querySelectorAll('.dropdown-item').forEach((item) => {
+    item.addEventListener('click', function () {
+      const selectedFilter = this.getAttribute('data-value');
       filterDropdown.textContent = selectedFilter;
 
-      if (selectedFilter === "Custom Date Range") {
-        customDateRange.classList.remove("d-none");
-        customDateRange.classList.add("d-flex");
+      if (selectedFilter === 'Custom Date Range') {
+        customDateRange.classList.remove('d-none');
+        customDateRange.classList.add('d-flex');
       } else {
-        customDateRange.classList.add("d-none");
-        customDateRange.classList.remove("d-flex");
+        customDateRange.classList.add('d-none');
+        customDateRange.classList.remove('d-flex');
 
         fetchSalesReport(selectedFilter);
       }
@@ -89,35 +86,35 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Event listener for Apply button
-  applyButton.addEventListener("click", () => {
+  applyButton.addEventListener('click', () => {
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
 
     if (startDate && endDate) {
-      fetchSalesReport("Custom Date Range", startDate, endDate);
+      fetchSalesReport('Custom Date Range', startDate, endDate);
     } else {
-      alert("Please select both start and end dates.");
+      alert('Please select both start and end dates.');
     }
   });
 
   // PDF Generation using jsPDF
-  const pdfButton = document.querySelector("#pdfDownload");
-  pdfButton.addEventListener("click", () => {
-    const { jsPDF } = window.jspdf; // Get the jsPDF constructor
-    const doc = new jsPDF();
+  const pdfButton = document.querySelector('#pdfDownload');
+  pdfButton.addEventListener('click', () => {
+    const { jsPDF: JsPDF } = window.jspdf; // Get the jsPDF constructor
+    const doc = new JsPDF();
 
     // Add title and date
-    doc.text("Sales Report", 10, 10);
+    doc.text('Sales Report', 10, 10);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 10, 20);
 
     // Table headers
     const tableHeaders = [
-      "Date",
-      "Total Sales Revenue",
-      "Discount Applied",
-      "Net Sales",
-      "Number of Orders",
-      "Total Items Sold",
+      'Date',
+      'Total Sales Revenue',
+      'Discount Applied',
+      'Net Sales',
+      'Number of Orders',
+      'Total Items Sold',
     ];
 
     // Format the table data for PDF generation
@@ -138,8 +135,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Add overall summary section
-    const finalY = doc.autoTable.previous.finalY;
-    doc.text("Overall Summary", 10, finalY + 10);
+    const { finalY } = doc.autoTable.previous;
+    doc.text('Overall Summary', 10, finalY + 10);
     doc.text(`Total Orders: ${summaryData.totalSalesCount}`, 10, finalY + 20);
     doc.text(
       `Overall Order Amount: ${summaryData.overallOrderAmount.toFixed(2)}`,
@@ -153,23 +150,23 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     // Download the generated PDF
-    doc.save("sales_report.pdf");
+    doc.save('sales_report.pdf');
   });
 
-  const excelButton = document.querySelector("#excelDownload");
-  excelButton.addEventListener("click", () => {
+  const excelButton = document.querySelector('#excelDownload');
+  excelButton.addEventListener('click', () => {
     // Create a new workbook and a worksheet
     const wb = XLSX.utils.book_new();
     const wsData = [];
 
     // Add headers to the worksheet
     const headers = [
-      "Date",
-      "Total Sales Revenue",
-      "Discount Applied",
-      "Net Sales",
-      "Number of Orders",
-      "Total Items Sold",
+      'Date',
+      'Total Sales Revenue',
+      'Discount Applied',
+      'Net Sales',
+      'Number of Orders',
+      'Total Items Sold',
     ];
     wsData.push(headers);
 
@@ -189,9 +186,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
     // Append the worksheet to the workbook
-    XLSX.utils.book_append_sheet(wb, ws, "Sales Report");
+    XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
 
     // Download the workbook
-    XLSX.writeFile(wb, "sales_report.xlsx");
+    XLSX.writeFile(wb, 'sales_report.xlsx');
   });
 });

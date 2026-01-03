@@ -2,10 +2,12 @@ async function searchProduct(query) {
   if (query === undefined) {
     query = '';
   }
-  
+
   try {
     // Use fetch to send a GET request to the backend
-    const response = await fetch(`shop/search-products?query=${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `shop/search-products?query=${encodeURIComponent(query)}`
+    );
     if (response.ok) {
       const products = await response.json();
       renderSearchResults(products); // Call function to render the results
@@ -27,7 +29,7 @@ function renderSearchResults(products) {
     return;
   }
 
-  products.forEach(product => {
+  products.forEach((product) => {
     const productCard = `
       <div class="col-md-4 col-sm-6">
         <div class="card h-100 shadow-sm border-1 ${product.isOutOfStock ? 'out-of-stock' : ''}">
@@ -48,7 +50,7 @@ function renderSearchResults(products) {
             </div>
             <div class="d-flex justify-content-between align-items-center">
               <span class="${product.stock === 0 || product.isOutOfStock ? 'text-danger' : 'text-success'}">
-                ${product.stock === 0 || product.isOutOfStock ? 'Out of Stock' : product.stock + ' Available'}
+                ${product.stock === 0 || product.isOutOfStock ? 'Out of Stock' : `${product.stock} Available`}
               </span>
             </div>
           </div>

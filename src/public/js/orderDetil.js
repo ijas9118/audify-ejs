@@ -1,7 +1,7 @@
 async function cancelOrder(orderid) {
-  let Toast = Swal.mixin({
+  const Toast = Swal.mixin({
     toast: true,
-    position: "top",
+    position: 'top',
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -21,21 +21,21 @@ async function cancelOrder(orderid) {
 
     if (response.ok) {
       await Toast.fire({
-        icon: "success",
-        title: "Order Cancelled! Refunded to wallet",
+        icon: 'success',
+        title: 'Order Cancelled! Refunded to wallet',
       });
       window.location.reload();
     } else {
       alert(data.message || 'Failed to remove product');
       Toast.fire({
-        icon: "error",
+        icon: 'error',
         title: data.message,
       });
     }
   } catch (error) {
     console.error('Error:', error);
     Toast.fire({
-      icon: "error",
+      icon: 'error',
       title: 'An error occurred. Please try again.',
     });
   }
