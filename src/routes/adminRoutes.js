@@ -14,12 +14,22 @@ const {
   couponValidation,
   validate,
 } = require('../middleware/validators/adminValidator');
+const { adminAuthLimiter } = require('../middleware/rateLimiter');
+const {
+  adminLoginValidation,
+} = require('../middleware/validators/authValidator');
 
 // ============================
 // Admin Authentication Routes
 // ============================
 router.get('/login', adminAuthController.getAdminLogin);
-router.post('/login', adminAuthController.loginAdmin);
+router.post(
+  '/login',
+  adminAuthLimiter,
+  adminLoginValidation,
+  validate,
+  adminAuthController.loginAdmin
+);
 router.post('/logout', adminAuth, adminAuthController.logoutAdmin);
 
 // ============================

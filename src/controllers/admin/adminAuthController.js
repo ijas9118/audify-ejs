@@ -16,8 +16,8 @@ const getAdminLogin = asyncHandler(async (req, res) => {
 
 // Handle Admin Login
 const loginAdmin = asyncHandler(async (req, res) => {
-  const { user, password } = req.body;
-  const findAdmin = await Admin.findOne({ user });
+  const { username, password } = req.body;
+  const findAdmin = await Admin.findOne({ username });
 
   if (findAdmin && (await findAdmin.isPasswordMatched(password))) {
     req.session.admin = findAdmin._id;

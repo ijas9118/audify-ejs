@@ -10,6 +10,7 @@ const {
   loginValidation,
   validate,
 } = require('../middleware/validators/authValidator');
+const { authLimiter } = require('../middleware/rateLimiter');
 require('../services/passport');
 
 router.use(passport.initialize());
@@ -61,11 +62,17 @@ router.get('/signup', (req, res) => {
   });
 });
 
-router.post('/signup', signupValidation, validate, authController.sendOtp);
+router.post(
+  '/signup',
+  authLimiter,
+  signupValidation,
+  validate,
+  authController.sendOtp
+);
 
 router.get('/signup/resend-otp', authController.resendOtp);
 
-router.post('/verify-otp', authController.verifyAndSignUp);
+router.post('/verify-otp', authLimiter, authController.verifyAndSignUp);
 
 router.get('/login', (req, res) => {
   if (req.session.user) {
@@ -80,7 +87,13 @@ router.get('/login', (req, res) => {
   });
 });
 
-router.post('/login', loginValidation, validate, authController.loginUser);
+router.post(
+  '/login',
+  authLimiter,
+  loginValidation,
+  validate,
+  authController.loginUser
+);
 
 router.get('/login/forgot-password', (req, res) => {
   res.render('layout', {
@@ -92,7 +105,7 @@ router.get('/login/forgot-password', (req, res) => {
   });
 });
 
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authLimiter, async (req, res) => {
   const { email } = req.body;
   req.session.email = email;
   try {
@@ -113,7 +126,7 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-router.post('/login/reset-password', authController.resetPassword);
+router.post('/login/reset-password', authLimiter, authController.resetPassword);
 
 router.post('/logout', userAuth, authController.logoutUser);
 

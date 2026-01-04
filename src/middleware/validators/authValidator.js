@@ -40,7 +40,7 @@ exports.signupValidation = [
  * Validation middleware for user login
  */
 exports.loginValidation = [
-  body('user')
+  body('email')
     .trim()
     .notEmpty()
     .withMessage('Email is required')
@@ -55,7 +55,7 @@ exports.loginValidation = [
  * Validation middleware for admin login
  */
 exports.adminLoginValidation = [
-  body('user')
+  body('username')
     .trim()
     .notEmpty()
     .withMessage('Username is required')

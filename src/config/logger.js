@@ -1,4 +1,5 @@
 const winston = require('winston');
+const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
 
 // Define log levels
@@ -54,22 +55,28 @@ const transports = [
 
 // Only add file transports in production
 if (process.env.NODE_ENV === 'production') {
+  // Error log with daily rotation
   transports.push(
-    // Error log file - only errors
-    new winston.transports.File({
-      filename: path.join('logs', 'error.log'),
+    new DailyRotateFile({
+      filename: path.join('logs', 'error-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
       level: 'error',
       format: fileFormat,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
+      maxSize: '20m',
+      maxFiles: '30d', // Keep 30 days of error logs
+      zippedArchive: true, // Compress old logs
+    })
+  );
 
-    // Combined log file - all logs
-    new winston.transports.File({
-      filename: path.join('logs', 'combined.log'),
+  // Combined log with daily rotation
+  transports.push(
+    new DailyRotateFile({
+      filename: path.join('logs', 'combined-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
       format: fileFormat,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
+      maxSize: '20m',
+      maxFiles: '14d', // Keep 14 days of combined logs
+      zippedArchive: true, // Compress old logs
     })
   );
 }
