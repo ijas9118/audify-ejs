@@ -6,7 +6,7 @@ async function searchProduct(query) {
   try {
     // Use fetch to send a GET request to the backend
     const response = await fetch(
-      `shop/search-products?query=${encodeURIComponent(query)}`
+      `shop/search?query=${encodeURIComponent(query)}`
     );
     if (response.ok) {
       const products = await response.json();

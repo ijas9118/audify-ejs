@@ -42,7 +42,7 @@ function changeQuantity(productId, change) {
 }
 
 function updateQuantityInDatabase(productId, newQuantity) {
-  fetch('/shop/cart/updateQuantity', {
+  fetch('/shop/cart/update', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -67,8 +67,8 @@ function updateQuantityInDatabase(productId, newQuantity) {
 }
 
 function addToCart(productId) {
-  fetch(`/shop/cart/${productId}`, {
-    method: 'GET',
+  fetch(`/shop/cart/add/${productId}`, {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -155,7 +155,7 @@ function deleteItem(productId) {
     },
   });
 
-  fetch(`/shop/cart/${productId}`, {
+  fetch(`/shop/cart/delete/${productId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
@@ -254,7 +254,7 @@ async function verifyStock() {
 
 async function getProductIdsFromCart() {
   try {
-    const response = await fetch('/shop/cart-item-id', {
+    const response = await fetch('/shop/cart/get-cart-item', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

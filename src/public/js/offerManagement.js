@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function fetchOptions(offerType) {
     const url =
       offerType === 'product'
-        ? '/admin/offers/products'
+        ? '/admin/offer-products'
         : offerType === 'category'
-          ? '/admin/offers/categories'
+          ? '/admin/offer-categories'
           : null;
 
     if (url) {
@@ -186,7 +186,7 @@ function updateOffer(offerId) {
     minCartValue,
   };
 
-  fetch(`/admin/offers/update/${offerId}`, {
+  fetch(`/admin/offers/edit/${offerId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -244,7 +244,7 @@ function deleteOffer(offerId) {
   })
     .then((result) => {
       if (result.isConfirmed) {
-        fetch(`/admin/offers/delete/${offerId}`, {
+        fetch(`/admin/offers/${offerId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

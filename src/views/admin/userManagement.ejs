@@ -37,8 +37,8 @@
                 <td><%= user.gender %></td>
                 <td>
                   <form
-                    action="/admin/users/toggle-status/<%= user._id %>"
-                    method="POST"
+                    action="/admin/users/toggle/<%= user._id %>"
+                    method="GET"
                     class="w-100"
                   >
                     <button

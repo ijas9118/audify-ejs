@@ -12,7 +12,7 @@
       <div class="card shadow-sm border-1 position-sticky" style="top: 100px;">
         <div class="card-body py-5">
           <h5 class="card-title text-center">Filter Products</h5>
-          <form action="/shop" method="post">
+          <form action="/shop/filter" method="post">
             <!-- Category Filter -->
             <div class="mb-5">
               <label for="category" class="form-label">Category</label>
@@ -79,7 +79,7 @@
             class="card h-100 shadow-sm border-1 <% if (product.isOutOfStock) { %> out-of-stock <% } %>"
           >
             <div class="position-relative">
-              <a href="/shop/<%= product._id %>" class="card-link">
+              <a href="/shop/product/<%= product._id %>" class="card-link">
                 <!-- Discount Badge -->
                 <% if (product.productOfferDetails || product.categoryOfferDetails) { %>
                   <span class="badge bg-danger position-absolute top-0 start-0 m-2">

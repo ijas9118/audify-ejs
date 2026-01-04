@@ -156,7 +156,7 @@ const walletTransactions = asyncHandler(async (req, res) => {
   }
 });
 
-const downloadInvoice = async (req, res) => {
+const downloadInvoice = asyncHandler(async (req, res) => {
   const orderId = req.params.id;
 
   try {
@@ -187,7 +187,7 @@ const downloadInvoice = async (req, res) => {
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .send(RESPONSE_MESSAGES.SERVER_ERROR);
   }
-};
+});
 
 module.exports = {
   getUserAccount,

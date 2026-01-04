@@ -53,8 +53,8 @@ async function addToCartFromWishlist(productId) {
     },
   });
   try {
-    const response = await fetch(`/shop/cart/${productId}`, {
-      method: 'GET',
+    const response = await fetch(`/shop/cart/add/${productId}`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -95,8 +95,8 @@ async function removeProduct(productId) {
     },
   });
   try {
-    const response = await fetch(`/shop/wishlist/remove/${productId}`, {
-      method: 'GET',
+    const response = await fetch(`/shop/wishlist/delete/${productId}`, {
+      method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },

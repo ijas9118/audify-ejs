@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler');
 const authService = require('../services/authService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
-const successGoogleLogin = async (req, res) => {
+const successGoogleLogin = asyncHandler(async (req, res) => {
   if (!req.user) res.redirect('/failure');
   try {
     const user = await authService.handleGoogleLogin(req.user);
@@ -12,7 +12,7 @@ const successGoogleLogin = async (req, res) => {
     console.error('Error during Google login: ', error);
     res.redirect('/login');
   }
-};
+});
 
 const failureGoogleLogin = (req, res) => {
   res.send('Error');

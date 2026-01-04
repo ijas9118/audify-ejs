@@ -154,7 +154,7 @@ async function updateCoupon(couponId) {
   };
 
   try {
-    const response = await fetch(`/admin/coupons/update/${couponId}`, {
+    const response = await fetch(`/admin/coupons/edit/${couponId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -275,8 +275,8 @@ async function deleteCoupon(couponId) {
 
 async function toggleCouponStatus(couponId) {
   try {
-    const response = await fetch(`/admin/coupons/toggle-status/${couponId}`, {
-      method: 'PUT',
+    const response = await fetch(`/admin/coupons/toggle/${couponId}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
