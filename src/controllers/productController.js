@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/products');
 const Category = require('../models/categories');
-const cloudinary = require('../config/cloudinary');
+const uploadService = require('../services/uploadService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 // Render Product Management Page
@@ -46,40 +46,9 @@ const addProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  const uploadPromises = [
-    // Upload main image
-    new Promise((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          { folder: 'products', resource_type: 'image' },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result.secure_url);
-          }
-        )
-        .end(mainImageFile.buffer);
-    }),
-
-    // Upload support images
-    ...supportImageFiles.map(
-      (file) =>
-        new Promise((resolve, reject) => {
-          cloudinary.uploader
-            .upload_stream(
-              { folder: 'products', resource_type: 'image' },
-              (error, result) => {
-                if (error) return reject(error);
-                resolve(result.secure_url);
-              }
-            )
-            .end(file.buffer);
-        })
-    ),
-  ];
-
-  const imageUrls = await Promise.all(uploadPromises);
-
-  const [mainImageUrl, ...supportImageUrls] = imageUrls;
+  // Upload images using uploadService
+  const { mainImageUrl, supportImageUrls } =
+    await uploadService.uploadProductImages(mainImageFile, supportImageFiles);
 
   // Check if all required fields are provided
   if (!name || !price || !categoryId || !stock) {
@@ -176,54 +145,20 @@ const updateProduct = asyncHandler(async (req, res) => {
       .json({ message: RESPONSE_MESSAGES.PRODUCT_NOT_FOUND });
   }
 
-  // Handle image upload if new images are provided
-  const uploadPromises = [];
+  // Keep existing images, update only if new ones are provided
   const updatedImages = { ...product.images };
 
+  // Handle image uploads using uploadService
   if (req.files.mainImage && req.files.mainImage.length > 0) {
-    const mainImageFile = req.files.mainImage[0];
-    uploadPromises.push(
-      new Promise((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream(
-            { folder: 'products', resource_type: 'image' },
-            (error, result) => {
-              if (error) return reject(error);
-              resolve(result.secure_url);
-            }
-          )
-          .end(mainImageFile.buffer);
-      })
+    updatedImages.main = await uploadService.uploadToCloudinary(
+      req.files.mainImage[0].buffer
     );
   }
 
   if (req.files.supportImages && req.files.supportImages.length > 0) {
-    const supportImageFiles = req.files.supportImages;
-    supportImageFiles.forEach((file) => {
-      uploadPromises.push(
-        new Promise((resolve, reject) => {
-          cloudinary.uploader
-            .upload_stream(
-              { folder: 'products', resource_type: 'image' },
-              (error, result) => {
-                if (error) return reject(error);
-                resolve(result.secure_url);
-              }
-            )
-            .end(file.buffer);
-        })
-      );
-    });
-  }
-
-  const imageUrls = await Promise.all(uploadPromises);
-
-  if (req.files.mainImage && req.files.mainImage.length > 0) {
-    updatedImages.main = imageUrls.shift(); // Get the first URL for the main image
-  }
-
-  if (req.files.supportImages && req.files.supportImages.length > 0) {
-    updatedImages.supports = imageUrls; // The rest are support images
+    updatedImages.supports = await uploadService.uploadMultipleImages(
+      req.files.supportImages
+    );
   }
 
   // Update product details
