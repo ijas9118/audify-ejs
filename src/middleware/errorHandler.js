@@ -1,3 +1,4 @@
+const logger = require('../config/logger');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 // Not Found Error
@@ -14,6 +15,15 @@ const errorHandler = (err, req, res, next) => {
       ? StatusCodes.INTERNAL_SERVER_ERROR
       : res.statusCode;
   res.status(statusCode);
+
+  // Log the error with context
+  logger.error('Error occurred', {
+    message: err.message,
+    statusCode,
+    path: req.path,
+    method: req.method,
+    stack: err.stack,
+  });
 
   if (statusCode === StatusCodes.NOT_FOUND) {
     // Render the 404 page

@@ -5,6 +5,7 @@ const cors = require('cors');
 require('dotenv').config();
 const xss = require('xss-clean');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
+const requestLogger = require('./middleware/requestLogger');
 const routes = require('./routes');
 
 const app = express();
@@ -16,6 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // XSS Protection - Sanitize user input
 app.use(xss());
+
+// Request logging
+app.use(requestLogger);
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
