@@ -14,7 +14,7 @@ const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 // ============================
 
 // Render Admin Login Page
-exports.getAdminLogin = asyncHandler(async (req, res) => {
+const getAdminLogin = asyncHandler(async (req, res) => {
   if (req.session.admin) {
     return res.redirect('/admin');
   }
@@ -22,7 +22,7 @@ exports.getAdminLogin = asyncHandler(async (req, res) => {
 });
 
 // Handle Admin Login
-exports.loginAdmin = asyncHandler(async (req, res) => {
+const loginAdmin = asyncHandler(async (req, res) => {
   const { user, password } = req.body;
   const findAdmin = await Admin.findOne({ user });
 
@@ -36,7 +36,7 @@ exports.loginAdmin = asyncHandler(async (req, res) => {
 });
 
 // Render Admin Home Page (Dashboard)
-exports.getAdminHome = asyncHandler(async (req, res) => {
+const getAdminHome = asyncHandler(async (req, res) => {
   res.render('layout', {
     title: 'Audify',
     viewName: 'admin/adminHome',
@@ -46,7 +46,7 @@ exports.getAdminHome = asyncHandler(async (req, res) => {
 });
 
 // Handle Admin Logout
-exports.logoutAdmin = asyncHandler(async (req, res) => {
+const logoutAdmin = asyncHandler(async (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res
@@ -62,7 +62,7 @@ exports.logoutAdmin = asyncHandler(async (req, res) => {
 // ============================
 
 // Render User Management Page
-exports.getUsers = asyncHandler(async (req, res) => {
+const getUsers = asyncHandler(async (req, res) => {
   const users = await User.find();
 
   if (!users) {
@@ -79,7 +79,7 @@ exports.getUsers = asyncHandler(async (req, res) => {
 });
 
 // Toggle user status
-exports.toggleUserStatus = asyncHandler(async (req, res) => {
+const toggleUserStatus = asyncHandler(async (req, res) => {
   const userId = req.params.id;
 
   // Find user by ID
@@ -113,7 +113,7 @@ exports.toggleUserStatus = asyncHandler(async (req, res) => {
 // ============================
 
 // Render Order Management Page
-exports.getOrders = asyncHandler(async (req, res) => {
+const getOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find().sort({ dateOrdered: -1 });
 
   res.render('layout', {
@@ -125,7 +125,7 @@ exports.getOrders = asyncHandler(async (req, res) => {
   });
 });
 
-exports.updateOrderStatus = asyncHandler(async (req, res) => {
+const updateOrderStatus = asyncHandler(async (req, res) => {
   const orderId = req.params.id;
   const { status } = req.body;
   try {
@@ -149,7 +149,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   }
 });
 
-exports.viewOrder = asyncHandler(async (req, res) => {
+const viewOrder = asyncHandler(async (req, res) => {
   const orderId = req.params.id;
   const order = await Order.findById({ _id: orderId })
     .populate('user', 'firstName lastName email mobile')
@@ -169,7 +169,7 @@ exports.viewOrder = asyncHandler(async (req, res) => {
 // ============================
 
 // Render Coupon Management Page
-exports.getCoupons = asyncHandler(async (req, res) => {
+const getCoupons = asyncHandler(async (req, res) => {
   const coupons = await Coupon.find();
   res.render('layout', {
     title: 'Coupon Management',
@@ -180,7 +180,7 @@ exports.getCoupons = asyncHandler(async (req, res) => {
   });
 });
 
-exports.addCoupon = asyncHandler(async (req, res) => {
+const addCoupon = asyncHandler(async (req, res) => {
   try {
     const {
       code,
@@ -240,7 +240,7 @@ exports.addCoupon = asyncHandler(async (req, res) => {
   }
 });
 
-exports.updateCoupon = async (req, res) => {
+const updateCoupon = async (req, res) => {
   const { id } = req.params;
   const {
     code,
@@ -287,7 +287,7 @@ exports.updateCoupon = async (req, res) => {
   }
 };
 
-exports.deleteCoupon = async (req, res) => {
+const deleteCoupon = async (req, res) => {
   try {
     const couponId = req.params.id;
 
@@ -310,7 +310,7 @@ exports.deleteCoupon = async (req, res) => {
   }
 };
 
-exports.toggleCouponStatus = asyncHandler(async (req, res) => {
+const toggleCouponStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -344,7 +344,7 @@ exports.toggleCouponStatus = asyncHandler(async (req, res) => {
 // ============================
 
 // Render Offer Management Page
-exports.getOffers = asyncHandler(async (req, res) => {
+const getOffers = asyncHandler(async (req, res) => {
   const offers = await Offer.find().populate('product').populate('category');
   res.render('layout', {
     title: 'Offer Management',
@@ -355,7 +355,7 @@ exports.getOffers = asyncHandler(async (req, res) => {
   });
 });
 
-exports.addOffer = asyncHandler(async (req, res) => {
+const addOffer = asyncHandler(async (req, res) => {
   try {
     const {
       type,
@@ -419,7 +419,7 @@ exports.addOffer = asyncHandler(async (req, res) => {
   }
 });
 
-exports.updateOffer = async (req, res) => {
+const updateOffer = async (req, res) => {
   const { id } = req.params; // The offer ID
   const {
     type,
@@ -467,7 +467,7 @@ exports.updateOffer = async (req, res) => {
   }
 };
 
-exports.deleteOffer = asyncHandler(async (req, res) => {
+const deleteOffer = asyncHandler(async (req, res) => {
   const offerId = req.params.id;
 
   try {
@@ -494,7 +494,7 @@ exports.deleteOffer = asyncHandler(async (req, res) => {
   }
 });
 
-exports.toggleOfferStatus = async (req, res) => {
+const toggleOfferStatus = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -527,7 +527,7 @@ exports.toggleOfferStatus = async (req, res) => {
 // ============================
 
 // Render Deals Management Page
-exports.getDeals = asyncHandler(async (req, res) => {
+const getDeals = asyncHandler(async (req, res) => {
   res.render('layout', {
     title: 'Offer Management',
     viewName: 'admin/dealManagement',
@@ -569,7 +569,7 @@ const getDateRange = (filterType) => {
   }
 };
 
-exports.getSalesReport = asyncHandler(async (req, res) => {
+const getSalesReport = asyncHandler(async (req, res) => {
   const { filter, startDate, endDate } = req.body;
   let start;
   let end;
@@ -659,7 +659,7 @@ exports.getSalesReport = asyncHandler(async (req, res) => {
   }
 });
 
-exports.getSalesData = async (req, res) => {
+const getSalesData = async (req, res) => {
   try {
     const filter = req.query.filter || 'Monthly';
     let match = {};
@@ -820,7 +820,7 @@ exports.getSalesData = async (req, res) => {
   }
 };
 
-exports.getBestSellers = async (req, res) => {
+const getBestSellers = async (req, res) => {
   try {
     // Fetch top 10 best-selling products
     const topProducts = await Product.find({ isActive: true })
@@ -871,7 +871,7 @@ exports.getBestSellers = async (req, res) => {
   }
 };
 
-exports.getOfferCategories = async (req, res) => {
+const getOfferCategories = async (req, res) => {
   try {
     const categories = await Category.find({});
     res.json(categories);
@@ -883,7 +883,7 @@ exports.getOfferCategories = async (req, res) => {
   }
 };
 
-exports.getOfferProducts = async (req, res) => {
+const getOfferProducts = async (req, res) => {
   try {
     const products = await Product.find({});
     res.json(products);
@@ -893,4 +893,32 @@ exports.getOfferProducts = async (req, res) => {
       message: RESPONSE_MESSAGES.FAILED_TO_FETCH_DATA,
     });
   }
+};
+
+module.exports = {
+  getAdminLogin,
+  loginAdmin,
+  getAdminHome,
+  logoutAdmin,
+  getUsers,
+  toggleUserStatus,
+  getOrders,
+  updateOrderStatus,
+  viewOrder,
+  getCoupons,
+  addCoupon,
+  updateCoupon,
+  deleteCoupon,
+  toggleCouponStatus,
+  getOffers,
+  addOffer,
+  updateOffer,
+  deleteOffer,
+  toggleOfferStatus,
+  getDeals,
+  getSalesReport,
+  getSalesData,
+  getBestSellers,
+  getOfferCategories,
+  getOfferProducts,
 };

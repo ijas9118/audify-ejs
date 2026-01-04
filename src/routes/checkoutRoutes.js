@@ -2,34 +2,30 @@ const express = require('express');
 
 const router = express.Router();
 const userAuth = require('../middleware/userAuth');
-const {
-  getCheckoutPage,
-  orderSuccessPage,
-  razorPay,
-  applyCoupon,
-  removeCoupon,
-  placeOrder,
-  paymentSelection,
-  confirmPayment,
-  walletPayment,
-} = require('../controllers/checkoutController');
+const checkoutController = require('../controllers/checkoutController');
+const couponController = require('../controllers/couponController');
+const paymentController = require('../controllers/paymentController');
+const orderController = require('../controllers/orderController');
 
-router.get('/', userAuth, getCheckoutPage);
+// Checkout page
+router.get('/', userAuth, checkoutController.getCheckoutPage);
 
-router.post('/', userAuth, confirmPayment);
+// Payment operations
+router.post('/', userAuth, paymentController.confirmPayment);
+router.post('/wallet', userAuth, paymentController.processWalletPayment);
+router.post('/order/:id', paymentController.createRazorpayOrder);
+router.get('/payment/:orderId', userAuth, paymentController.getPaymentPage);
 
-router.post('/wallet', userAuth, walletPayment);
+// Order operations
+router.post('/place-order', userAuth, orderController.placeOrder);
+router.get(
+  '/order-success/:orderId',
+  userAuth,
+  orderController.getOrderSuccessPage
+);
 
-router.post('/place-order', userAuth, placeOrder);
-
-router.get('/payment/:orderId', userAuth, paymentSelection);
-
-router.post('/apply-coupons', userAuth, applyCoupon);
-
-router.get('/remove-coupon/:cartId', userAuth, removeCoupon);
-
-router.post('/order/:id', razorPay);
-
-router.get('/order-success/:orderId', userAuth, orderSuccessPage);
+// Coupon operations
+router.post('/apply-coupons', userAuth, couponController.applyCoupon);
+router.get('/remove-coupon/:cartId', userAuth, couponController.removeCoupon);
 
 module.exports = router;

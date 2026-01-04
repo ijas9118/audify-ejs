@@ -1,15 +1,10 @@
 const asyncHandler = require('express-async-handler');
-const Category = require('../models/categories');
-const Product = require('../models/products');
+const categoryService = require('../services/categoryService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 // Render Category Management Page
-exports.getCategory = asyncHandler(async (req, res) => {
-  const categories = await Category.find();
-
-  if (!categories) {
-    throw new Error(RESPONSE_MESSAGES.FAILED_TO_FETCH_DATA);
-  }
+const getCategory = asyncHandler(async (req, res) => {
+  const categories = await categoryService.getAllCategories();
 
   res.render('layout', {
     title: 'Category Management',
@@ -21,122 +16,136 @@ exports.getCategory = asyncHandler(async (req, res) => {
 });
 
 // Controller to add a new category
-exports.addCategory = asyncHandler(async (req, res) => {
+const addCategory = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
 
-  if (!name) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: RESPONSE_MESSAGES.CATEGORY_NAME_REQUIRED });
+  try {
+    const newCategory = await categoryService.createCategory(name, description);
+
+    res.status(StatusCodes.CREATED).json({
+      message: RESPONSE_MESSAGES.CATEGORY_ADDED,
+      category: newCategory,
+    });
+  } catch (error) {
+    if (error.message === 'Category name is required') {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: RESPONSE_MESSAGES.CATEGORY_NAME_REQUIRED });
+    }
+
+    if (error.message === 'Category already exists') {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: RESPONSE_MESSAGES.CATEGORY_EXISTS });
+    }
+
+    throw error;
   }
-
-  const existingCategory = await Category.findOne({ name });
-
-  if (existingCategory) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: RESPONSE_MESSAGES.CATEGORY_EXISTS });
-  }
-
-  const newCategory = new Category({ name, description });
-  await newCategory.save();
-
-  res.status(StatusCodes.CREATED).json({
-    message: RESPONSE_MESSAGES.CATEGORY_ADDED,
-    category: newCategory,
-  });
 });
 
 // Unlist Category
-exports.toggleCategoryStatus = asyncHandler(async (req, res) => {
+const toggleCategoryStatus = asyncHandler(async (req, res) => {
   const categoryId = req.params.id;
 
-  const category = await Category.findById(categoryId);
+  try {
+    await categoryService.toggleCategoryStatus(categoryId);
+    res.redirect('/admin/category');
+  } catch (error) {
+    if (error.message === 'Category not found') {
+      res.status(StatusCodes.NOT_FOUND);
+      throw new Error(RESPONSE_MESSAGES.CATEGORY_NOT_FOUND);
+    }
 
-  if (!category) {
-    res.status(StatusCodes.NOT_FOUND);
-    throw new Error(RESPONSE_MESSAGES.CATEGORY_NOT_FOUND);
+    throw error;
   }
-
-  category.isActive = !category.isActive;
-
-  await category.save();
-
-  res.redirect('/admin/category');
 });
 
 // Controller to delete a category
-exports.deleteCategory = asyncHandler(async (req, res) => {
+const deleteCategory = asyncHandler(async (req, res) => {
   const categoryId = req.params.id;
 
-  // Find the category by ID
-  const category = await Category.findById(categoryId);
+  try {
+    await categoryService.deleteCategory(categoryId);
 
-  if (!category) {
-    return res.status(StatusCodes.NOT_FOUND).json({
-      success: false,
-      message: RESPONSE_MESSAGES.CATEGORY_NOT_FOUND,
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: RESPONSE_MESSAGES.CATEGORY_DELETED,
     });
+  } catch (error) {
+    if (error.message === 'Category not found') {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: RESPONSE_MESSAGES.CATEGORY_NOT_FOUND,
+      });
+    }
+
+    if (error.message.includes('Cannot delete category')) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    throw error;
   }
-
-  // Count products associated with this category
-  const products = await Product.countDocuments({ categoryId });
-
-  if (products > 0) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      success: false,
-      message: `Cannot delete category. There are ${products} product(s) associated with this category.`,
-    });
-  }
-
-  // Delete the category
-  await Category.findByIdAndDelete(categoryId);
-  res.status(StatusCodes.OK).json({
-    success: true,
-    message: RESPONSE_MESSAGES.CATEGORY_DELETED,
-  });
 });
 
 // Get edit category page
-exports.getCategoryDetail = asyncHandler(async (req, res) => {
+const getCategoryDetail = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  // Fetch category details
-  const category = await Category.findById(id);
-  if (!category) {
-    res.status(StatusCodes.NOT_FOUND);
-    throw new Error(RESPONSE_MESSAGES.CATEGORY_NOT_FOUND);
-  }
+  try {
+    const category = await categoryService.getCategoryById(id);
 
-  // Render the edit page with product details and categories
-  res.render('layout', {
-    title: 'Edit Category',
-    viewName: 'admin/editCategory',
-    activePage: 'category',
-    isAdmin: true,
-    category,
-  });
+    res.render('layout', {
+      title: 'Edit Category',
+      viewName: 'admin/editCategory',
+      activePage: 'category',
+      isAdmin: true,
+      category,
+    });
+  } catch (error) {
+    if (error.message === 'Category not found') {
+      res.status(StatusCodes.NOT_FOUND);
+      throw new Error(RESPONSE_MESSAGES.CATEGORY_NOT_FOUND);
+    }
+
+    throw error;
+  }
 });
 
 // Update category details
-exports.updateCategory = asyncHandler(async (req, res) => {
+const updateCategory = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
   const { id } = req.params;
 
-  const category = await Category.findById(id);
-  if (!category) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ message: RESPONSE_MESSAGES.CATEGORY_NOT_FOUND });
+  try {
+    const updatedCategory = await categoryService.updateCategory(
+      id,
+      name,
+      description
+    );
+
+    res.status(StatusCodes.OK).json({
+      message: RESPONSE_MESSAGES.CATEGORY_UPDATED,
+      category: updatedCategory,
+    });
+  } catch (error) {
+    if (error.message === 'Category not found') {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: RESPONSE_MESSAGES.CATEGORY_NOT_FOUND });
+    }
+
+    throw error;
   }
-
-  category.name = name;
-  category.description = description;
-
-  await category.save();
-
-  res.status(StatusCodes.OK).json({
-    message: RESPONSE_MESSAGES.CATEGORY_UPDATED,
-    category: { name: category.name, description: category.description },
-  });
 });
+
+module.exports = {
+  getCategory,
+  addCategory,
+  toggleCategoryStatus,
+  deleteCategory,
+  getCategoryDetail,
+  updateCategory,
+};

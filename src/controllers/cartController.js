@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler');
 const cartService = require('../services/cartService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
-exports.getCart = asyncHandler(async (req, res) => {
+const getCart = asyncHandler(async (req, res) => {
   const userId = req.session.user;
   const cart = await cartService.getCart(userId);
 
@@ -16,7 +16,7 @@ exports.getCart = asyncHandler(async (req, res) => {
   });
 });
 
-exports.getCartItemID = asyncHandler(async (req, res) => {
+const getCartItemID = asyncHandler(async (req, res) => {
   const userId = req.session.user;
 
   if (!userId) {
@@ -51,7 +51,7 @@ exports.getCartItemID = asyncHandler(async (req, res) => {
   }
 });
 
-exports.addToCart = asyncHandler(async (req, res) => {
+const addToCart = asyncHandler(async (req, res) => {
   const userId = req.session.user;
   const productId = req.params.id;
   try {
@@ -67,7 +67,7 @@ exports.addToCart = asyncHandler(async (req, res) => {
   }
 });
 
-exports.updateCart = asyncHandler(async (req, res) => {
+const updateCart = asyncHandler(async (req, res) => {
   const { productId, quantity } = req.body;
   const userId = req.session.user;
 
@@ -76,7 +76,7 @@ exports.updateCart = asyncHandler(async (req, res) => {
   res.json(cart);
 });
 
-exports.deleteItemFromCart = asyncHandler(async (req, res) => {
+const deleteItemFromCart = asyncHandler(async (req, res) => {
   const productId = req.params.id;
   const userId = req.session.user;
 
@@ -92,3 +92,11 @@ exports.deleteItemFromCart = asyncHandler(async (req, res) => {
       .json({ message: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 });
+
+module.exports = {
+  getCart,
+  getCartItemID,
+  addToCart,
+  updateCart,
+  deleteItemFromCart,
+};

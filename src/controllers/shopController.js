@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler');
 const productService = require('../services/productService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
-exports.getShop = asyncHandler(async (req, res) => {
+const getShop = asyncHandler(async (req, res) => {
   const category = '';
   const minPrice = 200;
   const maxPrice = 5000;
@@ -29,7 +29,7 @@ exports.getShop = asyncHandler(async (req, res) => {
   });
 });
 
-exports.filterShop = asyncHandler(async (req, res) => {
+const filterShop = asyncHandler(async (req, res) => {
   const sortBy = req.body.sort;
   const { category } = req.body;
   const minPrice = parseFloat(req.body.minPrice) || 0;
@@ -56,7 +56,7 @@ exports.filterShop = asyncHandler(async (req, res) => {
   });
 });
 
-exports.getProduct = asyncHandler(async (req, res) => {
+const getProduct = asyncHandler(async (req, res) => {
   const details = await productService.getProductDetails(req.params.id);
 
   if (!details) {
@@ -76,7 +76,7 @@ exports.getProduct = asyncHandler(async (req, res) => {
   });
 });
 
-exports.getStock = asyncHandler(async (req, res) => {
+const getStock = asyncHandler(async (req, res) => {
   try {
     const { productId } = req.query;
     if (!productId) {
@@ -101,7 +101,7 @@ exports.getStock = asyncHandler(async (req, res) => {
   }
 });
 
-exports.getWishList = asyncHandler(async (req, res) => {
+const getWishList = asyncHandler(async (req, res) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -141,7 +141,7 @@ exports.getWishList = asyncHandler(async (req, res) => {
   }
 });
 
-exports.addToWishlist = asyncHandler(async (req, res) => {
+const addToWishlist = asyncHandler(async (req, res) => {
   const productId = req.params.id;
   const userId = req.session.user;
 
@@ -176,7 +176,7 @@ exports.addToWishlist = asyncHandler(async (req, res) => {
   }
 });
 
-exports.removeWishlist = asyncHandler(async (req, res) => {
+const removeWishlist = asyncHandler(async (req, res) => {
   try {
     const userId = req.session.user;
     const productId = req.params.id;
@@ -206,7 +206,7 @@ exports.removeWishlist = asyncHandler(async (req, res) => {
   }
 });
 
-exports.searchProducts = async (req, res) => {
+const searchProducts = async (req, res) => {
   const query = req.query.query || '';
   try {
     const products = await productService.searchProducts(query);
@@ -217,4 +217,15 @@ exports.searchProducts = async (req, res) => {
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: RESPONSE_MESSAGES.ERROR_FETCHING_PRODUCTS });
   }
+};
+
+module.exports = {
+  getShop,
+  filterShop,
+  getProduct,
+  getStock,
+  getWishList,
+  addToWishlist,
+  removeWishlist,
+  searchProducts,
 };

@@ -4,18 +4,8 @@ const router = express.Router();
 const passport = require('passport');
 const userAuth = require('../middleware/userAuth');
 const User = require('../models/userModel');
+const authController = require('../controllers/authController');
 require('../services/passport');
-
-const {
-  sendOtp,
-  loginUser,
-  logoutUser,
-  verifyAndSignUp,
-  resendOtp,
-  successGoogleLogin,
-  failureGoogleLogin,
-  resetPassword,
-} = require('../controllers/authController');
 
 router.use(passport.initialize());
 router.use(passport.session());
@@ -38,10 +28,10 @@ router.get(
 );
 
 // Success
-router.get('/success', successGoogleLogin);
+router.get('/success', authController.successGoogleLogin);
 
 // failure
-router.get('/failure', failureGoogleLogin);
+router.get('/failure', authController.failureGoogleLogin);
 
 router.get('/', (req, res) => {
   res.render('layout', {
@@ -66,11 +56,11 @@ router.get('/signup', (req, res) => {
   });
 });
 
-router.post('/signup', sendOtp);
+router.post('/signup', authController.sendOtp);
 
-router.get('/signup/resend-otp', resendOtp);
+router.get('/signup/resend-otp', authController.resendOtp);
 
-router.post('/verify-otp', verifyAndSignUp);
+router.post('/verify-otp', authController.verifyAndSignUp);
 
 router.get('/login', (req, res) => {
   if (req.session.user) {
@@ -85,7 +75,7 @@ router.get('/login', (req, res) => {
   });
 });
 
-router.post('/login', loginUser);
+router.post('/login', authController.loginUser);
 
 router.get('/login/forgot-password', (req, res) => {
   res.render('layout', {
@@ -118,8 +108,8 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-router.post('/login/reset-password', resetPassword);
+router.post('/login/reset-password', authController.resetPassword);
 
-router.post('/logout', userAuth, logoutUser);
+router.post('/logout', userAuth, authController.logoutUser);
 
 module.exports = router;

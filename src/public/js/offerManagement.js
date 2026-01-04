@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function fetchOptions(offerType) {
     const url =
       offerType === 'product'
-        ? '/admin/offer/products'
+        ? '/admin/offers/products'
         : offerType === 'category'
-          ? '/admin/offer/categories'
+          ? '/admin/offers/categories'
           : null;
 
     if (url) {
@@ -117,7 +117,7 @@ function addOffer() {
         : undefined,
   };
 
-  fetch('/admin/offer', {
+  fetch('/admin/offers', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ function updateOffer(offerId) {
     minCartValue,
   };
 
-  fetch(`/admin/offer/update/${offerId}`, {
+  fetch(`/admin/offers/update/${offerId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -244,7 +244,7 @@ function deleteOffer(offerId) {
   })
     .then((result) => {
       if (result.isConfirmed) {
-        fetch(`/admin/offer/delete/${offerId}`, {
+        fetch(`/admin/offers/delete/${offerId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -285,7 +285,7 @@ function deleteOffer(offerId) {
 
 async function toggleOfferStatus(offerId) {
   try {
-    const response = await fetch(`/admin/offer/toggle/${offerId}`, {
+    const response = await fetch(`/admin/offers/toggle/${offerId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

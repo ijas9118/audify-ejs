@@ -1,50 +1,34 @@
 const express = require('express');
 
 const router = express.Router();
-
 const userAuth = require('../middleware/userAuth');
-const {
-  getCart,
-  updateCart,
-  addToCart,
-  deleteItemFromCart,
-  getCartItemID,
-} = require('../controllers/cartController');
-const {
-  getShop,
-  filterShop,
-  getProduct,
-  getStock,
-  addToWishlist,
-  getWishList,
-  removeWishlist,
-  searchProducts,
-} = require('../controllers/shopController');
+const cartController = require('../controllers/cartController');
+const shopController = require('../controllers/shopController');
 
-router.get('/', getShop);
+router.get('/', shopController.getShop);
 
-router.post('/', filterShop);
+router.post('/filter', shopController.filterShop);
 
-router.get('/search-products', searchProducts);
+router.get('/product/:id', shopController.getProduct);
 
-router.get('/cart', userAuth, getCart);
+router.get('/cart', userAuth, cartController.getCart);
 
-router.get('/cart-item-id', userAuth, getCartItemID);
+router.get('/stock', shopController.getStock);
 
-router.post('/cart/updateQuantity', userAuth, updateCart);
+router.post('/cart/update', userAuth, cartController.updateCart);
 
-router.get('/cart/:id', userAuth, addToCart);
+router.post('/cart/add/:id', userAuth, cartController.addToCart);
 
-router.delete('/cart/:id', userAuth, deleteItemFromCart);
+router.get('/cart/get-cart-item', userAuth, cartController.getCartItemID);
 
-// Wishlist
-router.post('/wishlist/add/:id', userAuth, addToWishlist);
-router.get('/wishlist', userAuth, getWishList);
-router.get('/wishlist/remove/:id', userAuth, removeWishlist);
+router.delete('/cart/delete/:id', userAuth, cartController.deleteItemFromCart);
 
-// Get the stock of a product
-router.get('/stock', userAuth, getStock);
+router.get('/wishlist', userAuth, shopController.getWishList);
 
-router.get('/:id', getProduct);
+router.post('/wishlist/add/:id', userAuth, shopController.addToWishlist);
+
+router.delete('/wishlist/delete/:id', userAuth, shopController.removeWishlist);
+
+router.get('/search', shopController.searchProducts);
 
 module.exports = router;

@@ -2,90 +2,49 @@ const express = require('express');
 
 const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
+const adminController = require('../controllers/adminController');
 
-const {
-  loginAdmin,
-  logoutAdmin,
-  getUsers,
-  getOrders,
-  getCoupons,
-  getOffers,
-  getDeals,
-  getAdminHome,
-  getAdminLogin,
-  toggleUserStatus,
-  updateOrderStatus,
-  viewOrder,
-  addOffer,
-  updateOffer,
-  deleteOffer,
-  addCoupon,
-  updateCoupon,
-  deleteCoupon,
-  getSalesReport,
-  getSalesData,
-  getBestSellers,
-  toggleCouponStatus,
-  toggleOfferStatus,
-  getOfferCategories,
-  getOfferProducts,
-} = require('../controllers/adminController');
-const categoryRoutes = require('./categoryRoutes');
-const productRoutes = require('./productRoutes');
+// Admininistrator Login
+router.get('/login', adminController.getAdminLogin);
+router.post('/login', adminController.loginAdmin);
+router.post('/logout', adminAuth, adminController.logoutAdmin);
 
-// Admin Home Route
-router.get('/', adminAuth, getAdminHome);
-router.post('/sales-report', adminAuth, getSalesReport);
-router.get('/sales-data', adminAuth, getSalesData);
-router.get('/best-sellers', getBestSellers);
+// Admin Dashboard
+router.get('/', adminAuth, adminController.getAdminHome);
+router.get('/sales-data', adminAuth, adminController.getSalesData);
+router.get('/best-sellers', adminAuth, adminController.getBestSellers);
 
-// Admin Authentication Routes
-// Admin Login Route
-router.route('/login').get(getAdminLogin).post(loginAdmin);
-// Admin Logout Route
-router.post('/logout', adminAuth, logoutAdmin);
+// User Management
+router.get('/users', adminAuth, adminController.getUsers);
+router.get('/users/toggle/:id', adminAuth, adminController.toggleUserStatus);
 
-// User Management Routes
-router.get('/users', adminAuth, getUsers);
+// Order Management
+router.get('/orders', adminAuth, adminController.getOrders);
+router.post('/orders/update/:id', adminAuth, adminController.updateOrderStatus);
+router.get('/orders/:id', adminAuth, adminController.viewOrder);
+router.post('/sales-report', adminAuth, adminController.getSalesReport);
 
-// User status toggle
-router.post('/users/toggle-status/:id', adminAuth, toggleUserStatus);
+// Coupon Management
+router.get('/coupons', adminAuth, adminController.getCoupons);
+router.post('/coupons', adminAuth, adminController.addCoupon);
+router.post('/coupons/edit/:id', adminAuth, adminController.updateCoupon);
+router.delete('/coupons/:id', adminAuth, adminController.deleteCoupon);
+router.post(
+  '/coupons/toggle/:id',
+  adminAuth,
+  adminController.toggleCouponStatus
+);
 
-// Product Management Route
-router.use('/products', productRoutes);
+// Offer Management
+router.get('/offers', adminAuth, adminController.getOffers);
+router.post('/offers', adminAuth, adminController.addOffer);
+router.post('/offers/edit/:id', adminAuth, adminController.updateOffer);
+router.delete('/offers/:id', adminAuth, adminController.deleteOffer);
+router.post('/offers/toggle/:id', adminAuth, adminController.toggleOfferStatus);
+router.get('/offer-categories', adminAuth, adminController.getOfferCategories);
+router.get('/offer-products', adminAuth, adminController.getOfferProducts);
 
-// Order Management Route
-router.get('/orders', adminAuth, getOrders);
-router.post('/orders/update-status/:id', adminAuth, updateOrderStatus);
-router.get('/orders/view/:id', adminAuth, viewOrder);
-
-// Category Management Route
-router.use('/category', categoryRoutes);
-
-// Coupon Management Route
-router.get('/coupon', adminAuth, getCoupons);
-
-router.post('/coupon/add', adminAuth, addCoupon);
-
-router.post('/coupon/update/:id', adminAuth, updateCoupon);
-
-router.delete('/coupon/delete/:id', adminAuth, deleteCoupon);
-
-router.put('/coupon/toggle-status/:id', adminAuth, toggleCouponStatus);
-
-// Offer Management Route
-router.get('/offer', adminAuth, getOffers);
-router.post('/offer', adminAuth, addOffer);
-router.get('/offer/categories', getOfferCategories);
-router.get('/offer/products', getOfferProducts);
-
-router.post('/offer/update/:id', adminAuth, updateOffer);
-
-router.delete('/offer/delete/:id', adminAuth, deleteOffer);
-
-router.put('/offer/toggle/:id', adminAuth, toggleOfferStatus);
-
-// Deal Management Route
-router.get('/deal', adminAuth, getDeals);
+// Deal  Management
+router.get('/deals', adminAuth, adminController.getDeals);
 
 module.exports = router;

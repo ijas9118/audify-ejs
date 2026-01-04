@@ -1,6 +1,6 @@
 const app = require('./app');
 const connectDB = require('./config/db');
-require('./config/validateEnv'); // Validate env vars
+require('./config/validateEnv');
 
 const PORT = process.env.PORT || 3000;
 connectDB();

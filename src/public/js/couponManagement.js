@@ -51,7 +51,7 @@ document
     };
 
     try {
-      const response = await fetch('/admin/coupon/add', {
+      const response = await fetch('/admin/coupons/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ async function updateCoupon(couponId) {
   };
 
   try {
-    const response = await fetch(`/admin/coupon/update/${couponId}`, {
+    const response = await fetch(`/admin/coupons/update/${couponId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ async function deleteCoupon(couponId) {
   }
 
   try {
-    const response = await fetch(`/admin/coupon/delete/${couponId}`, {
+    const response = await fetch(`/admin/coupons/delete/${couponId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -275,7 +275,7 @@ async function deleteCoupon(couponId) {
 
 async function toggleCouponStatus(couponId) {
   try {
-    const response = await fetch(`/admin/coupon/toggle-status/${couponId}`, {
+    const response = await fetch(`/admin/coupons/toggle-status/${couponId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

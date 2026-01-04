@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler');
 const authService = require('../services/authService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
-exports.successGoogleLogin = async (req, res) => {
+const successGoogleLogin = async (req, res) => {
   if (!req.user) res.redirect('/failure');
   try {
     const user = await authService.handleGoogleLogin(req.user);
@@ -14,11 +14,11 @@ exports.successGoogleLogin = async (req, res) => {
   }
 };
 
-exports.failureGoogleLogin = (req, res) => {
+const failureGoogleLogin = (req, res) => {
   res.send('Error');
 };
 
-exports.sendOtp = asyncHandler(async (req, res) => {
+const sendOtp = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   const findUser = await authService.findUserByEmail(email);
 
@@ -52,7 +52,7 @@ exports.sendOtp = asyncHandler(async (req, res) => {
   }
 });
 
-exports.resendOtp = asyncHandler(async (req, res) => {
+const resendOtp = asyncHandler(async (req, res) => {
   const { email } = req.session.tempUser;
   if (!email) {
     return res
@@ -68,7 +68,7 @@ exports.resendOtp = asyncHandler(async (req, res) => {
   res.json({ message: RESPONSE_MESSAGES.OTP_RESENT });
 });
 
-exports.verifyAndSignUp = asyncHandler(async (req, res) => {
+const verifyAndSignUp = asyncHandler(async (req, res) => {
   const { otp } = req.body;
 
   if (req.session.otp && req.session.otpExpiry > Date.now()) {
@@ -111,7 +111,7 @@ exports.verifyAndSignUp = asyncHandler(async (req, res) => {
   }
 });
 
-exports.loginUser = asyncHandler(async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const findUser = await authService.findUserByEmail(email);
 
@@ -134,7 +134,7 @@ exports.loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-exports.logoutUser = asyncHandler(async (req, res) => {
+const logoutUser = asyncHandler(async (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res
@@ -145,7 +145,7 @@ exports.logoutUser = asyncHandler(async (req, res) => {
   });
 });
 
-exports.updatePassword = asyncHandler(async (req, res) => {
+const updatePassword = asyncHandler(async (req, res) => {
   const { newPassword } = req.body;
   const userId = req.session.user;
 
@@ -162,7 +162,7 @@ exports.updatePassword = asyncHandler(async (req, res) => {
   }
 });
 
-exports.resetPassword = asyncHandler(async (req, res) => {
+const resetPassword = asyncHandler(async (req, res) => {
   const { newPassword, confirmPassword } = req.body;
   const { email } = req.session;
 
@@ -190,3 +190,15 @@ exports.resetPassword = asyncHandler(async (req, res) => {
       .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
   }
 });
+
+module.exports = {
+  successGoogleLogin,
+  failureGoogleLogin,
+  sendOtp,
+  resendOtp,
+  verifyAndSignUp,
+  loginUser,
+  logoutUser,
+  updatePassword,
+  resetPassword,
+};

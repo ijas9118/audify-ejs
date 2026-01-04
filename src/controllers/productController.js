@@ -5,7 +5,7 @@ const cloudinary = require('../config/cloudinary');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 // Render Product Management Page
-exports.getProducts = asyncHandler(async (req, res) => {
+const getProducts = asyncHandler(async (req, res) => {
   const categories = await Category.find();
   const products = await Product.aggregate([
     {
@@ -32,7 +32,7 @@ exports.getProducts = asyncHandler(async (req, res) => {
 });
 
 // Add new product
-exports.addProduct = asyncHandler(async (req, res) => {
+const addProduct = asyncHandler(async (req, res) => {
   const { name, description, price, categoryId, stock } = req.body;
 
   const mainImageFile = req.files.mainImage ? req.files.mainImage[0] : null;
@@ -117,7 +117,7 @@ exports.addProduct = asyncHandler(async (req, res) => {
 });
 
 // Unlist Product
-exports.toggleProductStatus = asyncHandler(async (req, res) => {
+const toggleProductStatus = asyncHandler(async (req, res) => {
   const productId = req.params.id;
 
   // Find the product by ID
@@ -139,7 +139,7 @@ exports.toggleProductStatus = asyncHandler(async (req, res) => {
 });
 
 // Get product for editing
-exports.getProductById = asyncHandler(async (req, res) => {
+const getProductById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   // Fetch product details
@@ -164,7 +164,7 @@ exports.getProductById = asyncHandler(async (req, res) => {
 });
 
 // Update product
-exports.updateProduct = asyncHandler(async (req, res) => {
+const updateProduct = asyncHandler(async (req, res) => {
   const { name, price, categoryId, stock, description } = req.body;
   const productId = req.params.id;
 
@@ -239,3 +239,11 @@ exports.updateProduct = asyncHandler(async (req, res) => {
 
   res.redirect('/admin/products/');
 });
+
+module.exports = {
+  getProducts,
+  addProduct,
+  toggleProductStatus,
+  getProductById,
+  updateProduct,
+};

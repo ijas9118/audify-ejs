@@ -2,27 +2,18 @@ const express = require('express');
 
 const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
-const {
-  getCategory,
-  toggleCategoryStatus,
-  deleteCategory,
-  addCategory,
-  updateCategory,
-} = require('../controllers/categoryController');
+const categoryController = require('../controllers/categoryController');
 
-// Get all categories
-router.get('/', adminAuth, getCategory);
+router.get('/', adminAuth, categoryController.getCategory);
 
-// Add a new category
-router.post('/', adminAuth, addCategory);
+router.post('/', adminAuth, categoryController.addCategory);
 
-// Toggle category status
-router.post('/toggle-status/:id', adminAuth, toggleCategoryStatus);
+router.get('/toggle/:id', adminAuth, categoryController.toggleCategoryStatus);
 
-// Delete a category
-router.post('/delete/:id', adminAuth, deleteCategory);
+router.delete('/:id', adminAuth, categoryController.deleteCategory);
 
-// Update a category
-router.post('/edit/:id', adminAuth, updateCategory);
+router.get('/edit/:id', adminAuth, categoryController.getCategoryDetail);
+
+router.post('/edit/:id', adminAuth, categoryController.updateCategory);
 
 module.exports = router;

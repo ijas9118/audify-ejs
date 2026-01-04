@@ -2,35 +2,25 @@ const express = require('express');
 
 const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
+const productController = require('../controllers/productController');
 const upload = require('../middleware/multer');
-const {
-  addProduct,
-  toggleProductStatus,
-  getProducts,
-  getProductById,
-  updateProduct,
-} = require('../controllers/productController');
 
-// Product Management Route
-router.get('/', adminAuth, getProducts);
+router.get('/', adminAuth, productController.getProducts);
 
-// Add new product
 router.post(
-  '/add',
+  '/',
   adminAuth,
   upload.fields([
     { name: 'mainImage', maxCount: 1 },
     { name: 'supportImages', maxCount: 2 },
   ]),
-  addProduct
+  productController.addProduct
 );
 
-router.post('/toggle-status/:id', adminAuth, toggleProductStatus);
+router.get('/toggle/:id', adminAuth, productController.toggleProductStatus);
 
-// Get product details for editing
-router.get('/edit/:id', adminAuth, getProductById);
+router.get('/edit/:id', adminAuth, productController.getProductById);
 
-// Update product details
 router.post(
   '/edit/:id',
   adminAuth,
@@ -38,7 +28,7 @@ router.post(
     { name: 'mainImage', maxCount: 1 },
     { name: 'supportImages', maxCount: 2 },
   ]),
-  updateProduct
+  productController.updateProduct
 );
 
 module.exports = router;
