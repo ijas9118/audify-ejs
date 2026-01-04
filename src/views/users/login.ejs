@@ -7,10 +7,31 @@
       <div class="form-container">
         <h2>Login to Audify</h2>
         <p class="mb-4">Enter your details below to access your account.</p>
+        
+        <%# Display all validation errors in an alert %>
+        <% if (typeof errors !== 'undefined' && errors && errors.length > 0) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Please fix the following errors:</strong>
+            <ul class="mb-0 mt-2">
+              <% errors.forEach(error => { %>
+                <li><%= error.msg %></li>
+              <% }) %>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+        
         <form id="loginForm">
           <div class="mb-4">
             <label for="email" class="form-label">Email address</label>
-            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" />
+            <input 
+              type="email" 
+              class="form-control" 
+              id="email" 
+              name="email" 
+              placeholder="Enter your email"
+              value="<%= typeof formData !== 'undefined' && formData ? (formData.user || formData.email || '') : '' %>"
+            />
           </div>
           <div class="mb-4">
             <label for="password" class="form-label">Password</label>

@@ -5,6 +5,11 @@ const passport = require('passport');
 const userAuth = require('../middleware/userAuth');
 const User = require('../models/userModel');
 const authController = require('../controllers/authController');
+const {
+  signupValidation,
+  loginValidation,
+  validate,
+} = require('../middleware/validators/authValidator');
 require('../services/passport');
 
 router.use(passport.initialize());
@@ -56,7 +61,7 @@ router.get('/signup', (req, res) => {
   });
 });
 
-router.post('/signup', authController.sendOtp);
+router.post('/signup', signupValidation, validate, authController.sendOtp);
 
 router.get('/signup/resend-otp', authController.resendOtp);
 
@@ -75,7 +80,7 @@ router.get('/login', (req, res) => {
   });
 });
 
-router.post('/login', authController.loginUser);
+router.post('/login', loginValidation, validate, authController.loginUser);
 
 router.get('/login/forgot-password', (req, res) => {
   res.render('layout', {

@@ -4,6 +4,10 @@ const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
 const productController = require('../controllers/productController');
 const upload = require('../middleware/multer');
+const {
+  productValidation,
+  validate,
+} = require('../middleware/validators/adminValidator');
 
 router.get('/', adminAuth, productController.getProducts);
 
@@ -14,6 +18,8 @@ router.post(
     { name: 'mainImage', maxCount: 1 },
     { name: 'supportImages', maxCount: 2 },
   ]),
+  productValidation,
+  validate,
   productController.addProduct
 );
 
@@ -28,6 +34,8 @@ router.post(
     { name: 'mainImage', maxCount: 1 },
     { name: 'supportImages', maxCount: 2 },
   ]),
+  productValidation,
+  validate,
   productController.updateProduct
 );
 

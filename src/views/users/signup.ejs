@@ -11,6 +11,20 @@
       <div class="bg-light p-4 rounded shadow-sm">
         <h2 class="mb-4">Create an account</h2>
         <p class="text-muted mb-4">Enter your details below</p>
+        
+        <%# Display all validation errors in an alert %>
+        <% if (typeof errors !== 'undefined' && errors && errors.length > 0) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Please fix the following errors:</strong>
+            <ul class="mb-0 mt-2">
+              <% errors.forEach(error => { %>
+                <li><%= error.msg %></li>
+              <% }) %>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+        
         <form id="signupForm" action="/signup" method="POST">
           <div class="mb-3">
             <input
@@ -19,6 +33,7 @@
               id="firstname"
               name="firstName"
               placeholder="First Name"
+              value="<%= typeof formData !== 'undefined' && formData ? (formData.firstName || '') : '' %>"
             />
              <div id="firstnameError" class="text-danger mt-2 alert alert-danger" style="display: none;"></div>
           </div>
@@ -29,6 +44,7 @@
               id="lastname"
               name="lastName"
               placeholder="Last Name"
+              value="<%= typeof formData !== 'undefined' && formData ? (formData.lastName || '') : '' %>"
             />
             <div id="lastnameError" class="text-danger mt-2 alert alert-danger" style="display: none;"></div>
           </div>
@@ -39,6 +55,7 @@
               id="email"
               name="email"
               placeholder="Email"
+              value="<%= typeof formData !== 'undefined' && formData ? (formData.email || '') : '' %>"
             />
             <div id="emailError" class="text-danger mt-2 alert alert-danger" style="display: none;"></div>
           </div>

@@ -25,6 +25,7 @@ document
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           name: categoryName,
@@ -33,6 +34,19 @@ document
       });
 
       const result = await response.json();
+
+      // Handle validation errors (400 status)
+      if (response.status === 400 && result.errors) {
+        // Display validation errors
+        const errorMessages = result.errors.map((err) => err.msg).join('<br>');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Validation Error',
+          html: errorMessages,
+        });
+        return;
+      }
+
       if (response.ok) {
         await Toast.fire({
           icon: 'success',
@@ -48,7 +62,7 @@ document
       } else {
         Toast.fire({
           icon: 'error',
-          title: result.message,
+          title: result.message || 'An error occurred',
         });
       }
     } catch (error) {
@@ -89,18 +103,24 @@ async function handleCategoryUpdate(categoryId) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-      Toast.fire({
-        icon: 'error',
-        title: 'An error occurred while updating the category.',
-      });
-    }
-
     const result = await response.json();
+
+    // Handle validation errors (400 status)
+    if (response.status === 400 && result.errors) {
+      // Display validation errors
+      const errorMessages = result.errors.map((err) => err.msg).join('<br>');
+      await Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        html: errorMessages,
+      });
+      return;
+    }
 
     if (response.ok) {
       await Toast.fire({
@@ -115,7 +135,8 @@ async function handleCategoryUpdate(categoryId) {
     } else {
       Toast.fire({
         icon: 'error',
-        title: result.message,
+        title:
+          result.message || 'An error occurred while updating the category.',
       });
     }
   } catch (error) {
@@ -146,7 +167,7 @@ async function handleCategoryDelete(categoryId) {
 
   try {
     const response = await fetch(`/admin/category/delete/${categoryId}`, {
-      method: 'POST',
+      method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },

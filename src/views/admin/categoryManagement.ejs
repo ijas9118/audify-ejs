@@ -102,7 +102,6 @@
               class="form-control custom-search-input"
               id="categoryName"
               name="name"
-              required
             />
           </div>
           <div class="mb-3">
@@ -148,8 +147,7 @@
               class="form-control custom-search-input"
               id="categoryName<%= category._id %>"
               name="name"
-              value="<%= category.name %>"
-              required
+              value="<%= category.name %>"         
             />
           </div>
           <div class="mb-3">
@@ -159,7 +157,7 @@
               id="categoryDescription<%= category._id %>"
               name="description"
               rows="2"
-              required
+              
             ><%= category.description %></textarea>
           </div>
           <button type="button" class="btn btn-primary" onclick="handleCategoryUpdate('<%= category._id %>')">Update category</button>

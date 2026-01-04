@@ -10,6 +10,10 @@ const orderManagementController = require('../controllers/admin/orderManagementC
 const couponManagementController = require('../controllers/admin/couponManagementController');
 const offerManagementController = require('../controllers/admin/offerManagementController');
 const salesReportController = require('../controllers/admin/salesReportController');
+const {
+  couponValidation,
+  validate,
+} = require('../middleware/validators/adminValidator');
 
 // ============================
 // Admin Authentication Routes
@@ -51,10 +55,18 @@ router.post('/sales-report', adminAuth, salesReportController.getSalesReport);
 // Coupon Management Routes
 // ============================
 router.get('/coupons', adminAuth, couponManagementController.getCoupons);
-router.post('/coupons', adminAuth, couponManagementController.addCoupon);
+router.post(
+  '/coupons',
+  adminAuth,
+  couponValidation,
+  validate,
+  couponManagementController.addCoupon
+);
 router.post(
   '/coupons/edit/:id',
   adminAuth,
+  couponValidation,
+  validate,
   couponManagementController.updateCoupon
 );
 router.delete(

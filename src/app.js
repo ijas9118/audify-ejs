@@ -3,6 +3,7 @@ const path = require('node:path');
 const session = require('express-session');
 const cors = require('cors');
 require('dotenv').config();
+const xss = require('xss-clean');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const routes = require('./routes');
 
@@ -12,6 +13,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// XSS Protection - Sanitize user input
+app.use(xss());
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 
