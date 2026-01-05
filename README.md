@@ -46,13 +46,13 @@ Audify follows a **Layered MVC Architecture** with clear separation of concerns,
 graph TD
     %% Client Layer
     Client[🌐 Client Browser] -->|HTTP Requests| Router[Express Router]
-    
+
     %% Routing Layer
     Router --> UserRoutes[User Routes]
     Router --> AdminRoutes[Admin Routes]
     Router --> ShopRoutes[Shop Routes]
     Router --> CheckoutRoutes[Checkout Routes]
-    
+
     %% Middleware Layer
     subgraph Middleware ["🛡️ Middleware Layer"]
         direction TB
@@ -62,12 +62,12 @@ graph TD
         ErrorHandler[Error Handler]
         XSS[XSS Protection]
     end
-    
+
     UserRoutes --> Middleware
     AdminRoutes --> Middleware
     ShopRoutes --> Middleware
     CheckoutRoutes --> Middleware
-    
+
     %% Controller Layer
     subgraph Controllers ["🎮 Controller Layer"]
         direction TB
@@ -79,9 +79,9 @@ graph TD
         PaymentCtrl[Payment Controller]
         AdminCtrl[Admin Controllers]
     end
-    
+
     Middleware --> Controllers
-    
+
     %% Service Layer
     subgraph Services ["⚙️ Service Layer"]
         direction TB
@@ -93,9 +93,9 @@ graph TD
         PaymentService[Payment Service]
         UploadService[Upload Service]
     end
-    
+
     Controllers --> Services
-    
+
     %% Data Layer
     subgraph DataLayer ["💾 Data Access Layer"]
         direction TB
@@ -105,9 +105,9 @@ graph TD
         CartModel[(Cart Model)]
         CouponModel[(Coupon Model)]
     end
-    
+
     Services --> DataLayer
-    
+
     %% External Services
     subgraph External ["🔌 External Services"]
         direction TB
@@ -117,13 +117,13 @@ graph TD
         GoogleAuth[Google OAuth2]
         EmailService[Nodemailer]
     end
-    
+
     DataLayer --> MongoDB
     UploadService -.->|Image Upload| Cloudinary
     PaymentService -.->|Payment| Razorpay
     AuthService -.->|OAuth| GoogleAuth
     AuthService -.->|Notifications| EmailService
-    
+
     %% Styling
     classDef default fill:none,stroke:#30363d,stroke-width:1px,color:#c9d1d9;
     classDef client fill:#388bfd26,stroke:#388bfd,stroke-width:2px,color:#c9d1d9,rx:5,ry:5;
@@ -132,14 +132,14 @@ graph TD
     classDef service fill:#d2992226,stroke:#d29922,stroke-width:2px,color:#c9d1d9,rx:5,ry:5;
     classDef data fill:#f8514926,stroke:#f85149,stroke-width:2px,color:#c9d1d9,rx:5,ry:5;
     classDef external fill:#9e6a0326,stroke:#9e6a03,stroke-width:2px,color:#c9d1d9,rx:5,ry:5;
-    
+
     class Client client;
     class Router,UserRoutes,AdminRoutes,ShopRoutes,CheckoutRoutes routing;
     class AuthCtrl,ProductCtrl,CartCtrl,OrderCtrl,CouponCtrl,PaymentCtrl,AdminCtrl controller;
     class AuthService,ProductService,CartService,OrderService,CouponService,PaymentService,UploadService service;
     class UserModel,ProductModel,OrderModel,CartModel,CouponModel data;
     class MongoDB,Cloudinary,Razorpay,GoogleAuth,EmailService external;
-    
+
     style Middleware fill:#1b1e23ff,stroke:#388bfd,stroke-width:2px,rx:10,ry:10
     style Controllers fill:#1b1e23ff,stroke:#2ea043,stroke-width:2px,rx:10,ry:10
     style Services fill:#1b1e23ff,stroke:#d29922,stroke-width:2px,rx:10,ry:10
@@ -160,36 +160,38 @@ graph TD
 
 ### Backend
 
-| Category            | Technology                                                                                                       | Description                                    |
-| :------------------ | :--------------------------------------------------------------------------------------------------------------- | :--------------------------------------------- |
-| **Runtime**         | ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)        | JavaScript runtime environment                 |
-| **Framework**       | ![Express](https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white)       | Fast, minimalist web framework for Node.js     |
-| **Database**        | ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=flat-square&logo=mongodb&logoColor=white)          | NoSQL document database                        |
-| **ODM**             | **Mongoose**                                                                                                     | Elegant MongoDB object modeling for Node.js    |
-| **Template Engine** | ![EJS](https://img.shields.io/badge/EJS-B4CA65?style=flat-square&logo=ejs&logoColor=black)                      | Embedded JavaScript templating                 |
-| **Authentication**  | **Passport.js** + **Google OAuth2**                                                                              | Authentication middleware with OAuth support   |
-| **Session**         | **express-session**                                                                                              | Session management middleware                  |
-| **Security**        | **bcrypt** + **xss-clean**                                                                                       | Password hashing and XSS protection            |
+| Category            | Technology                                                                                                | Description                                  |
+| :------------------ | :-------------------------------------------------------------------------------------------------------- | :------------------------------------------- |
+| **Runtime**         | ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)  | JavaScript runtime environment               |
+| **Framework**       | ![Express](https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white) | Fast, minimalist web framework for Node.js   |
+| **Database**        | ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=flat-square&logo=mongodb&logoColor=white)    | NoSQL document database                      |
+| **ODM**             | **Mongoose**                                                                                              | Elegant MongoDB object modeling for Node.js  |
+| **Template Engine** | ![EJS](https://img.shields.io/badge/EJS-B4CA65?style=flat-square&logo=ejs&logoColor=black)                | Embedded JavaScript templating               |
+| **Authentication**  | **Passport.js** + **Google OAuth2**                                                                       | Authentication middleware with OAuth support |
+| **Session**         | **express-session**                                                                                       | Session management middleware                |
+| **Security**        | **bcrypt** + **xss-clean**                                                                                | Password hashing and XSS protection          |
 
 ### Third-Party Integrations
 
-| Service              | Technology                                                                                                  | Purpose                             |
-| :------------------- | :---------------------------------------------------------------------------------------------------------- | :---------------------------------- |
-| **Payment Gateway**  | ![Razorpay](https://img.shields.io/badge/Razorpay-0C2451?style=flat-square&logo=razorpay&logoColor=white)  | Secure online payment processing    |
-| **Cloud Storage**    | ![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=flat-square&logo=cloudinary&logoColor=white) | Image upload and CDN                |
-| **Email Service**    | **Nodemailer**                                                                                              | Transactional email delivery        |
-| **PDF Generation**   | **PDFKit** + **jsPDF**                                                                                      | Invoice and report generation       |
+| Service             | Technology                                                                                                      | Purpose                          |
+| :------------------ | :-------------------------------------------------------------------------------------------------------------- | :------------------------------- |
+| **Payment Gateway** | ![Razorpay](https://img.shields.io/badge/Razorpay-0C2451?style=flat-square&logo=razorpay&logoColor=white)       | Secure online payment processing |
+| **Cloud Storage**   | ![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=flat-square&logo=cloudinary&logoColor=white) | Image upload and CDN             |
+| **Email Service**   | **Nodemailer**                                                                                                  | Transactional email delivery     |
+| **PDF Generation**  | **PDFKit** + **jsPDF**                                                                                          | Invoice and report generation    |
 
 ### Development Tools
 
-| Tool                   | Technology              | Purpose                          |
-| :--------------------- | :---------------------- | :------------------------------- |
-| **Linter**             | **ESLint**              | Code quality and style checking  |
-| **Formatter**          | **Prettier**            | Code formatting                  |
-| **Development Server** | **Nodemon**             | Auto-restart on file changes     |
-| **Logger**             | **Winston**             | Application logging              |
-| **Validation**         | **express-validator**   | Request data validation          |
-| **Rate Limiting**      | **express-rate-limit**  | API rate limiting protection     |
+| Tool                   | Technology             | Purpose                          |
+| :--------------------- | :--------------------- | :------------------------------- |
+| **Linter**             | **ESLint**             | Code quality and style checking  |
+| **Formatter**          | **Prettier**           | Code formatting                  |
+| **Development Server** | **Nodemon**            | Auto-restart on file changes     |
+| **Logger**             | **Winston**            | Application logging              |
+| **Validation**         | **express-validator**  | Request data validation          |
+| **Rate Limiting**      | **express-rate-limit** | API rate limiting protection     |
+| **Git Hooks**          | **Husky**              | Automated pre-commit checks      |
+| **Staged Linting**     | **lint-staged**        | Run linters on staged files only |
 
 ---
 
@@ -198,6 +200,7 @@ graph TD
 ### 🛒 Customer Features
 
 #### Authentication & Account Management
+
 - ✅ User registration with email/password
 - ✅ Google OAuth2 social login
 - ✅ Secure password hashing with bcrypt
@@ -206,6 +209,7 @@ graph TD
 - ✅ Profile management with personal details
 
 #### Shopping Experience
+
 - ✅ **Product Browse & Search**: Explore audio products with detailed descriptions
 - ✅ **Product Filtering**: Filter by category, price, and availability
 - ✅ **Wishlist Management**: Save products for later
@@ -214,20 +218,23 @@ graph TD
 - ✅ **Stock Validation**: Real-time stock availability checks
 
 #### Checkout & Payments
+
 - ✅ **Multiple Payment Methods**:
   - Razorpay online payment gateway
   - Digital wallet
   - Cash on Delivery (COD)
 - ✅ **Coupon System**: Apply discount coupons at checkout
 - ✅ **Dynamic Pricing**: Automatic discount and offer calculations
-- ✅ **Order Confirmation**: Email notifications on successful order
+- ✅ **Order Confirmation**: Email notifications on successful order placement
 
 #### Digital Wallet
+
 - ✅ Wallet balance management
 - ✅ Credit/Debit transaction tracking
 - ✅ Transaction history with descriptions
 
 #### Order Management
+
 - ✅ Order tracking with status updates
 - ✅ Order history with detailed information
 - ✅ Order cancellation with automatic refunds to wallet
@@ -236,12 +243,14 @@ graph TD
 ### 🔐 Admin Features
 
 #### Dashboard & Analytics
+
 - ✅ **Sales Dashboard**: Visual sales analytics with Chart.js
 - ✅ **Sales Reports**: Generate reports by day, week, month, year, or custom date range
 - ✅ **Report Export**: Download reports as PDF or Excel
 - ✅ **Revenue Tracking**: Monitor total revenue and order statistics
 
 #### Product Management
+
 - ✅ **CRUD Operations**: Create, Read, Update, Delete products
 - ✅ **Image Management**: Upload product images via Cloudinary
 - ✅ **Stock Management**: Track and update product inventory
@@ -249,20 +258,24 @@ graph TD
 - ✅ **Category Association**: Link products to specific categories
 
 #### Category Management
+
 - ✅ **Category CRUD**: Full category lifecycle management
 - ✅ **Category-based Organization**: Organize products by audio categories
 
 #### Order Management
+
 - ✅ **Order Overview**: View all customer orders
 - ✅ **Status Updates**: Update order status (Pending → Processed → Shipped → Delivered)
 - ✅ **Order Cancellation**: Process order cancellations
 
 #### User Management
+
 - ✅ **User Listing**: View all registered customers
 - ✅ **Account Control**: Block/Unblock user accounts
 - ✅ **User Activity Monitoring**: Track user status and activity
 
 #### Promotions & Marketing
+
 - ✅ **Coupon Management**:
   - Create discount coupons (percentage or fixed amount)
   - Set minimum cart value requirements
@@ -276,6 +289,7 @@ graph TD
   - Dynamic discount calculations
 
 ### 🛡️ Security Features
+
 - ✅ **XSS Protection**: Input sanitization with xss-clean
 - ✅ **Rate Limiting**: Protection against brute-force attacks
 - ✅ **Secure Sessions**: HTTP-only cookies with secure flags
@@ -391,12 +405,14 @@ audify-ejs/
 ### 📦 Installation
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/ijas9118/audify-ejs.git
    cd audify-ejs
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
@@ -410,41 +426,45 @@ audify-ejs/
 
 Copy `.env.example` to `.env` and configure the following variables:
 
-| Variable                  | Description                              | Example                                       |
-| :------------------------ | :--------------------------------------- | :-------------------------------------------- |
-| `MONGO_URI`               | MongoDB connection string                | `mongodb://localhost:27017/audify`            |
-| `PORT`                    | Server port                              | `3000`                                        |
-| `SESSION_SECRET`          | Secret key for session encryption        | Generate with: `openssl rand -base64 32`      |
-| `NODE_ENV`                | Application environment                  | `development` or `production`                 |
-| `CLOUDINARY_CLOUD_NAME`   | Cloudinary cloud name                    | Get from Cloudinary dashboard                 |
-| `CLOUDINARY_API_KEY`      | Cloudinary API key                       | Get from Cloudinary dashboard                 |
-| `CLOUDINARY_API_SECRET`   | Cloudinary API secret                    | Get from Cloudinary dashboard                 |
-| `RAZORPAY_KEY_ID`         | Razorpay key ID for payments             | Get from Razorpay dashboard                   |
-| `RAZORPAY_SECRET`         | Razorpay secret key                      | Get from Razorpay dashboard                   |
-| `GOOGLE_CLIENT_ID`        | Google OAuth2 client ID                  | Get from Google Cloud Console                 |
-| `GOOGLE_CLIENT_SECRET`    | Google OAuth2 client secret              | Get from Google Cloud Console                 |
-| `EMAIL_USER`              | Email address for Nodemailer             | SMTP email address                            |
-| `EMAIL_PASS`              | Email password/app password              | SMTP password                                 |
+| Variable                | Description                       | Example                                  |
+| :---------------------- | :-------------------------------- | :--------------------------------------- |
+| `MONGO_URI`             | MongoDB connection string         | `mongodb://localhost:27017/audify`       |
+| `PORT`                  | Server port                       | `3000`                                   |
+| `SESSION_SECRET`        | Secret key for session encryption | Generate with: `openssl rand -base64 32` |
+| `NODE_ENV`              | Application environment           | `development` or `production`            |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name             | Get from Cloudinary dashboard            |
+| `CLOUDINARY_API_KEY`    | Cloudinary API key                | Get from Cloudinary dashboard            |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret             | Get from Cloudinary dashboard            |
+| `RAZORPAY_KEY_ID`       | Razorpay key ID for payments      | Get from Razorpay dashboard              |
+| `RAZORPAY_SECRET`       | Razorpay secret key               | Get from Razorpay dashboard              |
+| `GOOGLE_CLIENT_ID`      | Google OAuth2 client ID           | Get from Google Cloud Console            |
+| `GOOGLE_CLIENT_SECRET`  | Google OAuth2 client secret       | Get from Google Cloud Console            |
+| `EMAIL_USER`            | Email address for Nodemailer      | SMTP email address                       |
+| `EMAIL_PASS`            | Email password/app password       | SMTP password                            |
 
 ### 🚀 Running the Application
 
 **Development mode** (with auto-restart):
+
 ```bash
 npm run dev
 ```
 
 **Production mode**:
+
 ```bash
 npm start
 ```
 
 **Linting**:
+
 ```bash
 npm run lint        # Check for issues
 npm run lint:fix    # Auto-fix issues
 ```
 
 **Code formatting**:
+
 ```bash
 npm run format
 ```
@@ -468,7 +488,7 @@ graph LR
     Checkout --> Payment[Select Payment]
     Payment --> Order[Order Placed]
     Order --> Track[Track Order]
-    
+
     style Start fill:#388bfd26,stroke:#388bfd
     style Auth fill:#d2992226,stroke:#d29922
     style Order fill:#2386362e,stroke:#2ea043
@@ -485,13 +505,13 @@ graph LR
     Dashboard --> Users[Manage Users]
     Dashboard --> Reports[Sales Reports]
     Dashboard --> Promotions[Coupons & Offers]
-    
+
     Products --> CRUD[Create/Update/Delete]
     Orders --> Status[Update Status]
     Users --> Block[Block/Unblock]
     Reports --> Export[Export PDF/Excel]
     Promotions --> CreateOffer[Create Offers]
-    
+
     style AdminLogin fill:#388bfd26,stroke:#388bfd
     style Dashboard fill:#2386362e,stroke:#2ea043
     style Reports fill:#d2992226,stroke:#d29922

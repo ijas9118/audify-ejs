@@ -77,3 +77,123 @@ exports.resetPassword = async (email, newPassword) => {
   const hashedPassword = await exports.generateHash(newPassword);
   return User.findByIdAndUpdate(user._id, { password: hashedPassword });
 };
+
+/**
+ * Send order confirmation email
+ * @param {Object} orderDetails - Order details object
+ * @param {string} orderDetails.email - User email
+ * @param {string} orderDetails.orderId - Order ID
+ * @param {number} orderDetails.totalAmount - Total order amount
+ * @param {Array} orderDetails.items - Order items array
+ * @param {string} orderDetails.paymentMethod - Payment method used
+ * @param {Object} orderDetails.shippingAddress - Shipping address details
+ * @returns {Promise<void>}
+ */
+exports.sendOrderConfirmationEmail = async (orderDetails) => {
+  const { email, orderId, totalAmount, items, paymentMethod, shippingAddress } =
+    orderDetails;
+
+  if (!process.env.EMAIL_USER) {
+    throw new Error('EMAIL_USER environment variable is not defined');
+  }
+
+  // Build items list for email
+  const itemsList = items
+    .map(
+      (item) =>
+        `<li style="margin-bottom: 10px;">
+          <strong>${item.name}</strong> x ${item.quantity} - ₹${item.price.toFixed(2)}
+        </li>`
+    )
+    .join('');
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .order-details { background-color: white; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        ul { list-style-type: none; padding: 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎧 Audify - Order Confirmation</h1>
+        </div>
+        <div class="content">
+          <h2>Thank you for your order!</h2>
+          <p>Your order has been successfully placed and confirmed.</p>
+          
+          <div class="order-details">
+            <h3>Order Details</h3>
+            <p><strong>Order ID:</strong> #${orderId}</p>
+            <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+            <p><strong>Total Amount:</strong> ₹${totalAmount.toFixed(2)}</p>
+          </div>
+
+          <div class="order-details">
+            <h3>Order Items</h3>
+            <ul>
+              ${itemsList}
+            </ul>
+          </div>
+
+          <div class="order-details">
+            <h3>Shipping Address</h3>
+            <p>
+              ${shippingAddress.name}<br>
+              ${shippingAddress.location}<br>
+              ${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.zip}<br>
+              Mobile: ${shippingAddress.mobile}
+            </p>
+          </div>
+
+          <p>We'll send you a shipping confirmation email as soon as your order ships.</p>
+        </div>
+        <div class="footer">
+          <p>Thank you for shopping with Audify!</p>
+          <p>Made with ❤️ for audio enthusiasts</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+    Order Confirmation - Audify
+
+    Thank you for your order!
+    
+    Order Details:
+    - Order ID: #${orderId}
+    - Payment Method: ${paymentMethod}
+    - Total Amount: ₹${totalAmount.toFixed(2)}
+    
+    Order Items:
+    ${items.map((item) => `- ${item.name} x ${item.quantity} - ₹${item.price.toFixed(2)}`).join('\n')}
+    
+    Shipping Address:
+    ${shippingAddress.name}
+    ${shippingAddress.location}
+    ${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.zip}
+    Mobile: ${shippingAddress.mobile}
+    
+    Thank you for shopping with Audify!
+  `;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: `Order Confirmation - Audify #${orderId}`,
+    text: textContent,
+    html: htmlContent,
+  };
+
+  await transporter.sendMail(mailOptions);
+};

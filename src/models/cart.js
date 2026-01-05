@@ -64,10 +64,19 @@ const cartSchema = new mongoose.Schema(
 );
 
 cartSchema.methods.calculateTotals = function calculateTotals() {
+  // Calculate subtotal of all items
+  const itemsSubtotal = this.items.reduce(
+    (acc, item) => acc + item.subtotal,
+    0
+  );
+
+  // Add shipping charge only if cart has items
   this.total =
-    this.items.reduce((acc, item) => acc + item.subtotal, 0) +
-    (this.items.length === 0 ? 0 : this.shippingCharge);
-  this.finalTotal = this.total + (this.total === 0 ? 0 : this.shippingCharge); // apply discount
+    itemsSubtotal + (this.items.length === 0 ? 0 : this.shippingCharge);
+
+  // Apply discount to get final total (discount is already calculated before this)
+  this.finalTotal = this.total - this.discountApplied;
+
   return this.finalTotal;
 };
 

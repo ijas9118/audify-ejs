@@ -1,6 +1,7 @@
 const Razorpay = require('razorpay');
 const User = require('../models/userModel');
 const Order = require('../models/order');
+const authService = require('./authService');
 
 /**
  * Payment Gateway Integration
@@ -74,7 +75,12 @@ exports.processWalletPayment = async (userId, orderId) => {
     throw new Error('User not found');
   }
 
-  const order = await Order.findById(orderId);
+  const order = await Order.findById(orderId).populate({
+    path: 'orderItems',
+    populate: {
+      path: 'product',
+    },
+  });
   if (!order) {
     throw new Error('Order not found');
   }
@@ -112,6 +118,34 @@ exports.processWalletPayment = async (userId, orderId) => {
   order.status = 'Processed';
   await order.save();
 
+  // Send order confirmation email (non-blocking)
+  try {
+    const items = order.orderItems.map((item) => ({
+      name: item.product.name,
+      quantity: item.quantity,
+      price: item.product.price,
+    }));
+
+    await authService.sendOrderConfirmationEmail({
+      email: user.email,
+      orderId: order._id,
+      totalAmount: order.finalTotal,
+      items,
+      paymentMethod: 'Wallet',
+      shippingAddress: {
+        name: order.name,
+        location: order.location,
+        city: order.city,
+        state: order.state,
+        zip: order.zip,
+        mobile: order.mobile,
+      },
+    });
+  } catch (emailError) {
+    // Log error but don't fail the order
+    console.error('Failed to send order confirmation email:', emailError);
+  }
+
   return order;
 };
 
@@ -126,7 +160,12 @@ exports.processWalletPayment = async (userId, orderId) => {
  * @returns {Promise<Object>} Updated order
  */
 exports.confirmPayment = async (orderId, paymentMethod) => {
-  const order = await Order.findById(orderId);
+  const order = await Order.findById(orderId).populate({
+    path: 'orderItems',
+    populate: {
+      path: 'product',
+    },
+  });
 
   if (!order) {
     throw new Error('Order not found');
@@ -141,6 +180,37 @@ exports.confirmPayment = async (orderId, paymentMethod) => {
   order.paymentMethod = paymentMethod;
   order.status = 'Processed';
   await order.save();
+
+  // Send order confirmation email (non-blocking)
+  try {
+    const user = await User.findById(order.user);
+    if (user) {
+      const items = order.orderItems.map((item) => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.product.price,
+      }));
+
+      await authService.sendOrderConfirmationEmail({
+        email: user.email,
+        orderId: order._id,
+        totalAmount: order.finalTotal,
+        items,
+        paymentMethod,
+        shippingAddress: {
+          name: order.name,
+          location: order.location,
+          city: order.city,
+          state: order.state,
+          zip: order.zip,
+          mobile: order.mobile,
+        },
+      });
+    }
+  } catch (emailError) {
+    // Log error but don't fail the order
+    console.error('Failed to send order confirmation email:', emailError);
+  }
 
   return order;
 };
