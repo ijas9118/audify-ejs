@@ -22,6 +22,8 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src ./src
 COPY package*.json ./
 
+RUN mkdir -p logs && chown -R nodejs:nodejs /app
+
 USER nodejs
 
 EXPOSE 3000
