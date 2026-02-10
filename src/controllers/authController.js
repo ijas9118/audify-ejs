@@ -134,6 +134,24 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+const loginDemoUser = asyncHandler(async (req, res) => {
+  try {
+    const demoUser = await authService.getOrCreateDemoUser();
+    req.session.user = demoUser._id;
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: 'Demo login successful',
+      redirectUrl: '/',
+    });
+  } catch (error) {
+    console.error('Error during demo login:', error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: 'Failed to login with demo account',
+    });
+  }
+});
+
 const logoutUser = asyncHandler(async (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -198,6 +216,7 @@ module.exports = {
   resendOtp,
   verifyAndSignUp,
   loginUser,
+  loginDemoUser,
   logoutUser,
   updatePassword,
   resetPassword,

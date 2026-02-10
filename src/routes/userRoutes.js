@@ -95,6 +95,8 @@ router.post(
   authController.loginUser
 );
 
+router.post('/login/demo', authController.loginDemoUser);
+
 router.get('/login/forgot-password', (req, res) => {
   res.render('layout', {
     title: 'Login',

@@ -79,6 +79,34 @@ exports.resetPassword = async (email, newPassword) => {
 };
 
 /**
+ * Get or create demo user for testing purposes
+ * @returns {Promise<Object>} Demo user object
+ */
+exports.getOrCreateDemoUser = async () => {
+  const demoEmail = process.env.DEMO_USER_EMAIL || 'demo@audify.com';
+  const demoPassword = process.env.DEMO_USER_PASSWORD || 'demo123456';
+
+  // Check if demo user already exists
+  let demoUser = await User.findOne({ email: demoEmail });
+
+  if (!demoUser) {
+    // Create demo user if it doesn't exist
+    const hashedPassword = await exports.generateHash(demoPassword);
+    demoUser = new User({
+      firstName: 'Demo',
+      lastName: 'User',
+      email: demoEmail,
+      password: hashedPassword,
+      status: 'Active',
+      walletBalance: 5000, // Give demo user some wallet balance to test checkout
+    });
+    await demoUser.save();
+  }
+
+  return demoUser;
+};
+
+/**
  * Send order confirmation email
  * @param {Object} orderDetails - Order details object
  * @param {string} orderDetails.email - User email

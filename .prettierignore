@@ -1,0 +1,9 @@
+# Ignore EJS templates (Prettier doesn't have a built-in parser for EJS)
+*.ejs
+
+# Ignore node_modules
+node_modules/
+
+# Ignore build outputs
+dist/
+build/
