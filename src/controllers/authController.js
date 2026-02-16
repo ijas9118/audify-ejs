@@ -4,14 +4,20 @@ const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 const logger = require('../config/logger');
 
 const successGoogleLogin = asyncHandler(async (req, res) => {
-  if (!req.user) res.redirect('/failure');
+  if (!req.user) {
+    return res.redirect('/failure');
+  }
   try {
     const user = await authService.handleGoogleLogin(req.user);
-    req.session.user = user;
-    res.redirect('/');
+    req.session.user = user._id;
+    return res.redirect('/');
   } catch (error) {
     logger.error('Error during Google login: ', error);
-    res.redirect('/login');
+    if (error.message === 'Account blocked') {
+      return res.redirect('/login');
+    }
+
+    return res.redirect('/login');
   }
 });
 
@@ -116,37 +122,55 @@ const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const findUser = await authService.findUserByEmail(email);
 
-  if (
-    findUser &&
-    (await authService.comparePassword(password, findUser.password)) &&
-    findUser.status === 'Active'
-  ) {
-    req.session.user = findUser._id;
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: RESPONSE_MESSAGES.LOGIN_SUCCESS,
-      redirectUrl: '/',
-    });
-  } else {
-    res.status(StatusCodes.UNAUTHORIZED).json({
+  if (!findUser) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({
       success: false,
       message: RESPONSE_MESSAGES.INVALID_CREDENTIALS,
     });
   }
+
+  if (findUser.status !== 'Active') {
+    return res.status(StatusCodes.FORBIDDEN).json({
+      success: false,
+      message: RESPONSE_MESSAGES.ACCOUNT_BLOCKED,
+    });
+  }
+
+  if (await authService.comparePassword(password, findUser.password)) {
+    req.session.user = findUser._id;
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: RESPONSE_MESSAGES.LOGIN_SUCCESS,
+      redirectUrl: '/',
+    });
+  }
+
+  return res.status(StatusCodes.UNAUTHORIZED).json({
+    success: false,
+    message: RESPONSE_MESSAGES.INVALID_CREDENTIALS,
+  });
 });
 
 const loginDemoUser = asyncHandler(async (req, res) => {
   try {
     const demoUser = await authService.getOrCreateDemoUser();
+
+    if (demoUser.status !== 'Active') {
+      return res.status(StatusCodes.FORBIDDEN).json({
+        success: false,
+        message: RESPONSE_MESSAGES.ACCOUNT_BLOCKED,
+      });
+    }
+
     req.session.user = demoUser._id;
-    res.status(StatusCodes.OK).json({
+    return res.status(StatusCodes.OK).json({
       success: true,
       message: 'Demo login successful',
       redirectUrl: '/',
     });
   } catch (error) {
     logger.error('Error during demo login:', error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Failed to login with demo account',
     });

@@ -6,6 +6,7 @@ require('dotenv').config();
 const xss = require('xss-clean');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const requestLogger = require('./middleware/requestLogger');
+const sessionUserGuard = require('./middleware/sessionUserGuard');
 const routes = require('./routes');
 
 const app = express();
@@ -52,6 +53,8 @@ app.use(
     },
   })
 );
+
+app.use(sessionUserGuard);
 
 app.use('/', routes);
 

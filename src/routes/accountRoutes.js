@@ -46,6 +46,6 @@ router.get('/order-history/cancel/:id', userAuth, orderController.cancelOrder);
 
 router.get('/order-history/:id', userAuth, orderController.getOrderDetail);
 
-router.get('/order/:id/invoice', accountController.downloadInvoice);
+router.get('/order/:id/invoice', userAuth, accountController.downloadInvoice);
 
 module.exports = router;

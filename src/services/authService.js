@@ -30,6 +30,10 @@ exports.createUser = async (userData) => {
 exports.handleGoogleLogin = async (profile) => {
   let user = await User.findOne({ email: profile.email });
 
+  if (user && user.status !== 'Active') {
+    throw new Error('Account blocked');
+  }
+
   if (!user) {
     const hashedPassword = await exports.generateHash('123456'); // Default password for Google users
     user = new User({
