@@ -13,7 +13,15 @@
     </nav>
     <div class="container">
       <div class="row">
-        <h3 class="mb-4 text-light">User Management</h3>
+        <h3 class="mb-3 text-light">User Management</h3>
+        <%- include('../partials/admin_search', {
+          action: '/admin/users',
+          paramName: 'search',
+          value: search || '',
+          placeholder: 'Search by first name, last name, or email',
+          debounce: 400,
+          extraQuery: { limit: pagination.limit },
+        }) %>
         <div class="table-responsive">
           <table class="table text-light">
             <thead>
@@ -27,10 +35,9 @@
               </tr>
             </thead>
             <tbody>
-              <!-- Loop through users and display each user's details -->
               <% users.forEach((user, index) => { %>
               <tr>
-                <th scope="row"><%= index + 1 %></th>
+                <th scope="row"><%= pagination.skip + index + 1 %></th>
                 <td><%= user.firstName %> <%= user.lastName %></td>
                 <td><%= user.email %></td>
                 <td><%= user.mobile %></td>
@@ -41,6 +48,9 @@
                     method="GET"
                     class="w-100"
                   >
+                    <input type="hidden" name="page" value="<%= pagination.currentPage %>" />
+                    <input type="hidden" name="limit" value="<%= pagination.limit %>" />
+                    <input type="hidden" name="search" value="<%= search || '' %>" />
                     <button
                       type="submit"
                       class="btn w-100 <%= user.status === 'Active' ? 'btn-outline-light' : 'btn-dark' %>"
@@ -51,9 +61,20 @@
                 </td>
               </tr>
               <% }); %>
+              <% if (!users.length) { %>
+              <tr>
+                <td colspan="6" class="text-center text-secondary">No users found</td>
+              </tr>
+              <% } %>
             </tbody>
           </table>
         </div>
+
+        <%- include('../partials/admin_pagination', {
+          pagination,
+          basePath: '/admin/users',
+          extraQuery: { search: search || '' },
+        }) %>
       </div>
     </div>
   </div>

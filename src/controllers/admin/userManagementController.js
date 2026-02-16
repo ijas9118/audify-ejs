@@ -1,5 +1,5 @@
 const asyncHandler = require('express-async-handler');
-const User = require('../../models/userModel');
+const userManagementService = require('../../services/userManagementService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../../constants/constants');
 
 // ============================
@@ -8,11 +8,12 @@ const { StatusCodes, RESPONSE_MESSAGES } = require('../../constants/constants');
 
 // Render User Management Page
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find();
-
-  if (!users) {
-    throw new Error(RESPONSE_MESSAGES.FAILED_TO_FETCH_USERS);
-  }
+  const { users, pagination, search } =
+    await userManagementService.getPaginatedUsers({
+      page: req.query.page,
+      limit: req.query.limit,
+      search: req.query.search,
+    });
 
   res.render('layout', {
     title: 'User Management',
@@ -20,6 +21,8 @@ const getUsers = asyncHandler(async (req, res) => {
     activePage: 'users',
     isAdmin: true,
     users,
+    pagination,
+    search,
   });
 });
 
@@ -27,30 +30,27 @@ const getUsers = asyncHandler(async (req, res) => {
 const toggleUserStatus = asyncHandler(async (req, res) => {
   const userId = req.params.id;
 
-  // Find user by ID
-  const user = await User.findById(userId);
-  if (!user) {
-    res.status(StatusCodes.NOT_FOUND);
-    throw new Error(RESPONSE_MESSAGES.USER_NOT_FOUND);
+  try {
+    await userManagementService.toggleUserStatus(userId);
+  } catch (error) {
+    if (error.message === 'User not found') {
+      res.status(StatusCodes.NOT_FOUND);
+      throw new Error(RESPONSE_MESSAGES.USER_NOT_FOUND);
+    }
+
+    throw error;
   }
 
-  // Determine the new status
-  const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
+  const page = req.query.page || '1';
+  const limit = req.query.limit || '10';
+  const search = (req.query.search || '').trim();
+  const queryParams = new URLSearchParams({ page, limit });
 
-  // Update the status field only
-  const result = await User.updateOne(
-    { _id: userId },
-    { $set: { status: newStatus } }
-  );
-
-  // Check if the update was successful
-  if (result.modifiedCount === 0) {
-    res.status(StatusCodes.NOT_FOUND);
-    throw new Error(RESPONSE_MESSAGES.USER_NOT_FOUND);
+  if (search) {
+    queryParams.set('search', search);
   }
 
-  // Redirect back to user management page
-  res.redirect('/admin/users');
+  res.redirect(`/admin/users?${queryParams.toString()}`);
 });
 
 module.exports = {

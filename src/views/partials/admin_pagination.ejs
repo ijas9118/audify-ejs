@@ -1,0 +1,82 @@
+<%
+  const query = extraQuery || {};
+
+  const buildUrl = (pageValue, limitValue) => {
+    const params = new URLSearchParams();
+
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.set(key, value);
+      }
+    });
+
+    params.set('page', String(pageValue));
+    params.set('limit', String(limitValue));
+
+    return `${basePath}?${params.toString()}`;
+  };
+
+  const hasPrev = pagination.currentPage > 1;
+  const hasNext = pagination.currentPage < pagination.totalPages;
+%>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3" data-bs-theme="dark">
+  <form method="GET" action="<%= basePath %>" class="d-flex align-items-center gap-2">
+    <% Object.entries(query).forEach(([key, value]) => { %>
+      <% if (value !== undefined && value !== null && value !== '') { %>
+        <input type="hidden" name="<%= key %>" value="<%= value %>" />
+      <% } %>
+    <% }); %>
+    <input type="hidden" name="page" value="1" />
+    <label for="pagination-limit" class="text-light mb-0">Per page</label>
+    <select
+      id="pagination-limit"
+      class="form-select form-select-sm"
+      style="width: auto"
+      name="limit"
+      onchange="this.form.submit()"
+    >
+      <% pagination.limitOptions.forEach((option) => { %>
+        <option value="<%= option %>" <%= option === pagination.limit ? 'selected' : '' %>>
+          <%= option %>
+        </option>
+      <% }); %>
+    </select>
+  </form>
+
+  <nav aria-label="Admin pagination">
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item <%= hasPrev ? '' : 'disabled' %>">
+        <a
+          class="page-link"
+          href="<%= hasPrev ? buildUrl(pagination.currentPage - 1, pagination.limit) : '#' %>"
+          aria-disabled="<%= hasPrev ? 'false' : 'true' %>"
+          tabindex="<%= hasPrev ? '0' : '-1' %>"
+        >
+          Prev
+        </a>
+      </li>
+
+      <% pagination.pageItems.forEach((item) => { %>
+        <% if (item === 'ellipsis') { %>
+          <li class="page-item disabled"><span class="page-link">...</span></li>
+        <% } else { %>
+          <li class="page-item <%= item === pagination.currentPage ? 'active' : '' %>">
+            <a class="page-link" href="<%= buildUrl(item, pagination.limit) %>"><%= item %></a>
+          </li>
+        <% } %>
+      <% }); %>
+
+      <li class="page-item <%= hasNext ? '' : 'disabled' %>">
+        <a
+          class="page-link"
+          href="<%= hasNext ? buildUrl(pagination.currentPage + 1, pagination.limit) : '#' %>"
+          aria-disabled="<%= hasNext ? 'false' : 'true' %>"
+          tabindex="<%= hasNext ? '0' : '-1' %>"
+        >
+          Next
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>
