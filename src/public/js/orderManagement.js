@@ -1,5 +1,5 @@
 function updateOrderStatus(orderId, status) {
-  fetch(`/admin/orders/update-status/${orderId}`, {
+  fetch(`/admin/orders/update/${orderId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

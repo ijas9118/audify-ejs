@@ -30,8 +30,16 @@
             <tbody>
               <% orders.forEach((order, index) => { %>
               <tr>
-                <th scope="row" class="text-center"><%= index + 1 %></th>
-                <td><%= order.user %></td>
+                <th scope="row" class="text-center"><%= pagination.skip + index + 1 %></th>
+                <td>
+                  <% if (order.user && order.user.firstName) { %>
+                  <%= `${order.user.firstName} ${order.user.lastName || ''}`.trim() %>
+                  <% } else if (order.user && order.user.email) { %>
+                  <%= order.user.email %>
+                  <% } else { %>
+                  <%= order.user %>
+                  <% } %>
+                </td>
                 <td>₹<%= order.finalTotal.toFixed(2) %></td>
                 <td><%= order.paymentMethod %></td>
                 <td>
@@ -50,15 +58,25 @@
                 </td>
                 <td class="text-center"><%= new Date(order.dateOrdered).toLocaleDateString() %></td>
                 <td>
-                  <form action="/admin/orders/view/<%= order._id %>" method="GET" style="display: inline">
+                  <form action="/admin/orders/<%= order._id %>" method="GET" style="display: inline">
                     <button type="submit" class="btn btn-outline-light w-100">View</button>
                   </form>
                 </td>
               </tr>
               <% }); %>
+              <% if (!orders.length) { %>
+              <tr>
+                <td colspan="7" class="text-center text-secondary">No orders found</td>
+              </tr>
+              <% } %>
             </tbody>
           </table>
         </div>
+        <%- include('../partials/admin_pagination', {
+          pagination,
+          basePath: '/admin/orders',
+          extraQuery: {},
+        }) %>
       </div>
     </div>
   </div>

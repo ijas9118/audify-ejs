@@ -1,0 +1,53 @@
+const Order = require('../models/order');
+const { getPaginationMeta } = require('../utils/pagination');
+
+const MIN_LIMIT = 5;
+const MAX_LIMIT = 15;
+
+exports.getPaginatedOrders = async ({ page, limit }) => {
+  const total = await Order.countDocuments();
+  const pagination = getPaginationMeta({
+    total,
+    page,
+    limit,
+    minLimit: MIN_LIMIT,
+    maxLimit: MAX_LIMIT,
+  });
+
+  const orders = await Order.find()
+    .populate('user', 'firstName lastName email')
+    .sort({ dateOrdered: -1 })
+    .skip(pagination.skip)
+    .limit(pagination.limit);
+
+  return {
+    orders,
+    pagination,
+  };
+};
+
+exports.updateOrderStatus = async (orderId, status) => {
+  const order = await Order.findByIdAndUpdate(
+    orderId,
+    { $set: { status } },
+    { new: true }
+  );
+
+  if (!order) {
+    throw new Error('Order not found');
+  }
+
+  return order;
+};
+
+exports.getOrderById = async (orderId) => {
+  const order = await Order.findById(orderId)
+    .populate('user', 'firstName lastName email mobile')
+    .populate({ path: 'orderItems', populate: 'product' });
+
+  if (!order) {
+    throw new Error('Order not found');
+  }
+
+  return order;
+};
