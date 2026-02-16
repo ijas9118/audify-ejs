@@ -13,7 +13,7 @@
     </nav>
     <div class="container">
       <div class="row">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center">
           <h3 class="text-light">Product Management</h3>
           <!-- Add New Product Button -->
           <button
@@ -25,6 +25,14 @@
             Add New Product
           </button>
         </div>
+        <%- include('../partials/admin_search', {
+          action: '/admin/products',
+          paramName: 'search',
+          value: search || '',
+          placeholder: 'Search by product name',
+          debounce: 400,
+          extraQuery: { limit: pagination ? pagination.limit : 8 },
+        }) %>
         <div class="table-responsive">
           <table class="table text-light">
             <thead>
@@ -40,7 +48,7 @@
             <tbody>
               <% products.forEach((product, index) => { %>
               <tr>
-                <th scope="row"><%= index + 1 %></th>
+                <th scope="row"><%= (pagination ? pagination.skip : 0) + index + 1 %></th>
                 <td><%= product.name %></td>
                 <td><%= product.categoryDetails.name %></td>
                 <td>₹<%= product.price.toFixed(2) %></td>
@@ -66,6 +74,9 @@
                       style="display: inline"
                       class="w-100"
                     >
+                      <input type="hidden" name="page" value="<%= pagination ? pagination.currentPage : 1 %>" />
+                      <input type="hidden" name="limit" value="<%= pagination ? pagination.limit : 10 %>" />
+                      <input type="hidden" name="search" value="<%= search || '' %>" />
                       <button
                         type="submit"
                         class="btn w-100 <%= product.isActive ? 'btn-dark' : 'btn-primary' %>"
@@ -77,9 +88,22 @@
                 </td>
               </tr>
               <% }); %>
+              <% if (!products.length) { %>
+              <tr>
+                <td colspan="6" class="text-center text-secondary">No products found</td>
+              </tr>
+              <% } %>
             </tbody>
           </table>
         </div>
+
+        <% if (pagination) { %>
+        <%- include('../partials/admin_pagination', {
+          pagination,
+          basePath: '/admin/products',
+          extraQuery: { search: search || '' },
+        }) %>
+        <% } %>
       </div>
     </div>
   </div>
@@ -252,4 +276,3 @@
 </div>
 
 <script src="/js/addProduct.js"></script>
-
