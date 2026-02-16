@@ -18,14 +18,11 @@ exports.addToCart = async (userId, productId, quantity) => {
     cart = new Cart({ user: userId, items: [], total: 0 });
   }
 
-  const itemIndex = cart.items.findIndex((item) =>
-    item.productId.equals(productId)
-  );
+  const item = cart.items.find((i) => i.productId.equals(productId));
 
-  if (itemIndex > -1) {
-    cart.items[itemIndex].quantity = quantity;
-    cart.items[itemIndex].subtotal =
-      cart.items[itemIndex].quantity * cart.items[itemIndex].price;
+  if (item) {
+    item.quantity = quantity;
+    item.subtotal = item.quantity * item.price;
   } else {
     cart.items.push({
       productId: product._id,

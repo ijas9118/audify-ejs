@@ -1,3 +1,7 @@
+/* eslint-disable security/detect-object-injection */
+
+const logger = require('./logger');
+
 require('dotenv').config();
 
 /**
@@ -79,21 +83,16 @@ function validateEnvironment() {
 
   // Display errors and exit if any
   if (errors.length > 0) {
-    console.error('\n═══════════════════════════════════════════════');
-    console.error('   ENVIRONMENT CONFIGURATION ERROR');
-    console.error('═══════════════════════════════════════════════');
-    console.error(errors.join('\n'));
-    console.error('\n💡 To fix this:');
-    console.error('   1. Create a .env file in the project root');
-    console.error('   2. Add the missing variables');
-    console.error('   3. Restart the application\n');
-    console.error('═══════════════════════════════════════════════\n');
+    logger.error(
+      `Environment configuration error:\n${errors.join('\n')}\n` +
+        `Fix: create a .env file, add the missing variables, then restart the app.`
+    );
     process.exit(1);
   }
 
   // Display warnings if any
   if (warnings.length > 0) {
-    console.warn(warnings.join('\n'));
+    logger.warn(warnings.join('\n'));
   }
 }
 

@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const couponService = require('../services/couponService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const logger = require('../config/logger');
 
 /**
  * Apply coupon to cart
@@ -18,7 +19,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
       appliedCoupon: result.appliedCoupon,
     });
   } catch (error) {
-    console.error('Error applying coupon:', error);
+    logger.error('Error applying coupon:', error);
 
     // Handle specific error types
     if (error.message === 'Cart not found') {
@@ -68,7 +69,7 @@ const removeCoupon = asyncHandler(async (req, res) => {
       finalTotal: result.finalTotal,
     });
   } catch (error) {
-    console.error('Error removing coupon:', error);
+    logger.error('Error removing coupon:', error);
 
     if (error.message === 'Cart not found') {
       return res

@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const cartService = require('../services/cartService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const logger = require('../config/logger');
 
 const getCart = asyncHandler(async (req, res) => {
   const userId = req.session.user;
@@ -44,7 +45,7 @@ const getCartItemID = asyncHandler(async (req, res) => {
     // Return product IDs and quantities as response
     res.json({ products });
   } catch (error) {
-    console.error('Error fetching cart items:', error);
+    logger.error('Error fetching cart items:', error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
@@ -60,7 +61,7 @@ const addToCart = asyncHandler(async (req, res) => {
       .status(StatusCodes.OK)
       .json({ message: RESPONSE_MESSAGES.ITEM_ADDED_TO_CART });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ message: RESPONSE_MESSAGES.FAILED_TO_ADD_TO_CART });
@@ -86,7 +87,7 @@ const deleteItemFromCart = asyncHandler(async (req, res) => {
       .status(StatusCodes.OK)
       .json({ message: RESPONSE_MESSAGES.ITEM_REMOVED_FROM_CART, cart });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ message: RESPONSE_MESSAGES.SERVER_ERROR });

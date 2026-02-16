@@ -4,6 +4,7 @@ const Order = require('../../models/order');
 const Product = require('../../models/products');
 const Category = require('../../models/categories');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../../constants/constants');
+const logger = require('../../config/logger');
 
 // ============================
 //  Sales Report Controllers
@@ -67,35 +68,34 @@ const getSalesReport = asyncHandler(async (req, res) => {
     });
 
     // Process sales data
-    const salesData = orders.reduce((acc, order) => {
+    const salesMap = new Map();
+
+    orders.forEach((order) => {
       const dateKey = moment(order.dateOrdered).format('YYYY-MM-DD');
-      if (!acc[dateKey]) {
-        acc[dateKey] = {
+
+      if (!salesMap.has(dateKey)) {
+        salesMap.set(dateKey, {
           totalSalesRevenue: 0,
           discountApplied: 0,
           netSales: 0,
           numberOfOrders: 0,
           totalItemsSold: 0,
-        };
+        });
       }
 
-      // Use the discount applied field directly from the order
-      const { discountApplied } = order; // Already provided in the order model
+      const dayData = salesMap.get(dateKey);
 
-      // Calculate total sales revenue including shipping charge
-      acc[dateKey].totalSalesRevenue += order.totalAmount;
-      acc[dateKey].discountApplied += discountApplied;
-      acc[dateKey].netSales += order.finalTotal; // Use finalTotal for net sales
-      acc[dateKey].numberOfOrders += 1;
-      acc[dateKey].totalItemsSold += order.orderItems.length;
-
-      return acc;
-    }, {});
+      dayData.totalSalesRevenue += order.totalAmount;
+      dayData.discountApplied += order.discountApplied;
+      dayData.netSales += order.finalTotal;
+      dayData.numberOfOrders += 1;
+      dayData.totalItemsSold += order.orderItems.length;
+    });
 
     // Transform sales data into an array
-    const responseData = Object.keys(salesData).map((date) => ({
+    const responseData = Array.from(salesMap.entries()).map(([date, data]) => ({
       date,
-      ...salesData[date],
+      ...data,
     }));
 
     // Summary calculations
@@ -121,7 +121,7 @@ const getSalesReport = asyncHandler(async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: RESPONSE_MESSAGES.SERVER_ERROR });
@@ -282,7 +282,7 @@ const getSalesData = asyncHandler(async (req, res) => {
 
     res.json({ labels, values });
   } catch (error) {
-    console.error('Error fetching sales data:', error);
+    logger.error('Error fetching sales data:', error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ message: RESPONSE_MESSAGES.SERVER_ERROR });
@@ -333,7 +333,7 @@ const getBestSellers = asyncHandler(async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error('Error fetching best sellers:', error);
+    logger.error('Error fetching best sellers:', error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: RESPONSE_MESSAGES.FAILED_TO_FETCH_DATA });

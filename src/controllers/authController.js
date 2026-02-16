@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const authService = require('../services/authService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const logger = require('../config/logger');
 
 const successGoogleLogin = asyncHandler(async (req, res) => {
   if (!req.user) res.redirect('/failure');
@@ -9,7 +10,7 @@ const successGoogleLogin = asyncHandler(async (req, res) => {
     req.session.user = user;
     res.redirect('/');
   } catch (error) {
-    console.error('Error during Google login: ', error);
+    logger.error('Error during Google login: ', error);
     res.redirect('/login');
   }
 });
@@ -144,7 +145,7 @@ const loginDemoUser = asyncHandler(async (req, res) => {
       redirectUrl: '/',
     });
   } catch (error) {
-    console.error('Error during demo login:', error);
+    logger.error('Error during demo login:', error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Failed to login with demo account',
@@ -173,7 +174,7 @@ const updatePassword = asyncHandler(async (req, res) => {
       .status(StatusCodes.OK)
       .json({ message: RESPONSE_MESSAGES.PASSWORD_UPDATE_SUCCESS });
   } catch (error) {
-    console.error('Error updating password:', error);
+    logger.error('Error updating password:', error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
@@ -202,7 +203,7 @@ const resetPassword = asyncHandler(async (req, res) => {
       .status(StatusCodes.OK)
       .json({ message: RESPONSE_MESSAGES.PASSWORD_UPDATE_SUCCESS });
   } catch (error) {
-    console.error('Error updating password:', error);
+    logger.error('Error updating password:', error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });

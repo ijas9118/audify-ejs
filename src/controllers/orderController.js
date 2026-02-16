@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const orderService = require('../services/orderService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const logger = require('../config/logger');
 
 /**
  * Place order from cart
@@ -83,7 +84,7 @@ const getOrderSuccessPage = asyncHandler(async (req, res) => {
       order,
     });
   } catch (error) {
-    console.error('Error fetching order:', error);
+    logger.error('Error fetching order:', error);
 
     if (error.message === 'Order not found') {
       return res

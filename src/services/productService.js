@@ -2,6 +2,7 @@ const Product = require('../models/products');
 const Offer = require('../models/offer');
 const User = require('../models/userModel');
 const { calculateDiscountedPrice } = require('./offerService');
+const { escapeRegex } = require('../utils/regex');
 
 exports.getFilteredProducts = async ({
   category,
@@ -177,8 +178,13 @@ exports.getStock = async (productId) => {
 
 exports.searchProducts = async (query) => {
   if (!query) return Product.find();
-  const regex = new RegExp(`^${query}`, 'i');
-  return Product.find({ name: { $regex: regex } });
+
+  return Product.find({
+    name: {
+      $regex: escapeRegex(query),
+      $options: 'i',
+    },
+  });
 };
 
 exports.getWishlist = async (userId) =>

@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const accountService = require('../services/accountService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const logger = require('../config/logger');
 
 const getUserAccount = asyncHandler(async (req, res) => {
   const id = req.session.user;
@@ -80,7 +81,7 @@ const updateDefaultAddress = asyncHandler(async (req, res) => {
     await accountService.updateDefaultAddress(newDefaultId);
     res.status(StatusCodes.OK).send(RESPONSE_MESSAGES.DEFAULT_ADDRESS_UPDATED);
   } catch (error) {
-    console.error('Error updating default address:', error);
+    logger.error('Error updating default address:', error);
 
     if (error.message === 'Address not found') {
       return res
@@ -175,7 +176,7 @@ const downloadInvoice = asyncHandler(async (req, res) => {
     // End the PDF stream
     pdfDoc.end();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
 
     if (error.message === 'Order not found') {
       return res

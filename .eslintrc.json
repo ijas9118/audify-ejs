@@ -3,13 +3,26 @@
     "node": true,
     "es2021": true
   },
-  "extends": ["airbnb-base", "prettier"],
-  "plugins": ["prettier"],
+  "extends": [
+    "airbnb-base",
+    "plugin:security/recommended-legacy",
+    "plugin:promise/recommended",
+    "plugin:n/recommended",
+    "prettier"
+  ],
+  "plugins": ["prettier", "security", "promise", "n"],
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module"
+  },
   "rules": {
     "prettier/prettier": "error",
-    "no-console": "off",
+    "no-console": "warn",
     "no-underscore-dangle": "off",
-    "consistent-return": "off"
+    "consistent-return": "off",
+    "n/no-process-exit": "off",
+    "n/no-missing-import": "off",
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }]
   },
   "overrides": [
     {
@@ -23,11 +36,12 @@
       },
       "rules": {
         "no-undef": "off",
-        "no-unused-vars": "off",
+        "no-unused-vars": "warn",
         "no-param-reassign": "off",
         "no-use-before-define": "off",
         "no-shadow": "off",
         "func-names": "off",
+        "no-console": "off",
         "no-alert": "off",
         "no-plusplus": "off",
         "no-restricted-globals": "off",

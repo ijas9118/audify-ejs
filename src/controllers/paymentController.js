@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const paymentService = require('../services/paymentService');
 const orderService = require('../services/orderService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const logger = require('../config/logger');
 
 /**
  * Create Razorpay order
@@ -13,7 +14,7 @@ const createRazorpayOrder = asyncHandler(async (req, res) => {
 
     res.status(StatusCodes.OK).json({ order: razorpayOrder, orderData });
   } catch (error) {
-    console.error('Razorpay error:', error);
+    logger.error('Razorpay error:', error);
 
     if (error.message === 'Order not found') {
       return res

@@ -5,7 +5,7 @@ const { getPaginationMeta } = require('../utils/pagination');
 const MIN_LIMIT = 5;
 const MAX_LIMIT = 15;
 
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const { escapeRegex } = require('../utils/regex');
 
 const buildSearchFilter = (search) => {
   const query = (search || '').trim();
@@ -14,8 +14,9 @@ const buildSearchFilter = (search) => {
     return {};
   }
 
-  const regex = new RegExp(escapeRegex(query), 'i');
-  return { name: regex };
+  return {
+    name: { $regex: escapeRegex(query), $options: 'i' },
+  };
 };
 
 exports.getProductManagementData = async ({ page, limit, search }) => {
