@@ -1,5 +1,25 @@
 const Category = require('../models/categories');
 const Product = require('../models/products');
+const { getPaginationMeta } = require('../utils/pagination');
+const { escapeRegex } = require('../utils/regex');
+
+const MIN_LIMIT = 5;
+const MAX_LIMIT = 15;
+
+const buildSearchFilter = (search) => {
+  const query = (search || '').trim();
+
+  if (!query) {
+    return {};
+  }
+
+  return {
+    $or: [
+      { name: { $regex: escapeRegex(query), $options: 'i' } },
+      { description: { $regex: escapeRegex(query), $options: 'i' } },
+    ],
+  };
+};
 
 /**
  * Category Retrieval Operations
@@ -15,6 +35,29 @@ exports.getAllCategories = async () => {
     throw new Error('Failed to fetch categories');
   }
   return categories;
+};
+
+exports.getPaginatedCategories = async ({ page, limit, search }) => {
+  const filter = buildSearchFilter(search);
+  const total = await Category.countDocuments(filter);
+  const pagination = getPaginationMeta({
+    total,
+    page,
+    limit,
+    minLimit: MIN_LIMIT,
+    maxLimit: MAX_LIMIT,
+  });
+
+  const categories = await Category.find(filter)
+    .sort({ createdAt: -1 })
+    .skip(pagination.skip)
+    .limit(pagination.limit);
+
+  return {
+    categories,
+    pagination,
+    search: (search || '').trim(),
+  };
 };
 
 /**

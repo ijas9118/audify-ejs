@@ -4,7 +4,12 @@ const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 // Render Category Management Page
 const getCategory = asyncHandler(async (req, res) => {
-  const categories = await categoryService.getAllCategories();
+  const { categories, pagination, search } =
+    await categoryService.getPaginatedCategories({
+      page: req.query.page,
+      limit: req.query.limit,
+      search: req.query.search,
+    });
 
   res.render('layout', {
     title: 'Category Management',
@@ -12,6 +17,8 @@ const getCategory = asyncHandler(async (req, res) => {
     activePage: 'category',
     isAdmin: true,
     categories,
+    pagination,
+    search,
   });
 });
 
@@ -49,7 +56,6 @@ const toggleCategoryStatus = asyncHandler(async (req, res) => {
 
   try {
     await categoryService.toggleCategoryStatus(categoryId);
-    res.redirect('/admin/category');
   } catch (error) {
     if (error.message === 'Category not found') {
       res.status(StatusCodes.NOT_FOUND);
@@ -58,6 +64,17 @@ const toggleCategoryStatus = asyncHandler(async (req, res) => {
 
     throw error;
   }
+
+  const page = req.query.page || '1';
+  const limit = req.query.limit || '10';
+  const search = (req.query.search || '').trim();
+  const queryParams = new URLSearchParams({ page, limit });
+
+  if (search) {
+    queryParams.set('search', search);
+  }
+
+  res.redirect(`/admin/category?${queryParams.toString()}`);
 });
 
 // Controller to delete a category

@@ -24,68 +24,80 @@
             Add New Offer
           </button>
         </div>
-        <!-- Check if there are offers to display -->
-        <% if (offers.length === 0) { %>
-          <div class="alert alert-info text-center" role="alert">No offers found.</div>
-        <% } else { %>
-          <!-- Offer Table -->
-          <div class="table-responsive">
-            <table class="table text-center">
-              <thead class="table-dark">
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Offer Type</th>
-                  <th scope="col">Applicable To</th>
-                  <th scope="col">Discount</th>
-                  <th scope="col">Max Discount</th>
-                  <th scope="col">Valid From</th>
-                  <th scope="col">Valid Until</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Actions</th>
+        <%- include('../partials/admin_search', {
+          action: '/admin/offers',
+          paramName: 'search',
+          value: search || '',
+          placeholder: 'Search by type, status, discount, product or category',
+          debounce: 400,
+          extraQuery: { limit: pagination.limit },
+        }) %>
+        <div class="table-responsive">
+          <table class="table text-center">
+            <thead class="table-dark">
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Offer Type</th>
+                <th scope="col">Applicable To</th>
+                <th scope="col">Discount</th>
+                <th scope="col">Max Discount</th>
+                <th scope="col">Valid From</th>
+                <th scope="col">Valid Until</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% offers.forEach((offer, index) => { %>
+                <tr data-offer-id="<%= offer._id %>">
+                  <th scope="row"><%= pagination.skip + index + 1 %></th>
+                  <td><%= offer.type %></td>
+                  <td>
+                    <% if (offer.type === 'product') { %>
+                      <%= offer.product && offer.product.name ? offer.product.name : '-' %>
+                    <% } else if (offer.type === 'category') { %>
+                      <%= offer.category && offer.category.name ? offer.category.name : '-' %>
+                    <% } else { %>
+                      Referral
+                    <% } %>
+                  </td>
+                  <td>
+                    <%= offer.discountType === 'percentage' ? `${offer.discountValue}%` : `₹${offer.discountValue}` %>
+                  </td>
+                  <td>
+                    <%= offer.maxDiscountAmount ? `₹${offer.maxDiscountAmount}` : '-' %>
+                  </td>
+                  <td><%= new Date(offer.validFrom).toLocaleDateString() %></td>
+                  <td><%= new Date(offer.validUntil).toLocaleDateString() %></td>
+                  <td>
+                    <span
+                      id="statusDisplay<%= offer._id %>"
+                      class="badge w-100 py-2 <%= offer.status === 'active' ? 'bg-success' : 'bg-danger' %>"
+                      style="cursor: pointer;"
+                      onclick="toggleOfferStatus('<%= offer._id %>')"
+                    >
+                      <%= offer.status %>
+                    </span>
+                  </td>
+                  <td class="d-flex gap-2">
+                    <button class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#editOfferModal<%= offer._id %>">Edit</button>
+                    <button class="btn btn-outline-danger w-100" onclick="deleteOffer('<%= offer._id %>')">Delete</button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                <!-- Loop through offers data -->
-                <% offers.forEach((offer, index) => { %>
-                  <tr data-offer-id="<%= offer._id %>">
-                    <th scope="row"><%= index + 1 %></th>
-                    <td><%= offer.type %></td>
-                    <td>
-                      <% if (offer.type === 'product') { %>
-                        <%= offer.product.name %>
-                      <% } else if (offer.type === 'category') { %>
-                        <%= offer.category.name %>
-                      <% } else { %>
-                        Referral
-                      <% } %>
-                    </td>
-                    <td>
-                      <%= offer.discountType === 'percentage' ? `${offer.discountValue}%` : `₹${offer.discountValue}` %>
-                    </td>
-                    <td>
-                      <%= offer.maxDiscountAmount ? `₹${offer.maxDiscountAmount}` : '-' %>
-                    </td>
-                    <td><%= new Date(offer.validFrom).toLocaleDateString() %></td>
-                    <td><%= new Date(offer.validUntil).toLocaleDateString() %></td>
-                    <td>
-                      <span 
-                        id="statusDisplay<%= offer._id %>" 
-                        class="badge w-100 py-2 <%= offer.status === 'active' ? 'bg-success' : 'bg-danger' %>" 
-                        style="cursor: pointer;" 
-                        onclick="toggleOfferStatus('<%= offer._id %>')">
-                        <%= offer.status %>
-                      </span>
-                    </td>
-                    <td class="d-flex gap-2">
-                      <button class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#editOfferModal<%= offer._id %>">Edit</button>
-                      <button class="btn btn-outline-danger w-100" onclick="deleteOffer('<%= offer._id %>')">Delete</button>
-                    </td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          </div>
-        <% } %>
+              <% }) %>
+              <% if (!offers.length) { %>
+              <tr>
+                <td colspan="9" class="text-center text-secondary">No offers found</td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        <%- include('../partials/admin_pagination', {
+          pagination,
+          basePath: '/admin/offers',
+          extraQuery: { search: search || '' },
+        }) %>
       </div>
     </div>
   </div>

@@ -1,5 +1,142 @@
 const Coupon = require('../models/coupon');
 const Cart = require('../models/cart');
+const { getPaginationMeta } = require('../utils/pagination');
+const { escapeRegex } = require('../utils/regex');
+
+const MIN_LIMIT = 5;
+const MAX_LIMIT = 15;
+
+const buildSearchFilter = (search) => {
+  const query = (search || '').trim();
+
+  if (!query) {
+    return {};
+  }
+
+  return {
+    $or: [
+      { code: { $regex: escapeRegex(query), $options: 'i' } },
+      { discountType: { $regex: escapeRegex(query), $options: 'i' } },
+    ],
+  };
+};
+
+exports.getPaginatedCoupons = async ({ page, limit, search }) => {
+  const filter = buildSearchFilter(search);
+  const total = await Coupon.countDocuments(filter);
+  const pagination = getPaginationMeta({
+    total,
+    page,
+    limit,
+    minLimit: MIN_LIMIT,
+    maxLimit: MAX_LIMIT,
+  });
+
+  const coupons = await Coupon.find(filter)
+    .sort({ createdAt: -1 })
+    .skip(pagination.skip)
+    .limit(pagination.limit);
+
+  return {
+    coupons,
+    pagination,
+    search: (search || '').trim(),
+  };
+};
+
+exports.createCoupon = async (couponData) => {
+  const {
+    code,
+    discountType,
+    discountValue,
+    maxDiscountValue,
+    minCartValue,
+    validFrom,
+    validUntil,
+    usageLimit,
+    isActive,
+  } = couponData;
+
+  if (!code || !discountType || !discountValue || !validFrom || !validUntil) {
+    throw new Error('Missing required fields');
+  }
+
+  const existingCoupon = await Coupon.findOne({ code });
+  if (existingCoupon) {
+    throw new Error('Coupon already exists');
+  }
+
+  const newCoupon = new Coupon({
+    code,
+    discountType,
+    discountValue,
+    maxDiscountValue,
+    minCartValue: minCartValue || 0,
+    validFrom,
+    validUntil,
+    usageLimit: usageLimit || 1,
+    isActive: isActive !== undefined ? isActive : true,
+  });
+
+  await newCoupon.save();
+  return newCoupon;
+};
+
+exports.updateCouponById = async (couponId, couponData) => {
+  const coupon = await Coupon.findById(couponId);
+
+  if (!coupon) {
+    throw new Error('Coupon not found');
+  }
+
+  const {
+    code,
+    discountType,
+    discountValue,
+    maxDiscountValue,
+    minCartValue,
+    validFrom,
+    validUntil,
+    usageLimit,
+    isActive,
+  } = couponData;
+
+  coupon.code = code || coupon.code;
+  coupon.discountType = discountType || coupon.discountType;
+  coupon.discountValue = discountValue || coupon.discountValue;
+  coupon.maxDiscountValue = maxDiscountValue;
+  coupon.minCartValue = minCartValue;
+  coupon.validFrom = validFrom || coupon.validFrom;
+  coupon.validUntil = validUntil || coupon.validUntil;
+  coupon.usageLimit = usageLimit || coupon.usageLimit;
+  coupon.isActive = isActive !== undefined ? isActive : coupon.isActive;
+
+  await coupon.save();
+  return coupon;
+};
+
+exports.deleteCouponById = async (couponId) => {
+  const coupon = await Coupon.findByIdAndDelete(couponId);
+
+  if (!coupon) {
+    throw new Error('Coupon not found');
+  }
+
+  return coupon;
+};
+
+exports.toggleCouponStatusById = async (couponId) => {
+  const coupon = await Coupon.findById(couponId);
+
+  if (!coupon) {
+    throw new Error('Coupon not found');
+  }
+
+  coupon.isActive = !coupon.isActive;
+  await coupon.save();
+
+  return coupon;
+};
 
 /**
  * Coupon Validation

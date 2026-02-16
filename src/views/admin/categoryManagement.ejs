@@ -24,6 +24,14 @@
             Add New Category
           </button>
         </div>
+        <%- include('../partials/admin_search', {
+          action: '/admin/category',
+          paramName: 'search',
+          value: search || '',
+          placeholder: 'Search by category name or description',
+          debounce: 400,
+          extraQuery: { limit: pagination.limit },
+        }) %>
         <div class="table-responsive">
           <table class="table text-light">
             <thead>
@@ -37,7 +45,7 @@
             <tbody id="categoryList">
               <% categories.forEach((category, index) => { %>
               <tr>
-                <th scope="row"><%= index + 1 %></th>
+                <th scope="row"><%= pagination.skip + index + 1 %></th>
                 <td><%= category.name %></td>
                 <td><%= category.description %></td>
                 <td>
@@ -48,6 +56,9 @@
                       style="display: inline"
                       class="w-100"
                     >
+                      <input type="hidden" name="page" value="<%= pagination.currentPage %>" />
+                      <input type="hidden" name="limit" value="<%= pagination.limit %>" />
+                      <input type="hidden" name="search" value="<%= search || '' %>" />
                       <button
                         type="submit"
                         class="btn w-100 <%= category.isActive ? 'btn-dark' : 'btn-primary' %>"
@@ -66,9 +77,19 @@
                 </td>
               </tr>
               <% }); %>
+              <% if (!categories.length) { %>
+              <tr>
+                <td colspan="4" class="text-center text-secondary">No categories found</td>
+              </tr>
+              <% } %>
             </tbody>            
           </table>
         </div>
+        <%- include('../partials/admin_pagination', {
+          pagination,
+          basePath: '/admin/category',
+          extraQuery: { search: search || '' },
+        }) %>
       </div>
     </div>
   </div>
@@ -166,7 +187,6 @@
     </div>
   </div>
 <% }) %>
->
 
 
 <script src="/js/categoryManagement.js"></script>

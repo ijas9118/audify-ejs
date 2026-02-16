@@ -51,7 +51,7 @@ document
     };
 
     try {
-      const response = await fetch('/admin/coupons/add', {
+      const response = await fetch('/admin/coupons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ async function deleteCoupon(couponId) {
   }
 
   try {
-    const response = await fetch(`/admin/coupons/delete/${couponId}`, {
+    const response = await fetch(`/admin/coupons/${couponId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
