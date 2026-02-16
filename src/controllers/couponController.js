@@ -12,7 +12,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
   try {
     const result = await couponService.applyCouponToCart(cartId, couponCode);
 
-    res.json({
+    return res.json({
       success: true,
       message: result.message,
       finalTotal: result.finalTotal,
@@ -47,7 +47,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
       });
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'An error occurred while applying the coupon',
     });
@@ -63,7 +63,7 @@ const removeCoupon = asyncHandler(async (req, res) => {
   try {
     const result = await couponService.removeCouponFromCart(cartId);
 
-    res.json({
+    return res.json({
       success: true,
       message: result.message,
       finalTotal: result.finalTotal,
@@ -83,7 +83,7 @@ const removeCoupon = asyncHandler(async (req, res) => {
         .json({ success: false, message: RESPONSE_MESSAGES.NO_COUPON_APPLIED });
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'An error occurred while removing the coupon',
     });

@@ -65,7 +65,7 @@ const addCoupon = asyncHandler(async (req, res) => {
   await newCoupon.save();
 
   // Send a success response
-  res
+  return res
     .status(StatusCodes.CREATED)
     .json({ success: true, message: RESPONSE_MESSAGES.COUPON_ADDED });
 });
@@ -103,7 +103,7 @@ const updateCoupon = asyncHandler(async (req, res) => {
   coupon.isActive = isActive !== undefined ? isActive : coupon.isActive;
   await coupon.save();
 
-  res.status(StatusCodes.OK).json({
+  return res.status(StatusCodes.OK).json({
     success: true,
     message: RESPONSE_MESSAGES.COUPON_UPDATED,
     coupon,
@@ -121,7 +121,7 @@ const deleteCoupon = asyncHandler(async (req, res) => {
       .json({ message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
   }
 
-  res
+  return res
     .status(StatusCodes.OK)
     .json({ message: RESPONSE_MESSAGES.COUPON_DELETED });
 });
@@ -141,7 +141,7 @@ const toggleCouponStatus = asyncHandler(async (req, res) => {
 
   await coupon.save();
 
-  res.json({
+  return res.json({
     success: true,
     message: RESPONSE_MESSAGES.COUPON_STATUS_UPDATED,
     coupon,

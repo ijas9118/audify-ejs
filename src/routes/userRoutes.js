@@ -51,9 +51,9 @@ router.get('/', (req, res) => {
 
 router.get('/signup', (req, res) => {
   if (req.session.user) {
-    return res.redirect('/');
+    res.redirect('/');
   }
-  res.render('layout', {
+  return res.render('layout', {
     title: 'Sign Up',
     header: 'partials/header',
     viewName: 'users/signup',
@@ -76,9 +76,9 @@ router.post('/verify-otp', authLimiter, authController.verifyAndSignUp);
 
 router.get('/login', (req, res) => {
   if (req.session.user) {
-    return res.redirect('/');
+    res.redirect('/');
   }
-  res.render('layout', {
+  return res.render('layout', {
     title: 'Login',
     header: 'partials/header',
     viewName: 'users/login',
@@ -116,7 +116,7 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
       return res.status(404).send('Email not found');
     }
 
-    res.render('layout', {
+    return res.render('layout', {
       title: 'Login',
       header: 'partials/header',
       viewName: 'users/resetPassword',
@@ -124,7 +124,7 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
       isAdmin: false,
     });
   } catch (err) {
-    res.status(500).send('Server error');
+    return res.status(500).send('Server error');
   }
 });
 

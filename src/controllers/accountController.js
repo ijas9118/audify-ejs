@@ -23,7 +23,7 @@ const updateUserAccount = asyncHandler(async (req, res) => {
   try {
     await accountService.updateUserAccount(req.params.id, req.body, email);
 
-    res
+    return res
       .status(StatusCodes.OK)
       .json({ success: true, message: RESPONSE_MESSAGES.ACCOUNT_UPDATED });
   } catch (error) {
@@ -79,7 +79,9 @@ const updateDefaultAddress = asyncHandler(async (req, res) => {
 
   try {
     await accountService.updateDefaultAddress(newDefaultId);
-    res.status(StatusCodes.OK).send(RESPONSE_MESSAGES.DEFAULT_ADDRESS_UPDATED);
+    return res
+      .status(StatusCodes.OK)
+      .send(RESPONSE_MESSAGES.DEFAULT_ADDRESS_UPDATED);
   } catch (error) {
     logger.error('Error updating default address:', error);
 
@@ -89,7 +91,7 @@ const updateDefaultAddress = asyncHandler(async (req, res) => {
         .send(RESPONSE_MESSAGES.ADDRESS_NOT_FOUND);
     }
 
-    res
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .send(RESPONSE_MESSAGES.SERVER_ERROR);
   }
@@ -120,7 +122,7 @@ const deleteAddress = asyncHandler(async (req, res) => {
 
   try {
     await accountService.deleteAddress(addressId);
-    res.status(StatusCodes.OK).send(RESPONSE_MESSAGES.ADDRESS_DELETED);
+    return res.status(StatusCodes.OK).send(RESPONSE_MESSAGES.ADDRESS_DELETED);
   } catch (error) {
     if (error.message === 'Address not found') {
       return res
@@ -138,7 +140,7 @@ const walletTransactions = asyncHandler(async (req, res) => {
   try {
     const user = await accountService.getUserWithWallet(userId);
 
-    res.render('layout', {
+    return res.render('layout', {
       title: 'My Audify Account',
       header: req.session.user ? 'partials/login_header' : 'partials/header',
       viewName: 'users/walletTransaction',
@@ -175,6 +177,8 @@ const downloadInvoice = asyncHandler(async (req, res) => {
 
     // End the PDF stream
     pdfDoc.end();
+
+    return res.status(StatusCodes.OK).send(RESPONSE_MESSAGES.INVOICE_GENERATED);
   } catch (error) {
     logger.error(error);
 
@@ -184,7 +188,7 @@ const downloadInvoice = asyncHandler(async (req, res) => {
         .send(RESPONSE_MESSAGES.ORDER_NOT_FOUND);
     }
 
-    res
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .send(RESPONSE_MESSAGES.SERVER_ERROR);
   }

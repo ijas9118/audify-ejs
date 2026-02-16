@@ -66,7 +66,7 @@ const resendOtp = asyncHandler(async (req, res) => {
   req.session.otp = otp;
   req.session.otpExpiry = otpExpiry;
 
-  res.json({ message: RESPONSE_MESSAGES.OTP_RESENT });
+  return res.json({ message: RESPONSE_MESSAGES.OTP_RESENT });
 });
 
 const verifyAndSignUp = asyncHandler(async (req, res) => {
@@ -160,7 +160,7 @@ const logoutUser = asyncHandler(async (req, res) => {
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ message: 'Failed to log out' });
     }
-    res.redirect('/login');
+    return res.redirect('/login');
   });
 });
 
@@ -199,12 +199,12 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   try {
     await authService.resetPassword(email, newPassword);
-    res
+    return res
       .status(StatusCodes.OK)
       .json({ message: RESPONSE_MESSAGES.PASSWORD_UPDATE_SUCCESS });
   } catch (error) {
     logger.error('Error updating password:', error);
-    res
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
   }

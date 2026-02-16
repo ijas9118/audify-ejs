@@ -9,9 +9,9 @@ const { StatusCodes, RESPONSE_MESSAGES } = require('../../constants/constants');
 // Render Admin Login Page
 const getAdminLogin = asyncHandler(async (req, res) => {
   if (req.session.admin) {
-    return res.redirect('/admin');
+    res.redirect('/admin');
   }
-  res.render('admin/adminLogin', { title: 'Admin Login' });
+  return res.render('admin/adminLogin', { title: 'Admin Login' });
 });
 
 // Handle Admin Login
@@ -46,7 +46,7 @@ const logoutAdmin = asyncHandler(async (req, res) => {
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ message: RESPONSE_MESSAGES.FAILED_TO_LOGOUT });
     }
-    res.redirect('/admin/login');
+    return res.redirect('/admin/login');
   });
 });
 

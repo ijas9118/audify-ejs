@@ -48,7 +48,7 @@ const requestLogger = (req, res, next) => {
     }
   });
 
-  next();
+  return next();
 };
 
 module.exports = requestLogger;

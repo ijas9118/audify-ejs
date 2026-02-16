@@ -109,5 +109,5 @@ exports.validate = (req, res, next) => {
     });
   }
 
-  next();
+  return next();
 };

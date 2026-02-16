@@ -71,7 +71,7 @@ const addOffer = asyncHandler(async (req, res) => {
   }
 
   // Send a success response
-  res
+  return res
     .status(StatusCodes.CREATED)
     .json({ success: true, message: RESPONSE_MESSAGES.OFFER_ADDED });
 });
@@ -110,7 +110,7 @@ const updateOffer = asyncHandler(async (req, res) => {
   await offer.save();
 
   // Send success response
-  res.status(StatusCodes.OK).json({
+  return res.status(StatusCodes.OK).json({
     success: true,
     message: RESPONSE_MESSAGES.OFFER_UPDATED,
     offer,
@@ -130,7 +130,7 @@ const deleteOffer = asyncHandler(async (req, res) => {
   }
 
   await Offer.deleteOne({ _id: offerId });
-  res.status(StatusCodes.OK).json({
+  return res.status(StatusCodes.OK).json({
     success: true,
     message: RESPONSE_MESSAGES.OFFER_DELETED,
   });
@@ -154,7 +154,7 @@ const toggleOfferStatus = asyncHandler(async (req, res) => {
   // Save the updated offer
   await offer.save();
 
-  res.json({ success: true, offer });
+  return res.json({ success: true, offer });
 });
 
 // Render Deals Management Page

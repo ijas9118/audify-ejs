@@ -77,7 +77,7 @@ const addProduct = asyncHandler(async (req, res) => {
   await product.save();
 
   // Respond with the created product
-  res.redirect('/admin/products');
+  return res.redirect('/admin/products');
 });
 
 // Unlist Product
@@ -172,7 +172,7 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   await product.save();
 
-  res.redirect('/admin/products/');
+  return res.redirect('/admin/products/');
 });
 
 module.exports = {

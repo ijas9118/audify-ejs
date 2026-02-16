@@ -36,7 +36,7 @@ const placeOrder = asyncHandler(async (req, res) => {
       shippingDetails
     );
 
-    res.status(StatusCodes.CREATED).json({
+    return res.status(StatusCodes.CREATED).json({
       success: true,
       message: RESPONSE_MESSAGES.ORDER_PLACED,
       orderId: placedOrder._id,
@@ -60,7 +60,7 @@ const placeOrder = asyncHandler(async (req, res) => {
         .json({ message: RESPONSE_MESSAGES.PRODUCT_NOT_FOUND });
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: RESPONSE_MESSAGES.ERROR_PLACING_ORDER,
       error: error.message,
@@ -75,7 +75,7 @@ const getOrderSuccessPage = asyncHandler(async (req, res) => {
   try {
     const order = await orderService.getOrderById(req.params.orderId, true);
 
-    res.render('layout', {
+    return res.render('layout', {
       title: 'Order Success',
       header: req.session.user ? 'partials/login_header' : 'partials/header',
       viewName: 'users/orderSuccess',
@@ -92,7 +92,7 @@ const getOrderSuccessPage = asyncHandler(async (req, res) => {
         .send(RESPONSE_MESSAGES.ORDER_NOT_FOUND);
     }
 
-    res
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .send(RESPONSE_MESSAGES.SERVER_ERROR);
   }

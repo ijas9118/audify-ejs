@@ -6,12 +6,14 @@ const cloudinary = require('../config/cloudinary');
  * @param {string} folder - The Cloudinary folder name (default: 'products')
  * @returns {Promise<string>} - The secure URL of the uploaded image
  */
-exports.uploadToCloudinary = async (fileBuffer, folder = 'products') =>
+exports.uploadToCloudinary = (fileBuffer, folder = 'products') =>
   new Promise((resolve, reject) => {
     cloudinary.uploader
       .upload_stream({ folder, resource_type: 'image' }, (error, result) => {
-        if (error) return reject(error);
-        resolve(result.secure_url);
+        if (error) {
+          return reject(error);
+        }
+        return resolve(result.secure_url);
       })
       .end(fileBuffer);
   });

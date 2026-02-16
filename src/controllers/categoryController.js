@@ -22,7 +22,7 @@ const addCategory = asyncHandler(async (req, res) => {
   try {
     const newCategory = await categoryService.createCategory(name, description);
 
-    res.status(StatusCodes.CREATED).json({
+    return res.status(StatusCodes.CREATED).json({
       message: RESPONSE_MESSAGES.CATEGORY_ADDED,
       category: newCategory,
     });
@@ -67,7 +67,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
   try {
     await categoryService.deleteCategory(categoryId);
 
-    res.status(StatusCodes.OK).json({
+    return res.status(StatusCodes.OK).json({
       success: true,
       message: RESPONSE_MESSAGES.CATEGORY_DELETED,
     });
@@ -126,7 +126,7 @@ const updateCategory = asyncHandler(async (req, res) => {
       description
     );
 
-    res.status(StatusCodes.OK).json({
+    return res.status(StatusCodes.OK).json({
       message: RESPONSE_MESSAGES.CATEGORY_UPDATED,
       category: updatedCategory,
     });

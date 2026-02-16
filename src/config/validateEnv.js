@@ -87,6 +87,7 @@ function validateEnvironment() {
       `Environment configuration error:\n${errors.join('\n')}\n` +
         `Fix: create a .env file, add the missing variables, then restart the app.`
     );
+    // eslint-disable-next-line n/no-process-exit
     process.exit(1);
   }
 

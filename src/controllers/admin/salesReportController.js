@@ -280,10 +280,10 @@ const getSalesData = asyncHandler(async (req, res) => {
 
     values = salesData.map((data) => data.totalSales);
 
-    res.json({ labels, values });
+    return res.json({ labels, values });
   } catch (error) {
     logger.error('Error fetching sales data:', error);
-    res
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ message: RESPONSE_MESSAGES.SERVER_ERROR });
   }

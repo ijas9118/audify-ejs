@@ -97,6 +97,7 @@ const RESPONSE_MESSAGES = {
   INSUFFICIENT_WALLET_BALANCE:
     'Insufficient wallet balance. Please use a different payment method.',
   CART_EMPTY: 'Cart is empty',
+  INVOICE_GENERATED: 'Invoice generated successfully',
 };
 
 module.exports = {

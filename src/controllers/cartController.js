@@ -43,10 +43,10 @@ const getCartItemID = asyncHandler(async (req, res) => {
     }));
 
     // Return product IDs and quantities as response
-    res.json({ products });
+    return res.json({ products });
   } catch (error) {
     logger.error('Error fetching cart items:', error);
-    res
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
   }
