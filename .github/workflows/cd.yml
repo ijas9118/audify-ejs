@@ -52,8 +52,8 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/audify:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/audify:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/audify-ejs:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/audify-ejs:latest
           cache-to: type=inline
 
   deploy:
