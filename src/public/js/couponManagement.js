@@ -2,17 +2,6 @@ document
   .querySelector('#addCouponform')
   .addEventListener('submit', async (event) => {
     event.preventDefault();
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top',
-      showConfirmButton: false,
-      timer: 2500,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.onmouseenter = Swal.stopTimer;
-        toast.onmouseleave = Swal.resumeTimer;
-      },
-    });
 
     const couponCode = document.getElementById('couponCode').value;
     const discountType = document.getElementById('discountType').value;
@@ -51,7 +40,7 @@ document
     };
 
     try {
-      const response = await fetch('/admin/coupons/add', {
+      const response = await fetch('/admin/coupons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,18 +87,6 @@ document.querySelectorAll('.edit-coupon-form').forEach((form) => {
 });
 
 async function updateCoupon(couponId) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
-
   const couponCode = document.getElementById(`couponCode${couponId}`).value;
   const discountType = document.getElementById(`discountType${couponId}`).value;
   const discountValue = document.getElementById(
@@ -187,8 +164,17 @@ async function updateCoupon(couponId) {
         new Date(updatedCoupon.validFrom).toLocaleDateString();
       document.getElementById(`validUntilDisplay${couponId}`).textContent =
         new Date(updatedCoupon.validUntil).toLocaleDateString();
-      document.getElementById(`isActiveDisplay${couponId}`).innerHTML =
-        `<span class="badge w-100  ${updatedCoupon.isActive ? 'bg-success' : 'bg-danger'}">${updatedCoupon.isActive ? 'Active' : 'Inactive'}</span>`;
+      const statusBadge = document.getElementById(`isActiveDisplay${couponId}`);
+      statusBadge.classList.remove(
+        'is-positive',
+        'is-negative',
+        'bg-success',
+        'bg-danger'
+      );
+      statusBadge.classList.add(
+        updatedCoupon.isActive ? 'is-positive' : 'is-negative'
+      );
+      statusBadge.textContent = updatedCoupon.isActive ? 'Active' : 'Inactive';
 
       Toast.fire({
         icon: 'success',
@@ -214,33 +200,19 @@ async function updateCoupon(couponId) {
 }
 
 async function deleteCoupon(couponId) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
+  const confirmDelete = await window.adminConfirm.open({
+    title: 'Delete Coupon',
+    message: 'This coupon will be permanently deleted.',
+    confirmText: 'Delete',
+    variant: 'danger',
   });
 
-  const confirmDelete = await Swal.fire({
-    title: 'Are you sure?',
-    text: 'This action cannot be undone!',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Yes, delete it!',
-    cancelButtonText: 'Cancel',
-  });
-
-  if (!confirmDelete.isConfirmed) {
+  if (!confirmDelete) {
     return; // Exit if the user cancels the deletion
   }
 
   try {
-    const response = await fetch(`/admin/coupons/delete/${couponId}`, {
+    const response = await fetch(`/admin/coupons/${couponId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -274,6 +246,21 @@ async function deleteCoupon(couponId) {
 }
 
 async function toggleCouponStatus(couponId) {
+  const badge = document.getElementById(`isActiveDisplay${couponId}`);
+  const currentIsActive = badge.textContent.trim().toLowerCase() === 'active';
+  const nextAction = currentIsActive ? 'Deactivate' : 'Activate';
+
+  const confirmed = await window.adminConfirm.open({
+    title: `${nextAction} Coupon`,
+    message: `Do you want to ${nextAction.toLowerCase()} this coupon?`,
+    confirmText: nextAction,
+    variant: 'danger',
+  });
+
+  if (!confirmed) {
+    return;
+  }
+
   try {
     const response = await fetch(`/admin/coupons/toggle/${couponId}`, {
       method: 'GET',
@@ -286,16 +273,30 @@ async function toggleCouponStatus(couponId) {
 
     if (result.success) {
       // Update the UI with the new status
-      const badge = document.getElementById(`isActiveDisplay${couponId}`);
       const newStatus = result.coupon.isActive; // Get the updated value from the response
 
-      badge.classList.remove(newStatus ? 'bg-danger' : 'bg-success');
-      badge.classList.add(newStatus ? 'bg-success' : 'bg-danger');
+      badge.classList.remove(
+        'is-positive',
+        'is-negative',
+        'bg-success',
+        'bg-danger'
+      );
+      badge.classList.add(newStatus ? 'is-positive' : 'is-negative');
       badge.textContent = newStatus ? 'Active' : 'Inactive';
+      Toast.fire({
+        icon: 'success',
+        title: `Coupon ${newStatus ? 'activated' : 'deactivated'}.`,
+      });
     } else {
-      console.error('Error updating status:', result.message);
+      Toast.fire({
+        icon: 'error',
+        title: result.message || 'Error updating coupon status.',
+      });
     }
   } catch (error) {
-    console.error('Error toggling coupon status:', error);
+    Toast.fire({
+      icon: 'error',
+      title: 'Error toggling coupon status.',
+    });
   }
 }

@@ -76,6 +76,12 @@ exports.validate = (req, res, next) => {
 
   if (!errors.isEmpty()) {
     const errorMessages = errors.array();
+    const fieldErrors = errorMessages.reduce((acc, err) => {
+      if (err.path && !acc[err.path]) {
+        acc[err.path] = err.msg;
+      }
+      return acc;
+    }, {});
 
     // For AJAX/API requests, return JSON
     if (
@@ -85,6 +91,16 @@ exports.validate = (req, res, next) => {
       return res.status(400).json({
         success: false,
         errors: errorMessages,
+      });
+    }
+
+    const isAdminLoginRequest = req.originalUrl.includes('/admin/login');
+    if (isAdminLoginRequest) {
+      return res.status(400).render('admin/adminLogin', {
+        title: 'Admin Login',
+        errors: fieldErrors,
+        formData: { username: req.body.username || '' },
+        authError: null,
       });
     }
 
@@ -109,5 +125,5 @@ exports.validate = (req, res, next) => {
     });
   }
 
-  next();
+  return next();
 };

@@ -1,0 +1,61 @@
+<%
+  const actionPath = action || '/admin/users';
+  const searchParamName = paramName || 'search';
+  const debounceMs = Number.isFinite(debounce) ? debounce : 400;
+  const searchValue = value || '';
+  const hint = placeholder || 'Search...';
+  const query = extraQuery || {};
+  const buildResetUrl = () => {
+    const params = new URLSearchParams();
+
+    Object.entries(query).forEach(([key, val]) => {
+      if (
+        val !== undefined &&
+        val !== null &&
+        val !== '' &&
+        key !== searchParamName &&
+        key !== 'page'
+      ) {
+        params.set(key, String(val));
+      }
+    });
+
+    params.set('page', '1');
+
+    return `${actionPath}?${params.toString()}`;
+  };
+%>
+
+<form
+  class="admin-search-bar mb-3"
+  method="GET"
+  action="<%= actionPath %>"
+  data-admin-search-form
+  data-debounce="<%= debounceMs %>"
+>
+  <div class="admin-search-input-wrap" data-bs-theme="dark">
+    <input
+      type="text"
+      class="form-control admin-search-input"
+      name="<%= searchParamName %>"
+      value="<%= searchValue %>"
+      placeholder="<%= hint %>"
+      autocomplete="off"
+      data-admin-search-input
+    />
+  </div>
+
+  <% Object.entries(query).forEach(([key, val]) => { %>
+    <% if (val !== undefined && val !== null && val !== '' && key !== searchParamName) { %>
+      <input type="hidden" name="<%= key %>" value="<%= val %>" />
+    <% } %>
+  <% }); %>
+
+  <input type="hidden" name="page" value="1" data-admin-search-page />
+
+  <% if (searchValue) { %>
+    <div class="admin-search-reset-wrap">
+      <a href="<%= buildResetUrl() %>" class="btn admin-search-reset-btn">Reset</a>
+    </div>
+  <% } %>
+</form>

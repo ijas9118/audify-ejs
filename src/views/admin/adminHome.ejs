@@ -1,261 +1,176 @@
-<div class="container-fluid mt-3">
-  <div class="row">
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-          <a href="/admin" class="text-light">Admin</a>
-        </li>
-        <li class="breadcrumb-item active text-info" aria-current="page">
-          Dashboard
-        </li>
-      </ol>
-    </nav>
-  </div>
+<div class="container-fluid mt-3 admin-management-page admin-dashboard-page">
+  <h3 class="admin-management-title my-3">Dashboard</h3>
 
-  <div class="row">
-    <div class="col-12">
-      <div class="card shadow-sm">
-        <div class="card-header bg-dark text-light">
-          <h5>Sales Report</h5>
-          <div class="d-flex align-items-center">
-            <div class="dropdown float-end me-3">
-              <button
-                class="btn btn-dark dropdown-toggle px-4"
-                id="filterDropdown"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                Daily
-              </button>
-              <ul class="dropdown-menu" aria-labelledby="filterDropdown">
-                <li>
-                  <a class="dropdown-item" href="#" data-value="Daily">Daily</a>
-                </li>
-                <li>
-                  <a class="dropdown-item" href="#" data-value="Weekly"
-                    >Weekly</a
-                  >
-                </li>
-                <li>
-                  <a class="dropdown-item" href="#" data-value="Monthly"
-                    >Monthly</a
-                  >
-                </li>
-                <li>
-                  <a class="dropdown-item" href="#" data-value="Yearly"
-                    >Yearly</a
-                  >
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="#"
-                    data-value="Custom Date Range"
-                    >Custom Date Range</a
-                  >
-                </li>
-              </ul>
-            </div>
-
-            <!-- Custom Date Range Input Fields -->
-            <div id="customDateRange" class="d-none">
-              <input
-                type="date"
-                id="startDate"
-                class="form-control d-inline-block me-2"
-                placeholder="Start Date"
-              />
-              <input
-                type="date"
-                id="endDate"
-                class="form-control d-inline-block me-2"
-                placeholder="End Date"
-              />
-              <button class="btn btn-primary">Apply</button>
-            </div>
-          </div>
+  <section class="admin-dashboard-panel">
+    <div class="admin-dashboard-panel-head">
+      <h5 class="admin-dashboard-panel-title mb-0">Sales Report</h5>
+      <div class="admin-dashboard-controls">
+        <div class="dropdown">
+          <button
+            class="btn admin-dashboard-filter-btn dropdown-toggle"
+            id="filterDropdown"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            Daily
+          </button>
+          <ul class="dropdown-menu admin-dashboard-dropdown" aria-labelledby="filterDropdown">
+            <li><a class="dropdown-item" href="#" data-value="Daily">Daily</a></li>
+            <li><a class="dropdown-item" href="#" data-value="Weekly">Weekly</a></li>
+            <li><a class="dropdown-item" href="#" data-value="Monthly">Monthly</a></li>
+            <li><a class="dropdown-item" href="#" data-value="Yearly">Yearly</a></li>
+            <li><a class="dropdown-item" href="#" data-value="Custom Date Range">Custom Date Range</a></li>
+          </ul>
         </div>
 
-        <div class="card-body bg-dark">
-          <!-- Table for Sales Report -->
-          <table class="table table-striped table-hover table-bordered">
-            <thead class="thead-dark">
-              <tr>
-                <th>Date</th>
-                <th>Total Sales Revenue</th>
-                <th>Discount Applied</th>
-                <th>Net Sales</th>
-                <th>Number of Orders</th>
-                <th>Total Items Sold</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Dynamic rows with sales data will go here -->
-              <tr>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-              </tr>
-              <!-- Repeat for more rows -->
-            </tbody>
-          </table>
-
-          <!-- Overall Sales Summary -->
-          <div class="row mt-4">
-            <div class="col-md-4">
-              <div class="card bg-light">
-                <div class="card-body">
-                  <h6>Total Sales Count</h6>
-                  <p id="totalSalesCount" class="text-success fw-semibold">
-                    0 Orders
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card bg-light">
-                <div class="card-body">
-                  <h6>Overall Order Amount</h6>
-                  <p id="overallOrderAmount" class="text-success fw-semibold">
-                    0
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card bg-light">
-                <div class="card-body">
-                  <h6>Overall Discount</h6>
-                  <p id="overallDiscount" class="text-success fw-semibold">0</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Download Buttons -->
-          <div class="row mt-4">
-            <div class="col-md-6">
-              <button id="pdfDownload" class="btn btn-outline-light btn-block">
-                Download PDF
-              </button>
-              <button id="excelDownload" class="btn btn-primary btn-block">
-                Download Excel
-              </button>
-            </div>
-          </div>
+        <div id="customDateRange" class="d-none admin-dashboard-date-range">
+          <input
+            type="date"
+            id="startDate"
+            class="form-control admin-dashboard-date-input"
+            placeholder="Start Date"
+          />
+          <input
+            type="date"
+            id="endDate"
+            class="form-control admin-dashboard-date-input"
+            placeholder="End Date"
+          />
+          <button class="btn btn-primary admin-dashboard-apply-btn">Apply</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="row">
-    <!-- Chart Section -->
-    <div class="col-12 mt-5">
-      <div class="card shadow-sm">
-        <div class="card-header bg-dark text-light">
-          <h5>Sales Chart</h5>
-          <div class="d-flex align-items-center">
-            <!-- Dropdown to filter chart data -->
-            <div class="dropdown float-end me-3">
-              <button
-                class="btn btn-dark dropdown-toggle px-4"
-                id="chartFilterDropdown"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                Monthly
-              </button>
-              <ul class="dropdown-menu" aria-labelledby="chartFilterDropdown">
-                <li>
-                  <a class="dropdown-item" href="#" data-value="Daily">Daily</a>
-                </li>
-                <li>
-                  <a class="dropdown-item" href="#" data-value="Weekly"
-                    >Weekly</a
-                  >
-                </li>
-                <li>
-                  <a class="dropdown-item" href="#" data-value="Monthly"
-                    >Monthly</a
-                  >
-                </li>
-                <li>
-                  <a class="dropdown-item" href="#" data-value="Yearly"
-                    >Yearly</a
-                  >
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="#"
-                    data-value="Custom Date Range"
-                    >Custom Date Range</a
-                  >
-                </li>
-              </ul>
-            </div>
+    <div class="admin-table-shell">
+      <div class="table-responsive">
+        <table class="table admin-management-table admin-dashboard-report-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Total Sales Revenue</th>
+              <th>Discount Applied</th>
+              <th>Net Sales</th>
+              <th>Number of Orders</th>
+              <th>Total Items Sold</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-2">
+      <div class="col-sm-6 col-lg-4">
+        <div class="admin-kpi-card">
+          <p class="admin-kpi-label mb-1">Total Sales Count</p>
+          <p id="totalSalesCount" class="admin-kpi-value mb-0">0 Orders</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div class="admin-kpi-card">
+          <p class="admin-kpi-label mb-1">Overall Order Amount</p>
+          <p id="overallOrderAmount" class="admin-kpi-value mb-0">0</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div class="admin-kpi-card">
+          <p class="admin-kpi-label mb-1">Overall Discount</p>
+          <p id="overallDiscount" class="admin-kpi-value mb-0">0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-dashboard-downloads mt-3">
+      <button id="pdfDownload" class="btn admin-action-btn admin-action-btn-secondary">
+        Download PDF
+      </button>
+      <button id="excelDownload" class="btn admin-action-btn admin-action-btn-success">
+        Download Excel
+      </button>
+    </div>
+  </section>
+
+  <section class="admin-dashboard-panel mt-4">
+    <div class="admin-dashboard-panel-head">
+      <h5 class="admin-dashboard-panel-title mb-0">Sales Chart</h5>
+      <div class="dropdown">
+        <button
+          class="btn admin-dashboard-filter-btn dropdown-toggle"
+          id="chartFilterDropdown"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          Monthly
+        </button>
+        <ul class="dropdown-menu admin-dashboard-dropdown" aria-labelledby="chartFilterDropdown">
+          <li><a class="dropdown-item" href="#" data-value="Daily">Daily</a></li>
+          <li><a class="dropdown-item" href="#" data-value="Weekly">Weekly</a></li>
+          <li><a class="dropdown-item" href="#" data-value="Monthly">Monthly</a></li>
+          <li><a class="dropdown-item" href="#" data-value="Yearly">Yearly</a></li>
+          <li><a class="dropdown-item" href="#" data-value="Custom Date Range">Custom Date Range</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="admin-dashboard-chart-wrap">
+      <canvas id="salesChart"></canvas>
+    </div>
+  </section>
+
+  <div class="row g-4 mt-1">
+    <div class="col-lg-6">
+      <section class="admin-dashboard-panel h-100">
+        <div class="admin-dashboard-panel-head">
+          <h5 class="admin-dashboard-panel-title mb-0">Best Selling Products (Top 10)</h5>
+        </div>
+        <div class="admin-table-shell">
+          <div class="table-responsive">
+            <table class="table admin-management-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Product Image</th>
+                  <th>Product Name</th>
+                  <th>Popularity</th>
+                </tr>
+              </thead>
+              <tbody id="bestSellingProducts"></tbody>
+            </table>
           </div>
         </div>
-
-        <div class="card-body bg-dark">
-          <!-- Chart Container -->
-          <canvas id="salesChart"></canvas>
-        </div>
-      </div>
+      </section>
     </div>
-  </div>
 
-  <div class="row">
-    <!-- Best Selling Products Section -->
-    <div class="col-md-6 mt-5">
-      <div class="card shadow-sm">
-        <div class="card-header bg-dark text-light">
-          <h5>Best Selling Products (Top 10)</h5>
+    <div class="col-lg-6">
+      <section class="admin-dashboard-panel h-100">
+        <div class="admin-dashboard-panel-head">
+          <h5 class="admin-dashboard-panel-title mb-0">Best Selling Categories (Top 3)</h5>
         </div>
-        <div class="card-body bg-dark">
-          <table class="table table-dark table-striped table-hover table-bordered">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Product Image</th>
-                <th>Product Name</th>
-                <th>Popularity</th>
-              </tr>
-            </thead>
-            <tbody id="bestSellingProducts">
-              <!-- Dynamic Product Rows will go here -->
-            </tbody>
-          </table>
+        <div class="admin-table-shell">
+          <div class="table-responsive">
+            <table class="table admin-management-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Category Name</th>
+                  <th>Popularity</th>
+                </tr>
+              </thead>
+              <tbody id="bestSellingCategories"></tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    </div>
-  
-    <!-- Best Selling Categories Section -->
-    <div class="col-md-6 mt-5">
-      <div class="card shadow-sm">
-        <div class="card-header bg-dark text-light">
-          <h5>Best Selling Categories (Top 3)</h5>
-        </div>
-        <div class="card-body bg-dark">
-          <table class="table table-dark table-striped table-hover table-bordered">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Category Name</th>
-                <th>Popularity</th>
-              </tr>
-            </thead>
-            <tbody id="bestSellingCategories">
-              <!-- Dynamic Category Rows will go here -->
-            </tbody>
-          </table>
-        </div>
-      </div>
+      </section>
     </div>
   </div>
 

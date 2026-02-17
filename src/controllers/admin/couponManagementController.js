@@ -1,5 +1,5 @@
 const asyncHandler = require('express-async-handler');
-const Coupon = require('../../models/coupon');
+const couponService = require('../../services/couponService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../../constants/constants');
 
 // ============================
@@ -8,13 +8,21 @@ const { StatusCodes, RESPONSE_MESSAGES } = require('../../constants/constants');
 
 // Render Coupon Management Page
 const getCoupons = asyncHandler(async (req, res) => {
-  const coupons = await Coupon.find();
+  const { coupons, pagination, search } =
+    await couponService.getPaginatedCoupons({
+      page: req.query.page,
+      limit: req.query.limit,
+      search: req.query.search,
+    });
+
   res.render('layout', {
     title: 'Coupon Management',
     viewName: 'admin/couponManagement',
     activePage: 'coupon',
     isAdmin: true,
     coupons,
+    pagination,
+    search,
   });
 });
 
@@ -31,43 +39,39 @@ const addCoupon = asyncHandler(async (req, res) => {
     isActive,
   } = req.body;
 
-  // Validate required fields
-  if (!code || !discountType || !discountValue || !validFrom || !validUntil) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      success: false,
-      message: RESPONSE_MESSAGES.MISSING_REQUIRED_FIELDS,
+  try {
+    await couponService.createCoupon({
+      code,
+      discountType,
+      discountValue,
+      maxDiscountValue,
+      minCartValue,
+      validFrom,
+      validUntil,
+      usageLimit,
+      isActive,
     });
+
+    return res
+      .status(StatusCodes.CREATED)
+      .json({ success: true, message: RESPONSE_MESSAGES.COUPON_ADDED });
+  } catch (error) {
+    if (error.message === 'Missing required fields') {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: RESPONSE_MESSAGES.MISSING_REQUIRED_FIELDS,
+      });
+    }
+
+    if (error.message === 'Coupon already exists') {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: RESPONSE_MESSAGES.COUPON_EXISTS,
+      });
+    }
+
+    throw error;
   }
-
-  const existingCoupon = await Coupon.findOne({ code });
-
-  if (existingCoupon) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      success: false,
-      message: RESPONSE_MESSAGES.COUPON_EXISTS,
-    });
-  }
-
-  // Create a new coupon document
-  const newCoupon = new Coupon({
-    code,
-    discountType,
-    discountValue,
-    maxDiscountValue,
-    minCartValue: minCartValue || 0,
-    validFrom,
-    validUntil,
-    usageLimit: usageLimit || 1,
-    isActive: isActive !== undefined ? isActive : true,
-  });
-
-  // Save the coupon to the database
-  await newCoupon.save();
-
-  // Send a success response
-  res
-    .status(StatusCodes.CREATED)
-    .json({ success: true, message: RESPONSE_MESSAGES.COUPON_ADDED });
 });
 
 const updateCoupon = asyncHandler(async (req, res) => {
@@ -84,26 +88,31 @@ const updateCoupon = asyncHandler(async (req, res) => {
     isActive,
   } = req.body;
 
-  const coupon = await Coupon.findById(id);
+  let coupon;
 
-  if (!coupon) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
+  try {
+    coupon = await couponService.updateCouponById(id, {
+      code,
+      discountType,
+      discountValue,
+      maxDiscountValue,
+      minCartValue,
+      validFrom,
+      validUntil,
+      usageLimit,
+      isActive,
+    });
+  } catch (error) {
+    if (error.message === 'Coupon not found') {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
+    }
+
+    throw error;
   }
 
-  coupon.code = code || coupon.code;
-  coupon.discountType = discountType || coupon.discountType;
-  coupon.discountValue = discountValue || coupon.discountValue;
-  coupon.maxDiscountValue = maxDiscountValue;
-  coupon.minCartValue = minCartValue;
-  coupon.validFrom = validFrom || coupon.validFrom;
-  coupon.validUntil = validUntil || coupon.validUntil;
-  coupon.usageLimit = usageLimit || coupon.usageLimit;
-  coupon.isActive = isActive !== undefined ? isActive : coupon.isActive;
-  await coupon.save();
-
-  res.status(StatusCodes.OK).json({
+  return res.status(StatusCodes.OK).json({
     success: true,
     message: RESPONSE_MESSAGES.COUPON_UPDATED,
     coupon,
@@ -113,35 +122,40 @@ const updateCoupon = asyncHandler(async (req, res) => {
 const deleteCoupon = asyncHandler(async (req, res) => {
   const couponId = req.params.id;
 
-  const result = await Coupon.findByIdAndDelete(couponId);
+  try {
+    await couponService.deleteCouponById(couponId);
+  } catch (error) {
+    if (error.message === 'Coupon not found') {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
+    }
 
-  if (!result) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
+    throw error;
   }
 
-  res
+  return res
     .status(StatusCodes.OK)
     .json({ message: RESPONSE_MESSAGES.COUPON_DELETED });
 });
 
 const toggleCouponStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  let coupon;
 
-  const coupon = await Coupon.findById(id);
+  try {
+    coupon = await couponService.toggleCouponStatusById(id);
+  } catch (error) {
+    if (error.message === 'Coupon not found') {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
+    }
 
-  if (!coupon) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ success: false, message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
+    throw error;
   }
 
-  coupon.isActive = !coupon.isActive;
-
-  await coupon.save();
-
-  res.json({
+  return res.json({
     success: true,
     message: RESPONSE_MESSAGES.COUPON_STATUS_UPDATED,
     coupon,

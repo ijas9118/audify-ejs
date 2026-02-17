@@ -46,6 +46,7 @@
         </main>
       </div>
     </div>
+    <%- include('partials/admin_confirm_modal') %>
     <% } else { %> <%- include(header, { activePage: activePage }) %>
     <!-- Dynamic Content -->
     <%- include(viewName) %> <% } %>
@@ -67,6 +68,11 @@
     <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/script.js"></script>
+    <% if (isAdmin) { %>
+    <script src="/js/adminToast.js"></script>
+    <script src="/js/adminConfirm.js"></script>
+    <script src="/js/adminSearch.js"></script>
+    <% } %>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   </body>
 </html>

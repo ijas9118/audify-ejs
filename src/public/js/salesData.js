@@ -49,16 +49,37 @@ document.addEventListener('DOMContentLoaded', () => {
           {
             label: 'Total Sales',
             data: data.values,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)', // Bar color
-            borderColor: 'rgba(75, 192, 192, 1)', // Bar border color
+            backgroundColor: 'rgba(79, 59, 112, 0.38)',
+            borderColor: 'rgba(113, 86, 157, 0.9)',
             borderWidth: 1,
           },
         ],
       },
       options: {
+        plugins: {
+          legend: {
+            labels: {
+              color: '#d8d8d8',
+            },
+          },
+        },
         scales: {
+          x: {
+            ticks: {
+              color: '#b9b9b9',
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.06)',
+            },
+          },
           y: {
             beginAtZero: true,
+            ticks: {
+              color: '#b9b9b9',
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.06)',
+            },
           },
         },
       },

@@ -3,13 +3,26 @@
     "node": true,
     "es2021": true
   },
-  "extends": ["airbnb-base", "prettier"],
-  "plugins": ["prettier"],
+  "extends": [
+    "airbnb-base",
+    "plugin:security/recommended-legacy",
+    "plugin:promise/recommended",
+    "plugin:n/recommended",
+    "prettier"
+  ],
+  "plugins": ["prettier", "security", "promise", "n"],
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module"
+  },
   "rules": {
     "prettier/prettier": "error",
-    "no-console": "off",
+    "no-console": "warn",
     "no-underscore-dangle": "off",
-    "consistent-return": "off"
+    "consistent-return": "error",
+    "n/no-process-exit": "warn",
+    "n/no-missing-import": "error",
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }]
   },
   "overrides": [
     {
@@ -22,16 +35,11 @@
         "bootstrap": "readonly"
       },
       "rules": {
-        "no-undef": "off",
-        "no-unused-vars": "off",
-        "no-param-reassign": "off",
-        "no-use-before-define": "off",
-        "no-shadow": "off",
-        "func-names": "off",
-        "no-alert": "off",
-        "no-plusplus": "off",
-        "no-restricted-globals": "off",
-        "no-nested-ternary": "off"
+        "no-undef": "error",
+        "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+        "no-param-reassign": ["error", { "props": false }],
+        "no-use-before-define": ["error", { "functions": false }],
+        "no-console": "warn"
       }
     }
   ]

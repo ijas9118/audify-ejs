@@ -1,94 +1,103 @@
-<div class="container-fluid mt-3">
-  <div class="row">
-    <!-- Main content -->
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-          <a href="/admin" class="text-light">Admin</a>
-        </li>
-        <li class="breadcrumb-item active text-info" aria-current="page">
-          Offer Management
-        </li>
+<div class="container-fluid mt-3 admin-management-page">
+  <div class="admin-management-header mb-3">
+    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrap">
+      <ol class="breadcrumb admin-breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Offer Management</li>
       </ol>
     </nav>
-    <div class="container">
-      <div class="row">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h3 class="text-light">Manage Offers</h3>
-          <button
-            type="button"
-            class="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#addOfferModal"
-          >
-            Add New Offer
-          </button>
-        </div>
-        <!-- Check if there are offers to display -->
-        <% if (offers.length === 0) { %>
-          <div class="alert alert-info text-center" role="alert">No offers found.</div>
-        <% } else { %>
-          <!-- Offer Table -->
-          <div class="table-responsive">
-            <table class="table text-center">
-              <thead class="table-dark">
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Offer Type</th>
-                  <th scope="col">Applicable To</th>
-                  <th scope="col">Discount</th>
-                  <th scope="col">Max Discount</th>
-                  <th scope="col">Valid From</th>
-                  <th scope="col">Valid Until</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Loop through offers data -->
-                <% offers.forEach((offer, index) => { %>
-                  <tr data-offer-id="<%= offer._id %>">
-                    <th scope="row"><%= index + 1 %></th>
-                    <td><%= offer.type %></td>
-                    <td>
-                      <% if (offer.type === 'product') { %>
-                        <%= offer.product.name %>
-                      <% } else if (offer.type === 'category') { %>
-                        <%= offer.category.name %>
-                      <% } else { %>
-                        Referral
-                      <% } %>
-                    </td>
-                    <td>
-                      <%= offer.discountType === 'percentage' ? `${offer.discountValue}%` : `₹${offer.discountValue}` %>
-                    </td>
-                    <td>
-                      <%= offer.maxDiscountAmount ? `₹${offer.maxDiscountAmount}` : '-' %>
-                    </td>
-                    <td><%= new Date(offer.validFrom).toLocaleDateString() %></td>
-                    <td><%= new Date(offer.validUntil).toLocaleDateString() %></td>
-                    <td>
-                      <span 
-                        id="statusDisplay<%= offer._id %>" 
-                        class="badge w-100 py-2 <%= offer.status === 'active' ? 'bg-success' : 'bg-danger' %>" 
-                        style="cursor: pointer;" 
-                        onclick="toggleOfferStatus('<%= offer._id %>')">
-                        <%= offer.status %>
-                      </span>
-                    </td>
-                    <td class="d-flex gap-2">
-                      <button class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#editOfferModal<%= offer._id %>">Edit</button>
-                      <button class="btn btn-outline-danger w-100" onclick="deleteOffer('<%= offer._id %>')">Delete</button>
-                    </td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          </div>
-        <% } %>
-      </div>
+    <div class="admin-management-title-row mt-2">
+      <h3 class="admin-management-title mb-0">Manage Offers</h3>
+      <button
+        type="button"
+        class="btn btn-primary admin-create-btn"
+        data-bs-toggle="modal"
+        data-bs-target="#addOfferModal"
+      >
+        Add New Offer
+      </button>
     </div>
   </div>
+
+  <%- include('../partials/admin_search', {
+    action: '/admin/offers',
+    paramName: 'search',
+    value: search || '',
+    placeholder: 'Search by type, status, discount, product or category',
+    debounce: 400,
+    extraQuery: { limit: pagination.limit },
+  }) %>
+
+  <div class="admin-table-shell">
+    <div class="table-responsive">
+      <table class="table admin-management-table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Offer Type</th>
+            <th scope="col">Applicable To</th>
+            <th scope="col">Discount</th>
+            <th scope="col">Max Discount</th>
+            <th scope="col">Valid From</th>
+            <th scope="col">Valid Until</th>
+            <th scope="col">Status</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% offers.forEach((offer, index) => { %>
+          <tr data-offer-id="<%= offer._id %>">
+            <th scope="row" class="admin-row-index"><%= pagination.skip + index + 1 %></th>
+            <td class="admin-cell-primary"><%= offer.type %></td>
+            <td>
+              <% if (offer.type === 'product') { %>
+                <%= offer.product && offer.product.name ? offer.product.name : '-' %>
+              <% } else if (offer.type === 'category') { %>
+                <%= offer.category && offer.category.name ? offer.category.name : '-' %>
+              <% } else { %>
+                Referral
+              <% } %>
+            </td>
+            <td>
+              <%= offer.discountType === 'percentage' ? `${offer.discountValue}%` : `₹${offer.discountValue}` %>
+            </td>
+            <td>
+              <%= offer.maxDiscountAmount ? `₹${offer.maxDiscountAmount}` : '-' %>
+            </td>
+            <td><%= new Date(offer.validFrom).toLocaleDateString() %></td>
+            <td><%= new Date(offer.validUntil).toLocaleDateString() %></td>
+            <td>
+              <span
+                id="statusDisplay<%= offer._id %>"
+                class="admin-status-badge <%= offer.status === 'active' ? 'is-positive' : 'is-negative' %>"
+                onclick="toggleOfferStatus('<%= offer._id %>')"
+              >
+                <%= offer.status %>
+              </span>
+            </td>
+            <td class="admin-cell-actions">
+              <div class="admin-action-group">
+                <button class="btn admin-action-btn admin-action-btn-secondary" data-bs-toggle="modal" data-bs-target="#editOfferModal<%= offer._id %>">Edit</button>
+                <button class="btn admin-action-btn admin-action-btn-danger-alt" onclick="deleteOffer('<%= offer._id %>')">Delete</button>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (!offers.length) { %>
+          <tr>
+            <td colspan="9" class="text-center admin-empty-row">No offers found</td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%- include('../partials/admin_pagination', {
+    pagination,
+    basePath: '/admin/offers',
+    extraQuery: { search: search || '' },
+  }) %>
 </div>
 
 <!-- Bootstrap Modal for Adding Offer -->

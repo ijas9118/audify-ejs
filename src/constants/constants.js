@@ -5,6 +5,7 @@ const RESPONSE_MESSAGES = {
   LOGIN_SUCCESS: 'Login successful',
   LOGOUT_SUCCESS: 'Logged out successfully',
   INVALID_CREDENTIALS: 'Invalid Credentials',
+  ACCOUNT_BLOCKED: 'Your account is blocked. Please contact support.',
   USER_NOT_FOUND: 'User not found',
   USER_ALREADY_EXISTS: 'User Already Exists',
   PASSWORD_MISMATCH: 'Passwords do not match',
@@ -97,6 +98,7 @@ const RESPONSE_MESSAGES = {
   INSUFFICIENT_WALLET_BALANCE:
     'Insufficient wallet balance. Please use a different payment method.',
   CART_EMPTY: 'Cart is empty',
+  INVOICE_GENERATED: 'Invoice generated successfully',
 };
 
 module.exports = {

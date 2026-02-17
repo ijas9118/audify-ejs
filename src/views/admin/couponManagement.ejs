@@ -1,95 +1,105 @@
-<div class="container-fluid mt-3">
-  <div class="row">
-    <!-- Main content -->
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-          <a href="/admin" class="text-light">Admin</a>
-        </li>
-        <li class="breadcrumb-item active text-info" aria-current="page">
-          Coupon Management
-        </li>
+<div class="container-fluid mt-3 admin-management-page">
+  <div class="admin-management-header mb-3">
+    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrap">
+      <ol class="breadcrumb admin-breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Coupon Management</li>
       </ol>
     </nav>
-    <div class="container">
-      <div class="row">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h3 class="text-light">Coupon Management</h3>
-          <button
-            type="button"
-            class="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#addCouponModal"
-          >
-            Add New Coupon
-          </button>
-        </div>
-        <% if (coupons.length === 0) { %>
-          <div class="alert alert-info text-center" role="alert">No coupons found.</div>
-        <% } else { %>
-          <!-- Coupon Table -->
-          <div class="table-responsive">
-            <table class="table text-center">
-              <thead class="table-dark">
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Coupon Code</th>
-                  <th scope="col">Discount</th>
-                  <th scope="col">Max Discount</th>
-                  <th scope="col">Min Cart Value</th>
-                  <th scope="col">Usage Limit</th>
-                  <th scope="col">Valid From</th>
-                  <th scope="col">Valid Until</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Loop through coupons data -->
-                <% coupons.forEach((coupon, index) => { %>
-                  <tr data-coupon-id="<%= coupon._id %>">
-                    <th scope="row"><%= index + 1 %></th>
-                    <td id="couponCodeDisplay<%= coupon._id %>"><%= coupon.code %></td>
-                    <td id="discountTypeDisplay<%= coupon._id %>">
-                      <%= coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}` %>
-                    </td>
-                    <td id="maxDiscountValueDisplay<%= coupon._id %>">
-                      <%= coupon.maxDiscountValue ? `₹${coupon.maxDiscountValue}` : '-' %>
-                    </td>
-                    <td id="minCartValueDisplay<%= coupon._id %>">
-                      <%= coupon.minCartValue ? `₹${coupon.minCartValue}` : '-' %>
-                    </td>
-                    <td id="usageLimitDisplay<%= coupon._id %>">
-                      <%= coupon.usageLimit ? coupon.usageLimit : 'Unlimited' %>
-                    </td>
-                    <td id="validFromDisplay<%= coupon._id %>">
-                      <%= new Date(coupon.validFrom).toLocaleDateString() %>
-                    </td>
-                    <td id="validUntilDisplay<%= coupon._id %>">
-                      <%= new Date(coupon.validUntil).toLocaleDateString() %>
-                    </td>
-                    <td >
-                      <span 
-                        id="isActiveDisplay<%= coupon._id %>" 
-                        class="badge w-100 py-2 <%= coupon.isActive ? 'bg-success' : 'bg-danger' %>" 
-                        style="cursor: pointer;" 
-                        onclick="toggleCouponStatus('<%= coupon._id %>')">
-                        <%= coupon.isActive ? 'Active' : 'Inactive' %>
-                      </span>
-                    </td>
-                    <td class="d-flex gap-2">
-                      <button class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#editCouponModal<%= coupon._id %>">Edit</button>
-                      <button class="btn btn-outline-danger w-100" onclick="deleteCoupon('<%= coupon._id %>')">Delete</button>
-                    </td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          </div>
-        <% } %>
-      </div>
+    <div class="admin-management-title-row mt-2">
+      <h3 class="admin-management-title mb-0">Coupon Management</h3>
+      <button
+        type="button"
+        class="btn btn-primary admin-create-btn"
+        data-bs-toggle="modal"
+        data-bs-target="#addCouponModal"
+      >
+        Add New Coupon
+      </button>
     </div>
   </div>
+
+  <%- include('../partials/admin_search', {
+    action: '/admin/coupons',
+    paramName: 'search',
+    value: search || '',
+    placeholder: 'Search by coupon code or discount type',
+    debounce: 400,
+    extraQuery: { limit: pagination.limit },
+  }) %>
+
+  <div class="admin-table-shell">
+    <div class="table-responsive">
+      <table class="table admin-management-table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Coupon Code</th>
+            <th scope="col">Discount</th>
+            <th scope="col">Max Discount</th>
+            <th scope="col">Min Cart Value</th>
+            <th scope="col">Usage Limit</th>
+            <th scope="col">Valid From</th>
+            <th scope="col">Valid Until</th>
+            <th scope="col">Status</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% coupons.forEach((coupon, index) => { %>
+          <tr data-coupon-id="<%= coupon._id %>">
+            <th scope="row" class="admin-row-index"><%= pagination.skip + index + 1 %></th>
+            <td id="couponCodeDisplay<%= coupon._id %>" class="admin-cell-primary"><%= coupon.code %></td>
+            <td id="discountTypeDisplay<%= coupon._id %>">
+              <%= coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}` %>
+            </td>
+            <td id="maxDiscountValueDisplay<%= coupon._id %>">
+              <%= coupon.maxDiscountValue ? `₹${coupon.maxDiscountValue}` : '-' %>
+            </td>
+            <td id="minCartValueDisplay<%= coupon._id %>">
+              <%= coupon.minCartValue ? `₹${coupon.minCartValue}` : '-' %>
+            </td>
+            <td id="usageLimitDisplay<%= coupon._id %>">
+              <%= coupon.usageLimit ? coupon.usageLimit : 'Unlimited' %>
+            </td>
+            <td id="validFromDisplay<%= coupon._id %>">
+              <%= new Date(coupon.validFrom).toLocaleDateString() %>
+            </td>
+            <td id="validUntilDisplay<%= coupon._id %>">
+              <%= new Date(coupon.validUntil).toLocaleDateString() %>
+            </td>
+            <td>
+              <span
+                id="isActiveDisplay<%= coupon._id %>"
+                class="admin-status-badge <%= coupon.isActive ? 'is-positive' : 'is-negative' %>"
+                onclick="toggleCouponStatus('<%= coupon._id %>')"
+              >
+                <%= coupon.isActive ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+            <td class="admin-cell-actions">
+              <div class="admin-action-group">
+                <button class="btn admin-action-btn admin-action-btn-secondary" data-bs-toggle="modal" data-bs-target="#editCouponModal<%= coupon._id %>">Edit</button>
+                <button class="btn admin-action-btn admin-action-btn-danger-alt" onclick="deleteCoupon('<%= coupon._id %>')">Delete</button>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (!coupons.length) { %>
+          <tr>
+            <td colspan="10" class="text-center admin-empty-row">No coupons found</td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%- include('../partials/admin_pagination', {
+    pagination,
+    basePath: '/admin/coupons',
+    extraQuery: { search: search || '' },
+  }) %>
 </div>
 
 <!-- Bootstrap Modal for Adding Coupon -->

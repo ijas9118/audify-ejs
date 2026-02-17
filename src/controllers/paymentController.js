@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const paymentService = require('../services/paymentService');
 const orderService = require('../services/orderService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const logger = require('../config/logger');
 
 /**
  * Create Razorpay order
@@ -11,9 +12,9 @@ const createRazorpayOrder = asyncHandler(async (req, res) => {
     const { razorpayOrder, orderData } =
       await paymentService.createRazorpayOrder(req.params.id, req.body);
 
-    res.status(StatusCodes.OK).json({ order: razorpayOrder, orderData });
+    return res.status(StatusCodes.OK).json({ order: razorpayOrder, orderData });
   } catch (error) {
-    console.error('Razorpay error:', error);
+    logger.error('Razorpay error:', error);
 
     if (error.message === 'Order not found') {
       return res
@@ -21,7 +22,9 @@ const createRazorpayOrder = asyncHandler(async (req, res) => {
         .send(RESPONSE_MESSAGES.ORDER_NOT_FOUND);
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Error creating order');
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send('Error creating order');
   }
 });
 
@@ -34,7 +37,7 @@ const confirmPayment = asyncHandler(async (req, res) => {
   try {
     const order = await paymentService.confirmPayment(orderId, paymentMethod);
 
-    res.status(StatusCodes.OK).json({
+    return res.status(StatusCodes.OK).json({
       success: true,
       message: RESPONSE_MESSAGES.PAYMENT_CONFIRMED,
       order,
@@ -67,7 +70,7 @@ const processWalletPayment = asyncHandler(async (req, res) => {
   try {
     const order = await paymentService.processWalletPayment(userId, orderId);
 
-    res.status(StatusCodes.OK).json({
+    return res.status(StatusCodes.OK).json({
       success: true,
       message: 'Payment confirmed using wallet, order updated successfully',
       order,
@@ -92,7 +95,7 @@ const processWalletPayment = asyncHandler(async (req, res) => {
       });
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: `Error processing wallet payment: ${error.message}`,
       error: error.message,
@@ -112,7 +115,7 @@ const getPaymentPage = asyncHandler(async (req, res) => {
       req.session.user
     );
 
-    res.render('layout', {
+    return res.render('layout', {
       title: 'Checkout',
       header: req.session.user ? 'partials/login_header' : 'partials/header',
       viewName: 'users/payment',
@@ -134,7 +137,9 @@ const getPaymentPage = asyncHandler(async (req, res) => {
         .send(RESPONSE_MESSAGES.USER_NOT_FOUND);
     }
 
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Error fetching order');
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send('Error fetching order');
   }
 });
 

@@ -11,21 +11,50 @@ const getAdminLogin = asyncHandler(async (req, res) => {
   if (req.session.admin) {
     return res.redirect('/admin');
   }
-  res.render('admin/adminLogin', { title: 'Admin Login' });
+  return res.render('admin/adminLogin', {
+    title: 'Admin Login',
+    errors: {},
+    formData: {},
+    authError: null,
+  });
 });
 
 // Handle Admin Login
 const loginAdmin = asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
+  const username = (req.body.username || '').trim();
+  const password = (req.body.password || '').trim();
+  const errors = {};
+
+  if (!username) {
+    errors.username = 'Username is required';
+  }
+  if (!password) {
+    errors.password = 'Password is required';
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(StatusCodes.BAD_REQUEST).render('admin/adminLogin', {
+      title: 'Admin Login',
+      errors,
+      formData: { username },
+      authError: null,
+    });
+  }
+
   const findAdmin = await Admin.findOne({ username });
 
   if (findAdmin && (await findAdmin.isPasswordMatched(password))) {
     req.session.admin = findAdmin._id;
 
-    res.redirect('/admin');
-  } else {
-    throw new Error(RESPONSE_MESSAGES.INVALID_CREDENTIALS);
+    return res.redirect('/admin');
   }
+
+  return res.status(StatusCodes.UNAUTHORIZED).render('admin/adminLogin', {
+    title: 'Admin Login',
+    errors: {},
+    formData: { username },
+    authError: RESPONSE_MESSAGES.INVALID_CREDENTIALS,
+  });
 });
 
 // Render Admin Home Page (Dashboard)
@@ -46,7 +75,7 @@ const logoutAdmin = asyncHandler(async (req, res) => {
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ message: RESPONSE_MESSAGES.FAILED_TO_LOGOUT });
     }
-    res.redirect('/admin/login');
+    return res.redirect('/admin/login');
   });
 });
 

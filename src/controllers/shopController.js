@@ -65,7 +65,7 @@ const getProduct = asyncHandler(async (req, res) => {
       .send(RESPONSE_MESSAGES.PRODUCT_NOT_FOUND);
   }
 
-  res.render('layout', {
+  return res.render('layout', {
     title: 'Audify',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/product-detail',
@@ -91,7 +91,7 @@ const getStock = asyncHandler(async (req, res) => {
       .json({ error: RESPONSE_MESSAGES.PRODUCT_NOT_FOUND });
   }
 
-  res.json({ stock });
+  return res.json({ stock });
 });
 
 const getWishList = asyncHandler(async (req, res) => {
@@ -117,7 +117,7 @@ const getWishList = asyncHandler(async (req, res) => {
     description: product.description,
   }));
 
-  res.render('layout', {
+  return res.render('layout', {
     title: 'Wishlist',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/wishlist',
@@ -138,7 +138,7 @@ const addToWishlist = asyncHandler(async (req, res) => {
   }
 
   const user = await productService.addToWishlist(userId, productId);
-  res.status(StatusCodes.OK).json({
+  return res.status(StatusCodes.OK).json({
     message: RESPONSE_MESSAGES.PRODUCT_ADDED_TO_WISHLIST,
     wishlist: user.wishlist,
   });
@@ -159,7 +159,7 @@ const removeWishlist = asyncHandler(async (req, res) => {
       .json({ message: RESPONSE_MESSAGES.USER_NOT_FOUND });
   }
 
-  res.status(StatusCodes.OK).json({
+  return res.status(StatusCodes.OK).json({
     success: true,
     message: RESPONSE_MESSAGES.PRODUCT_REMOVED_FROM_WISHLIST,
   });
@@ -168,7 +168,7 @@ const removeWishlist = asyncHandler(async (req, res) => {
 const searchProducts = asyncHandler(async (req, res) => {
   const query = req.query.query || '';
   const products = await productService.searchProducts(query);
-  res.json(products);
+  return res.json(products);
 });
 
 module.exports = {

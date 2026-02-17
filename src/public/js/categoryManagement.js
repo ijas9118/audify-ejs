@@ -8,18 +8,6 @@ document
       'categoryDescription'
     ).value;
 
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top',
-      showConfirmButton: false,
-      timer: 2500,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.onmouseenter = Swal.stopTimer;
-        toast.onmouseleave = Swal.resumeTimer;
-      },
-    });
-
     try {
       const response = await fetch('/admin/category', {
         method: 'POST',
@@ -74,18 +62,6 @@ document
   });
 
 async function handleCategoryUpdate(categoryId) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
-
   const categoryName = document.getElementById(
     `categoryName${categoryId}`
   ).value;
@@ -148,19 +124,13 @@ async function handleCategoryUpdate(categoryId) {
 }
 
 async function handleCategoryDelete(categoryId) {
-  // Use SweetAlert for confirmation
-  const { value: confirmDelete } = await Swal.fire({
-    title: 'Are you sure?',
-    text: "You won't be able to revert this!",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, delete it!',
-    cancelButtonText: 'Cancel',
+  const confirmDelete = await window.adminConfirm.open({
+    title: 'Delete Category',
+    message: 'This category will be permanently deleted.',
+    confirmText: 'Delete',
+    variant: 'danger',
   });
 
-  // If the user clicked "Cancel", exit the function
   if (!confirmDelete) {
     return;
   }
@@ -181,25 +151,23 @@ async function handleCategoryDelete(categoryId) {
 
     // Handle the response
     if (result.success) {
-      // Show success message with SweetAlert
-      await Swal.fire('Deleted!', 'Category deleted successfully!', 'success');
+      Toast.fire({
+        icon: 'success',
+        title: 'Category deleted successfully!',
+      });
 
       window.location.reload();
     } else {
-      // Show error message with SweetAlert
-      await Swal.fire(
-        'Error!',
-        `Error deleting category: ${result.message}`,
-        'error'
-      );
+      Toast.fire({
+        icon: 'error',
+        title: `Error deleting category: ${result.message}`,
+      });
     }
   } catch (error) {
     console.error('There was a problem with the fetch operation:', error);
-    // Show error message with SweetAlert
-    await Swal.fire(
-      'Oops!',
-      'An error occurred while deleting the category.',
-      'error'
-    );
+    Toast.fire({
+      icon: 'error',
+      title: 'An error occurred while deleting the category.',
+    });
   }
 }

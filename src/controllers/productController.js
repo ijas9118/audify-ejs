@@ -2,24 +2,17 @@ const asyncHandler = require('express-async-handler');
 const Product = require('../models/products');
 const Category = require('../models/categories');
 const uploadService = require('../services/uploadService');
+const productManagementService = require('../services/productManagementService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 
 // Render Product Management Page
 const getProducts = asyncHandler(async (req, res) => {
-  const categories = await Category.find();
-  const products = await Product.aggregate([
-    {
-      $lookup: {
-        from: 'categories',
-        localField: 'categoryId',
-        foreignField: '_id',
-        as: 'categoryDetails',
-      },
-    },
-    {
-      $unwind: '$categoryDetails',
-    },
-  ]);
+  const { products, categories, pagination, search } =
+    await productManagementService.getProductManagementData({
+      page: req.query.page,
+      limit: req.query.limit,
+      search: req.query.search,
+    });
 
   res.render('layout', {
     title: 'Product Management',
@@ -28,6 +21,8 @@ const getProducts = asyncHandler(async (req, res) => {
     isAdmin: true,
     products,
     categories,
+    pagination,
+    search,
   });
 });
 
@@ -82,29 +77,34 @@ const addProduct = asyncHandler(async (req, res) => {
   await product.save();
 
   // Respond with the created product
-  res.redirect('/admin/products');
+  return res.redirect('/admin/products');
 });
 
 // Unlist Product
 const toggleProductStatus = asyncHandler(async (req, res) => {
   const productId = req.params.id;
 
-  // Find the product by ID
-  const product = await Product.findById(productId);
+  try {
+    await productManagementService.toggleProductStatus(productId);
+  } catch (error) {
+    if (error.message === 'Product not found') {
+      res.status(StatusCodes.NOT_FOUND);
+      throw new Error(RESPONSE_MESSAGES.PRODUCT_NOT_FOUND);
+    }
 
-  if (!product) {
-    res.status(StatusCodes.NOT_FOUND);
-    throw new Error(RESPONSE_MESSAGES.PRODUCT_NOT_FOUND);
+    throw error;
   }
 
-  // Toggle the isActive field
-  product.isActive = !product.isActive;
+  const page = req.query.page || '1';
+  const limit = req.query.limit || '10';
+  const search = (req.query.search || '').trim();
+  const queryParams = new URLSearchParams({ page, limit });
 
-  // Save the updated product
-  await product.save();
+  if (search) {
+    queryParams.set('search', search);
+  }
 
-  // Redirect back to the product management page
-  res.redirect('/admin/products');
+  res.redirect(`/admin/products?${queryParams.toString()}`);
 });
 
 // Get product for editing
@@ -172,7 +172,7 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   await product.save();
 
-  res.redirect('/admin/products/');
+  return res.redirect('/admin/products/');
 });
 
 module.exports = {

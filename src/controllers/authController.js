@@ -1,16 +1,23 @@
 const asyncHandler = require('express-async-handler');
 const authService = require('../services/authService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const logger = require('../config/logger');
 
 const successGoogleLogin = asyncHandler(async (req, res) => {
-  if (!req.user) res.redirect('/failure');
+  if (!req.user) {
+    return res.redirect('/failure');
+  }
   try {
     const user = await authService.handleGoogleLogin(req.user);
-    req.session.user = user;
-    res.redirect('/');
+    req.session.user = user._id;
+    return res.redirect('/');
   } catch (error) {
-    console.error('Error during Google login: ', error);
-    res.redirect('/login');
+    logger.error('Error during Google login: ', error);
+    if (error.message === 'Account blocked') {
+      return res.redirect('/login');
+    }
+
+    return res.redirect('/login');
   }
 });
 
@@ -65,7 +72,7 @@ const resendOtp = asyncHandler(async (req, res) => {
   req.session.otp = otp;
   req.session.otpExpiry = otpExpiry;
 
-  res.json({ message: RESPONSE_MESSAGES.OTP_RESENT });
+  return res.json({ message: RESPONSE_MESSAGES.OTP_RESENT });
 });
 
 const verifyAndSignUp = asyncHandler(async (req, res) => {
@@ -115,37 +122,55 @@ const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const findUser = await authService.findUserByEmail(email);
 
-  if (
-    findUser &&
-    (await authService.comparePassword(password, findUser.password)) &&
-    findUser.status === 'Active'
-  ) {
-    req.session.user = findUser._id;
-    res.status(StatusCodes.OK).json({
-      success: true,
-      message: RESPONSE_MESSAGES.LOGIN_SUCCESS,
-      redirectUrl: '/',
-    });
-  } else {
-    res.status(StatusCodes.UNAUTHORIZED).json({
+  if (!findUser) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({
       success: false,
       message: RESPONSE_MESSAGES.INVALID_CREDENTIALS,
     });
   }
+
+  if (findUser.status !== 'Active') {
+    return res.status(StatusCodes.FORBIDDEN).json({
+      success: false,
+      message: RESPONSE_MESSAGES.ACCOUNT_BLOCKED,
+    });
+  }
+
+  if (await authService.comparePassword(password, findUser.password)) {
+    req.session.user = findUser._id;
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: RESPONSE_MESSAGES.LOGIN_SUCCESS,
+      redirectUrl: '/',
+    });
+  }
+
+  return res.status(StatusCodes.UNAUTHORIZED).json({
+    success: false,
+    message: RESPONSE_MESSAGES.INVALID_CREDENTIALS,
+  });
 });
 
 const loginDemoUser = asyncHandler(async (req, res) => {
   try {
     const demoUser = await authService.getOrCreateDemoUser();
+
+    if (demoUser.status !== 'Active') {
+      return res.status(StatusCodes.FORBIDDEN).json({
+        success: false,
+        message: RESPONSE_MESSAGES.ACCOUNT_BLOCKED,
+      });
+    }
+
     req.session.user = demoUser._id;
-    res.status(StatusCodes.OK).json({
+    return res.status(StatusCodes.OK).json({
       success: true,
       message: 'Demo login successful',
       redirectUrl: '/',
     });
   } catch (error) {
-    console.error('Error during demo login:', error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    logger.error('Error during demo login:', error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Failed to login with demo account',
     });
@@ -159,7 +184,7 @@ const logoutUser = asyncHandler(async (req, res) => {
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ message: 'Failed to log out' });
     }
-    res.redirect('/login');
+    return res.redirect('/login');
   });
 });
 
@@ -173,7 +198,7 @@ const updatePassword = asyncHandler(async (req, res) => {
       .status(StatusCodes.OK)
       .json({ message: RESPONSE_MESSAGES.PASSWORD_UPDATE_SUCCESS });
   } catch (error) {
-    console.error('Error updating password:', error);
+    logger.error('Error updating password:', error);
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
@@ -198,12 +223,12 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   try {
     await authService.resetPassword(email, newPassword);
-    res
+    return res
       .status(StatusCodes.OK)
       .json({ message: RESPONSE_MESSAGES.PASSWORD_UPDATE_SUCCESS });
   } catch (error) {
-    console.error('Error updating password:', error);
-    res
+    logger.error('Error updating password:', error);
+    return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: RESPONSE_MESSAGES.SERVER_ERROR });
   }

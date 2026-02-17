@@ -68,22 +68,24 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Event listener for dropdown items
-  document.querySelectorAll('.dropdown-item').forEach((item) => {
-    item.addEventListener('click', function () {
-      const selectedFilter = this.getAttribute('data-value');
-      filterDropdown.textContent = selectedFilter;
+  document
+    .querySelectorAll('#filterDropdown + .dropdown-menu .dropdown-item')
+    .forEach((item) => {
+      item.addEventListener('click', function () {
+        const selectedFilter = this.getAttribute('data-value');
+        filterDropdown.textContent = selectedFilter;
 
-      if (selectedFilter === 'Custom Date Range') {
-        customDateRange.classList.remove('d-none');
-        customDateRange.classList.add('d-flex');
-      } else {
-        customDateRange.classList.add('d-none');
-        customDateRange.classList.remove('d-flex');
+        if (selectedFilter === 'Custom Date Range') {
+          customDateRange.classList.remove('d-none');
+          customDateRange.classList.add('d-flex');
+        } else {
+          customDateRange.classList.add('d-none');
+          customDateRange.classList.remove('d-flex');
 
-        fetchSalesReport(selectedFilter);
-      }
+          fetchSalesReport(selectedFilter);
+        }
+      });
     });
-  });
 
   // Event listener for Apply button
   applyButton.addEventListener('click', () => {

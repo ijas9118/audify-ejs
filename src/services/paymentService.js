@@ -2,6 +2,7 @@ const Razorpay = require('razorpay');
 const User = require('../models/userModel');
 const Order = require('../models/order');
 const authService = require('./authService');
+const logger = require('../config/logger');
 
 /**
  * Payment Gateway Integration
@@ -143,7 +144,7 @@ exports.processWalletPayment = async (userId, orderId) => {
     });
   } catch (emailError) {
     // Log error but don't fail the order
-    console.error('Failed to send order confirmation email:', emailError);
+    logger.error('Failed to send order confirmation email:', emailError);
   }
 
   return order;
@@ -209,7 +210,7 @@ exports.confirmPayment = async (orderId, paymentMethod) => {
     }
   } catch (emailError) {
     // Log error but don't fail the order
-    console.error('Failed to send order confirmation email:', emailError);
+    logger.error('Failed to send order confirmation email:', emailError);
   }
 
   return order;

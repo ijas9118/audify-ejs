@@ -1,77 +1,98 @@
-<div class="container-fluid mt-3">
-  <div class="row">
-    <!-- Main content -->
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-          <a href="/admin" class="text-light">Admin</a>
-        </li>
-        <li class="breadcrumb-item active text-info" aria-current="page">
-          Category Management
-        </li>
+<div class="container-fluid mt-3 admin-management-page">
+  <div class="admin-management-header mb-3">
+    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrap">
+      <ol class="breadcrumb admin-breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Category Management</li>
       </ol>
     </nav>
-    <div class="container">
-      <div class="row">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h3 class="text-light">Category Management</h3>
-          <button
-            type="button"
-            class="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#addCategoryModal"
-          >
-            Add New Category
-          </button>
-        </div>
-        <div class="table-responsive">
-          <table class="table text-light">
-            <thead>
-              <tr>
-                <th scope="col">Sl</th>
-                <th scope="col">Category name</th>
-                <th scope="col">Description</th>
-                <th scope="col">Action</th>
-              </tr>
-            </thead>
-            <tbody id="categoryList">
-              <% categories.forEach((category, index) => { %>
-              <tr>
-                <th scope="row"><%= index + 1 %></th>
-                <td><%= category.name %></td>
-                <td><%= category.description %></td>
-                <td>
-                  <div class="d-flex justify-content-between gap-3">
-                    <form
-                      action="/admin/category/toggle/<%= category._id %>"
-                      method="GET"
-                      style="display: inline"
-                      class="w-100"
-                    >
-                      <button
-                        type="submit"
-                        class="btn w-100 <%= category.isActive ? 'btn-dark' : 'btn-primary' %>"
-                      >
-                        <%= category.isActive ? "Unlist" : "List" %>
-                      </button>
-                    </form>
-                    <button class="btn btn-outline-light w-100" data-bs-toggle="modal" data-bs-target="#editCategoryModal<%= category._id %>">Edit</button>
-                    <button
-                      class="btn btn-outline-danger w-100"
-                      onclick="handleCategoryDelete('<%= category._id %>')"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <% }); %>
-            </tbody>            
-          </table>
-        </div>
-      </div>
+    <div class="admin-management-title-row mt-2">
+      <h3 class="admin-management-title mb-0">Category Management</h3>
+      <button
+        type="button"
+        class="btn btn-primary admin-create-btn"
+        data-bs-toggle="modal"
+        data-bs-target="#addCategoryModal"
+      >
+        Add New Category
+      </button>
     </div>
   </div>
+
+  <%- include('../partials/admin_search', {
+    action: '/admin/category',
+    paramName: 'search',
+    value: search || '',
+    placeholder: 'Search by category name or description',
+    debounce: 400,
+    extraQuery: { limit: pagination.limit },
+  }) %>
+
+  <div class="admin-table-shell">
+    <div class="table-responsive">
+      <table class="table admin-management-table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Sl</th>
+            <th scope="col">Category name</th>
+            <th scope="col">Description</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody id="categoryList">
+          <% categories.forEach((category, index) => { %>
+          <tr>
+            <th scope="row" class="admin-row-index"><%= pagination.skip + index + 1 %></th>
+            <td class="admin-cell-primary"><%= category.name %></td>
+            <td><%= category.description %></td>
+            <td class="admin-cell-actions admin-cell-actions-wide">
+              <div class="admin-action-group admin-action-group-3">
+                <form
+                  action="/admin/category/toggle/<%= category._id %>"
+                  method="GET"
+                  class="w-100"
+                  data-confirm="true"
+                  data-confirm-title="<%= category.isActive ? 'Unlist Category' : 'List Category' %>"
+                  data-confirm-message="<%= category.isActive ? 'This category will be hidden from storefront navigation.' : 'This category will be available on the storefront.' %>"
+                  data-confirm-text="<%= category.isActive ? 'Unlist' : 'List' %>"
+                  data-confirm-variant="danger"
+                >
+                  <input type="hidden" name="page" value="<%= pagination.currentPage %>" />
+                  <input type="hidden" name="limit" value="<%= pagination.limit %>" />
+                  <input type="hidden" name="search" value="<%= search || '' %>" />
+                  <button
+                    type="submit"
+                    class="btn admin-action-btn <%= category.isActive ? 'admin-action-btn-danger' : 'admin-action-btn-success' %>"
+                  >
+                    <%= category.isActive ? "Unlist" : "List" %>
+                  </button>
+                </form>
+                <button class="btn admin-action-btn admin-action-btn-secondary" data-bs-toggle="modal" data-bs-target="#editCategoryModal<%= category._id %>">Edit</button>
+                <button
+                  class="btn admin-action-btn admin-action-btn-danger-alt"
+                  onclick="handleCategoryDelete('<%= category._id %>')"
+                >
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+          <% if (!categories.length) { %>
+          <tr>
+            <td colspan="4" class="text-center admin-empty-row">No categories found</td>
+          </tr>
+          <% } %>
+        </tbody>            
+      </table>
+    </div>
+  </div>
+
+  <%- include('../partials/admin_pagination', {
+    pagination,
+    basePath: '/admin/category',
+    extraQuery: { search: search || '' },
+  }) %>
 </div>
 
 <!-- Add Category Modal -->
@@ -166,7 +187,6 @@
     </div>
   </div>
 <% }) %>
->
 
 
 <script src="/js/categoryManagement.js"></script>

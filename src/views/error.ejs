@@ -3,148 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>500 - Server Error</title>
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap");
-
-      body {
-        font-family: "Roboto", sans-serif;
-        background-color: #f0f0f0;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        overflow: hidden;
-      }
-
-      .error-container {
-        text-align: center;
-        background-color: white;
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        max-width: 500px;
-        width: 90%;
-      }
-
-      h1 {
-        font-size: 120px;
-        margin: 0;
-        background: linear-gradient(45deg, #6b9aff, #7a0bcf);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: pulse 2s infinite;
-      }
-
-      h2 {
-        font-size: 24px;
-        margin: 20px 0;
-        color: #333;
-      }
-
-      p {
-        font-size: 16px;
-        color: #666;
-        margin-bottom: 30px;
-      }
-
-      .btn {
-        display: inline-block;
-        background-color: #5d51e0;
-        color: white;
-        text-decoration: none;
-        padding: 12px 24px;
-        border-radius: 30px;
-        font-weight: bold;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .btn:hover {
-        background-color: #7645b7;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(156, 78, 205, 0.3);
-      }
-
-      .btn::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 5px;
-        height: 5px;
-        background: rgba(255, 255, 255, 0.5);
-        opacity: 0;
-        border-radius: 100%;
-        transform: scale(1, 1) translate(-50%);
-        transform-origin: 50% 50%;
-      }
-
-      .btn:hover::after {
-        animation: ripple 1s ease-out;
-      }
-
-      .audio-icon {
-        font-size: 48px;
-        margin-bottom: 20px;
-        animation: bounce 2s infinite;
-      }
-
-      @keyframes pulse {
-        0% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.05);
-        }
-        100% {
-          transform: scale(1);
-        }
-      }
-
-      @keyframes bounce {
-        0%,
-        20%,
-        50%,
-        80%,
-        100% {
-          transform: translateY(0);
-        }
-        40% {
-          transform: translateY(-20px);
-        }
-        60% {
-          transform: translateY(-10px);
-        }
-      }
-
-      @keyframes ripple {
-        0% {
-          transform: scale(0, 0);
-          opacity: 1;
-        }
-        20% {
-          transform: scale(25, 25);
-          opacity: 1;
-        }
-        100% {
-          opacity: 0;
-          transform: scale(40, 40);
-        }
-      }
-    </style>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/error-pages.css" />
   </head>
-  <body>
-    <div class="error-container">
-      <div class="audio-icon">🎧</div>
-      <h1>500</h1>
-      <h2>Oops! Something went wrong</h2>
-      <p>We are experiencing some technical issues. Please try again later.</p>
-      <a href="/" class="btn">Tune Back to Homepage</a>
-    </div>
+  <body class="error-page">
+    <main class="error-shell">
+      <section class="error-card" role="alert" aria-live="polite">
+        <p class="error-code">500</p>
+        <h1 class="error-title">Unexpected server error</h1>
+        <p class="error-description">
+          We could not complete this request. Please try again in a moment.
+        </p>
+
+        <% if (errorMessage) { %>
+        <p class="error-meta"><%= errorMessage %></p>
+        <% } %>
+
+        <% if (stack) { %>
+        <details class="error-details">
+          <summary>Technical details</summary>
+          <pre><%= stack %></pre>
+        </details>
+        <% } %>
+
+        <div class="error-actions">
+          <a href="/" class="error-btn error-btn-primary">Go to homepage</a>
+          <button type="button" class="error-btn error-btn-secondary" onclick="location.reload()">
+            Retry
+          </button>
+        </div>
+      </section>
+    </main>
   </body>
 </html>

@@ -13,7 +13,7 @@ router.get('/', userAuth, checkoutController.getCheckoutPage);
 // Payment operations
 router.post('/', userAuth, paymentController.confirmPayment);
 router.post('/wallet', userAuth, paymentController.processWalletPayment);
-router.post('/order/:id', paymentController.createRazorpayOrder);
+router.post('/order/:id', userAuth, paymentController.createRazorpayOrder);
 router.get('/payment/:orderId', userAuth, paymentController.getPaymentPage);
 
 // Order operations
