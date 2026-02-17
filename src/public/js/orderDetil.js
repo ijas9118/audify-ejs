@@ -26,7 +26,6 @@ async function cancelOrder(orderid) {
       });
       window.location.reload();
     } else {
-      alert(data.message || 'Failed to remove product');
       Toast.fire({
         icon: 'error',
         title: data.message,

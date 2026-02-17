@@ -72,17 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function addOffer() {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top', // Adjust position as needed
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
   const offerType = document.getElementById('offerType').value;
   const productOrCategory = document.getElementById('productOrCategory').value;
   const discountType = document.getElementById('discountType').value;
@@ -153,17 +142,6 @@ function addOffer() {
 }
 
 function updateOffer(offerId) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top', // Adjust position as needed
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
   const offerType = document.getElementById(`offerType${offerId}`).value;
   const discountType = document.getElementById(`discountType${offerId}`).value;
   const discountValue = document.getElementById(
@@ -222,17 +200,6 @@ function updateOffer(offerId) {
 }
 
 function deleteOffer(offerId) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top', // Adjust position as needed
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
   window.adminConfirm
     .open({
       title: 'Delete Offer',
@@ -320,10 +287,20 @@ async function toggleOfferStatus(offerId) {
         newStatus === 'active' ? 'is-positive' : 'is-negative'
       );
       badge.textContent = newStatus;
+      Toast.fire({
+        icon: 'success',
+        title: `Offer ${newStatus === 'active' ? 'activated' : 'deactivated'}.`,
+      });
     } else {
-      console.error('Error updating status:', result.message);
+      Toast.fire({
+        icon: 'error',
+        title: result.message || 'Error updating offer status.',
+      });
     }
   } catch (error) {
-    console.error('Error toggling offer status:', error);
+    Toast.fire({
+      icon: 'error',
+      title: 'Error toggling offer status.',
+    });
   }
 }

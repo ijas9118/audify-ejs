@@ -2,17 +2,6 @@ document
   .querySelector('#addCouponform')
   .addEventListener('submit', async (event) => {
     event.preventDefault();
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top',
-      showConfirmButton: false,
-      timer: 2500,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.onmouseenter = Swal.stopTimer;
-        toast.onmouseleave = Swal.resumeTimer;
-      },
-    });
 
     const couponCode = document.getElementById('couponCode').value;
     const discountType = document.getElementById('discountType').value;
@@ -98,18 +87,6 @@ document.querySelectorAll('.edit-coupon-form').forEach((form) => {
 });
 
 async function updateCoupon(couponId) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
-
   const couponCode = document.getElementById(`couponCode${couponId}`).value;
   const discountType = document.getElementById(`discountType${couponId}`).value;
   const discountValue = document.getElementById(
@@ -223,18 +200,6 @@ async function updateCoupon(couponId) {
 }
 
 async function deleteCoupon(couponId) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
-
   const confirmDelete = await window.adminConfirm.open({
     title: 'Delete Coupon',
     message: 'This coupon will be permanently deleted.',
@@ -318,10 +283,20 @@ async function toggleCouponStatus(couponId) {
       );
       badge.classList.add(newStatus ? 'is-positive' : 'is-negative');
       badge.textContent = newStatus ? 'Active' : 'Inactive';
+      Toast.fire({
+        icon: 'success',
+        title: `Coupon ${newStatus ? 'activated' : 'deactivated'}.`,
+      });
     } else {
-      console.error('Error updating status:', result.message);
+      Toast.fire({
+        icon: 'error',
+        title: result.message || 'Error updating coupon status.',
+      });
     }
   } catch (error) {
-    console.error('Error toggling coupon status:', error);
+    Toast.fire({
+      icon: 'error',
+      title: 'Error toggling coupon status.',
+    });
   }
 }

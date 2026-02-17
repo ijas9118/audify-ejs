@@ -26,14 +26,23 @@ async function updateOrderStatus(orderId, selectElement) {
 
     if (!data.success) {
       selectElement.value = previousStatus || selectElement.value;
-      alert('Error updating order status');
+      Toast.fire({
+        icon: 'error',
+        title: 'Could not update order status.',
+      });
       return;
     }
 
     selectElement.dataset.previousValue = nextStatus;
-    alert('Order status updated successfully');
+    Toast.fire({
+      icon: 'success',
+      title: 'Order status updated successfully.',
+    });
   } catch (error) {
     selectElement.value = previousStatus || selectElement.value;
-    alert('Error updating order status');
+    Toast.fire({
+      icon: 'error',
+      title: 'Could not update order status.',
+    });
   }
 }
