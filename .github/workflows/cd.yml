@@ -55,6 +55,7 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/audify-ejs:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/audify-ejs:latest
           cache-to: type=inline
+          provenance: false
 
   deploy:
     name: Deploy to Azure VM
