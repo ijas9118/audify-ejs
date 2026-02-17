@@ -300,9 +300,14 @@ async function toggleOfferStatus(offerId) {
       const newStatus = result.offer.status; // Get the updated value from the response
 
       badge.classList.remove(
-        newStatus === 'active' ? 'bg-danger' : 'bg-success'
+        'is-positive',
+        'is-negative',
+        'bg-success',
+        'bg-danger'
       );
-      badge.classList.add(newStatus === 'active' ? 'bg-success' : 'bg-danger');
+      badge.classList.add(
+        newStatus === 'active' ? 'is-positive' : 'is-negative'
+      );
       badge.textContent = newStatus;
     } else {
       console.error('Error updating status:', result.message);

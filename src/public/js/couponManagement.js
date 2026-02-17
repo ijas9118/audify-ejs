@@ -187,8 +187,17 @@ async function updateCoupon(couponId) {
         new Date(updatedCoupon.validFrom).toLocaleDateString();
       document.getElementById(`validUntilDisplay${couponId}`).textContent =
         new Date(updatedCoupon.validUntil).toLocaleDateString();
-      document.getElementById(`isActiveDisplay${couponId}`).innerHTML =
-        `<span class="badge w-100  ${updatedCoupon.isActive ? 'bg-success' : 'bg-danger'}">${updatedCoupon.isActive ? 'Active' : 'Inactive'}</span>`;
+      const statusBadge = document.getElementById(`isActiveDisplay${couponId}`);
+      statusBadge.classList.remove(
+        'is-positive',
+        'is-negative',
+        'bg-success',
+        'bg-danger'
+      );
+      statusBadge.classList.add(
+        updatedCoupon.isActive ? 'is-positive' : 'is-negative'
+      );
+      statusBadge.textContent = updatedCoupon.isActive ? 'Active' : 'Inactive';
 
       Toast.fire({
         icon: 'success',
@@ -289,8 +298,13 @@ async function toggleCouponStatus(couponId) {
       const badge = document.getElementById(`isActiveDisplay${couponId}`);
       const newStatus = result.coupon.isActive; // Get the updated value from the response
 
-      badge.classList.remove(newStatus ? 'bg-danger' : 'bg-success');
-      badge.classList.add(newStatus ? 'bg-success' : 'bg-danger');
+      badge.classList.remove(
+        'is-positive',
+        'is-negative',
+        'bg-success',
+        'bg-danger'
+      );
+      badge.classList.add(newStatus ? 'is-positive' : 'is-negative');
       badge.textContent = newStatus ? 'Active' : 'Inactive';
     } else {
       console.error('Error updating status:', result.message);

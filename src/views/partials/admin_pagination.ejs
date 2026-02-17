@@ -20,19 +20,18 @@
   const hasNext = pagination.currentPage < pagination.totalPages;
 %>
 
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3" data-bs-theme="dark">
-  <form method="GET" action="<%= basePath %>" class="d-flex align-items-center gap-2">
+<div class="admin-pagination-wrap my-4" data-bs-theme="dark">
+  <form method="GET" action="<%= basePath %>" class="admin-limit-form">
     <% Object.entries(query).forEach(([key, value]) => { %>
       <% if (value !== undefined && value !== null && value !== '') { %>
         <input type="hidden" name="<%= key %>" value="<%= value %>" />
       <% } %>
     <% }); %>
     <input type="hidden" name="page" value="1" />
-    <label for="pagination-limit" class="text-light mb-0">Per page</label>
+    <label for="pagination-limit" class="admin-limit-label">Per page</label>
     <select
       id="pagination-limit"
-      class="form-select form-select-sm"
-      style="width: auto"
+      class="form-select form-select-sm admin-limit-select"
       name="limit"
       onchange="this.form.submit()"
     >
@@ -44,8 +43,8 @@
     </select>
   </form>
 
-  <nav aria-label="Admin pagination">
-    <ul class="pagination pagination-sm mb-0">
+  <nav aria-label="Admin pagination" class="admin-pagination-nav">
+    <ul class="pagination pagination-sm mb-0 admin-pagination-list">
       <li class="page-item <%= hasPrev ? '' : 'disabled' %>">
         <a
           class="page-link"

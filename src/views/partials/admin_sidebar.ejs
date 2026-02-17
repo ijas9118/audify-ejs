@@ -1,89 +1,49 @@
-<!-- Sidebar -->
-<nav id="sidebar" class="col-md-2 d-md-block bg-dark sidebar">
-  <div class="position-sticky vh-100 mt-3">
-    <div class="admin-profile p-3 text-center">
-      <i class="fas fa-user-circle fa-3x text-light mb-2"></i>
-      <h5 class="mb-0 text-light">Ijas Ahammed</h5>
-      <small style="color: rgb(185, 176, 52)">Gold Member</small>
-    </div>
-    <div class="mt-4">
-      <p class="px-3" style="color: rgb(171, 171, 171)">Navigation</p>
-      <ul class="nav flex-column">
-        <li class="nav-item">
-          <a
-            class="nav-link btn btn-outline-light my-2 <%= activePage === 'dashboard' ? 'active' : '' %>"
-            href="/admin"
-            ><i class="fas fa-tachometer me-2"></i> Dashboard</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link btn btn-outline-light my-2 <%= activePage === 'users' ? 'active' : '' %>"
-            href="/admin/users"
-            ><i class="fas fa-users me-2"></i> Users</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link btn btn-outline-light my-2 <%= activePage === 'products' ? 'active' : '' %>"
-            href="/admin/products"
-            ><i class="fas fa-boxes me-2"></i> Products</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link btn btn-outline-light my-2 <%= activePage === 'orders' ? 'active' : '' %>"
-            href="/admin/orders"
-            ><i class="fas fa-shopping-cart me-2"></i> Orders</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link btn btn-outline-light my-2 <%= activePage === 'category' ? 'active' : '' %>"
-            href="/admin/category"
-            ><i class="fas fa-tags me-2"></i> Category</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link btn btn-outline-light my-2 <%= activePage === 'coupon' ? 'active' : '' %>"
-            href="/admin/coupons"
-            ><i class="fas fa-ticket-alt me-2"></i> Coupon</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link btn btn-outline-light my-2 <%= activePage === 'offer' ? 'active' : '' %>"
-            href="/admin/offers"
-            ><i class="fas fa-gift me-2"></i> Offer</a
-          >
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
-
-<style>
-  .nav-link {
-    color: #f8f9fa !important; /* Light text color for nav links */
-    transition: background-color 0.3s, color 0.3s !important; /* Smooth transition */
-  }
-
-  .nav-link:hover {
-    background-color: #495057 !important; /* Dimmer hover background */
-    color: #ffffff !important; /* Ensure text color remains visible on hover */
-  }
-
-  .nav-link.active {
-    background-color: #c4c4c4 !important; /* Brighter active background */
-    color: #343a40 !important; /* White text color for active link */
-  }
-
-  .nav-link i {
-    color: #adb5bd !important; /* Light icon color */
-  }
-
-  .nav-link.active i {
-    color: #343a40 !important; /* White icon color for active link */
-  }
-</style>
+<aside id="sidebar" class="col-12 col-md-2 admin-sidebar-wrap">
+  <nav class="admin-sidebar" aria-label="Admin sidebar navigation">
+    <p class="admin-sidebar-label">Navigation</p>
+    <ul class="nav admin-sidebar-nav">
+      <li class="nav-item">
+        <a class="admin-sidebar-link <%= activePage === 'dashboard' ? 'active' : '' %>" href="/admin">
+          <i class="fas fa-tachometer" aria-hidden="true"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="admin-sidebar-link <%= activePage === 'users' ? 'active' : '' %>" href="/admin/users">
+          <i class="fas fa-users" aria-hidden="true"></i>
+          <span>Users</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="admin-sidebar-link <%= activePage === 'products' ? 'active' : '' %>" href="/admin/products">
+          <i class="fas fa-boxes" aria-hidden="true"></i>
+          <span>Products</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="admin-sidebar-link <%= activePage === 'orders' ? 'active' : '' %>" href="/admin/orders">
+          <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+          <span>Orders</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="admin-sidebar-link <%= activePage === 'category' ? 'active' : '' %>" href="/admin/category">
+          <i class="fas fa-tags" aria-hidden="true"></i>
+          <span>Category</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="admin-sidebar-link <%= activePage === 'coupon' ? 'active' : '' %>" href="/admin/coupons">
+          <i class="fas fa-ticket-alt" aria-hidden="true"></i>
+          <span>Coupon</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="admin-sidebar-link <%= activePage === 'offer' ? 'active' : '' %>" href="/admin/offers">
+          <i class="fas fa-gift" aria-hidden="true"></i>
+          <span>Offer</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>

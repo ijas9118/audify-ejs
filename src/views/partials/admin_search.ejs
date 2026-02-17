@@ -27,16 +27,16 @@
 %>
 
 <form
-  class="row g-2 align-items-center mb-3"
+  class="admin-search-bar mb-3"
   method="GET"
   action="<%= actionPath %>"
   data-admin-search-form
   data-debounce="<%= debounceMs %>"
 >
-  <div class="col-md-5" data-bs-theme="dark">
+  <div class="admin-search-input-wrap" data-bs-theme="dark">
     <input
       type="text"
-      class="form-control"
+      class="form-control admin-search-input"
       name="<%= searchParamName %>"
       value="<%= searchValue %>"
       placeholder="<%= hint %>"
@@ -54,8 +54,8 @@
   <input type="hidden" name="page" value="1" data-admin-search-page />
 
   <% if (searchValue) { %>
-    <div class="col-auto">
-      <a href="<%= buildResetUrl() %>" class="btn btn-dark">Reset</a>
+    <div class="admin-search-reset-wrap">
+      <a href="<%= buildResetUrl() %>" class="btn admin-search-reset-btn">Reset</a>
     </div>
   <% } %>
 </form>
