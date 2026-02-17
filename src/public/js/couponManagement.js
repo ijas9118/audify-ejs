@@ -235,16 +235,14 @@ async function deleteCoupon(couponId) {
     },
   });
 
-  const confirmDelete = await Swal.fire({
-    title: 'Are you sure?',
-    text: 'This action cannot be undone!',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Yes, delete it!',
-    cancelButtonText: 'Cancel',
+  const confirmDelete = await window.adminConfirm.open({
+    title: 'Delete Coupon',
+    message: 'This coupon will be permanently deleted.',
+    confirmText: 'Delete',
+    variant: 'danger',
   });
 
-  if (!confirmDelete.isConfirmed) {
+  if (!confirmDelete) {
     return; // Exit if the user cancels the deletion
   }
 
@@ -283,6 +281,21 @@ async function deleteCoupon(couponId) {
 }
 
 async function toggleCouponStatus(couponId) {
+  const badge = document.getElementById(`isActiveDisplay${couponId}`);
+  const currentIsActive = badge.textContent.trim().toLowerCase() === 'active';
+  const nextAction = currentIsActive ? 'Deactivate' : 'Activate';
+
+  const confirmed = await window.adminConfirm.open({
+    title: `${nextAction} Coupon`,
+    message: `Do you want to ${nextAction.toLowerCase()} this coupon?`,
+    confirmText: nextAction,
+    variant: 'danger',
+  });
+
+  if (!confirmed) {
+    return;
+  }
+
   try {
     const response = await fetch(`/admin/coupons/toggle/${couponId}`, {
       method: 'GET',
@@ -295,7 +308,6 @@ async function toggleCouponStatus(couponId) {
 
     if (result.success) {
       // Update the UI with the new status
-      const badge = document.getElementById(`isActiveDisplay${couponId}`);
       const newStatus = result.coupon.isActive; // Get the updated value from the response
 
       badge.classList.remove(

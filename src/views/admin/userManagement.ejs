@@ -44,6 +44,11 @@
                 action="/admin/users/toggle/<%= user._id %>"
                 method="GET"
                 class="w-100"
+                data-confirm="true"
+                data-confirm-title="<%= user.status === 'Active' ? 'Block User' : 'Unblock User' %>"
+                data-confirm-message="<%= user.status === 'Active' ? 'This user will be blocked from accessing the account.' : 'This user will regain account access.' %>"
+                data-confirm-text="<%= user.status === 'Active' ? 'Block' : 'Unblock' %>"
+                data-confirm-variant="danger"
               >
                 <input type="hidden" name="page" value="<%= pagination.currentPage %>" />
                 <input type="hidden" name="limit" value="<%= pagination.limit %>" />

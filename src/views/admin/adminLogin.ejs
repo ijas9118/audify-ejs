@@ -21,30 +21,35 @@
           <p class="admin-auth-subtitle mb-0">Secure access to dashboard controls.</p>
         </div>
 
-        <form action="/admin/login" method="POST" class="admin-auth-form">
+        <% if (authError) { %>
+        <div class="admin-auth-alert" role="alert"><%= authError %></div>
+        <% } %>
+
+        <form action="/admin/login" method="POST" class="admin-auth-form" novalidate id="adminLoginForm">
           <div class="mb-3">
             <label for="username" class="form-label">Username</label>
             <input
               type="text"
-              class="form-control admin-auth-input"
+              class="form-control admin-auth-input <%= errors && errors.username ? 'is-invalid' : '' %>"
               id="username"
               name="username"
               placeholder="Enter username"
-              required
+              value="<%= formData && formData.username ? formData.username : '' %>"
               autocomplete="username"
             />
+            <small class="admin-field-error" id="usernameError"><%= errors && errors.username ? errors.username : '' %></small>
           </div>
           <div class="mb-1">
             <label for="password" class="form-label">Password</label>
             <input
               type="password"
-              class="form-control admin-auth-input"
+              class="form-control admin-auth-input <%= errors && errors.password ? 'is-invalid' : '' %>"
               id="password"
               name="password"
               placeholder="Enter password"
-              required
               autocomplete="current-password"
             />
+            <small class="admin-field-error" id="passwordError"><%= errors && errors.password ? errors.password : '' %></small>
           </div>
 
           <button type="submit" class="btn btn-primary admin-auth-submit mt-4">
@@ -59,5 +64,48 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <script>
+      (() => {
+        const form = document.getElementById('adminLoginForm');
+        const username = document.getElementById('username');
+        const password = document.getElementById('password');
+        const usernameError = document.getElementById('usernameError');
+        const passwordError = document.getElementById('passwordError');
+
+        const setError = (input, errorEl, message) => {
+          errorEl.textContent = message || '';
+          input.classList.toggle('is-invalid', Boolean(message));
+        };
+
+        form.addEventListener('submit', (event) => {
+          let hasError = false;
+
+          if (!username.value.trim()) {
+            setError(username, usernameError, 'Username is required');
+            hasError = true;
+          } else {
+            setError(username, usernameError, '');
+          }
+
+          if (!password.value.trim()) {
+            setError(password, passwordError, 'Password is required');
+            hasError = true;
+          } else {
+            setError(password, passwordError, '');
+          }
+
+          if (hasError) {
+            event.preventDefault();
+          }
+        });
+
+        username.addEventListener('input', () => {
+          if (username.value.trim()) setError(username, usernameError, '');
+        });
+        password.addEventListener('input', () => {
+          if (password.value.trim()) setError(password, passwordError, '');
+        });
+      })();
+    </script>
   </body>
 </html>

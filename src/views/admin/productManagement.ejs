@@ -72,6 +72,11 @@
                   action="/admin/products/toggle/<%= product._id %>"
                   method="GET"
                   class="w-100"
+                  data-confirm="true"
+                  data-confirm-title="<%= product.isActive ? 'Unlist Product' : 'List Product' %>"
+                  data-confirm-message="<%= product.isActive ? 'This product will be hidden from the storefront.' : 'This product will be visible on the storefront.' %>"
+                  data-confirm-text="<%= product.isActive ? 'Unlist' : 'List' %>"
+                  data-confirm-variant="danger"
                 >
                   <input type="hidden" name="page" value="<%= pagination ? pagination.currentPage : 1 %>" />
                   <input type="hidden" name="limit" value="<%= pagination ? pagination.limit : 10 %>" />

@@ -51,6 +51,11 @@
                   action="/admin/category/toggle/<%= category._id %>"
                   method="GET"
                   class="w-100"
+                  data-confirm="true"
+                  data-confirm-title="<%= category.isActive ? 'Unlist Category' : 'List Category' %>"
+                  data-confirm-message="<%= category.isActive ? 'This category will be hidden from storefront navigation.' : 'This category will be available on the storefront.' %>"
+                  data-confirm-text="<%= category.isActive ? 'Unlist' : 'List' %>"
+                  data-confirm-variant="danger"
                 >
                   <input type="hidden" name="page" value="<%= pagination.currentPage %>" />
                   <input type="hidden" name="limit" value="<%= pagination.limit %>" />

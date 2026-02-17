@@ -148,19 +148,13 @@ async function handleCategoryUpdate(categoryId) {
 }
 
 async function handleCategoryDelete(categoryId) {
-  // Use SweetAlert for confirmation
-  const { value: confirmDelete } = await Swal.fire({
-    title: 'Are you sure?',
-    text: "You won't be able to revert this!",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, delete it!',
-    cancelButtonText: 'Cancel',
+  const confirmDelete = await window.adminConfirm.open({
+    title: 'Delete Category',
+    message: 'This category will be permanently deleted.',
+    confirmText: 'Delete',
+    variant: 'danger',
   });
 
-  // If the user clicked "Cancel", exit the function
   if (!confirmDelete) {
     return;
   }

@@ -233,46 +233,43 @@ function deleteOffer(offerId) {
       toast.onmouseleave = Swal.resumeTimer;
     },
   });
-  Swal.fire({
-    title: 'Are you sure?',
-    text: "You won't be able to revert this!",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, delete it!',
-  })
-    .then((result) => {
-      if (result.isConfirmed) {
-        fetch(`/admin/offers/${offerId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-              Toast.fire({
-                icon: 'success',
-                title: 'Offer deleted successfully!',
-              });
+  window.adminConfirm
+    .open({
+      title: 'Delete Offer',
+      message: 'This offer will be permanently deleted.',
+      confirmText: 'Delete',
+      variant: 'danger',
+    })
+    .then((confirmed) => {
+      if (!confirmed) return;
+      fetch(`/admin/offers/${offerId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            Toast.fire({
+              icon: 'success',
+              title: 'Offer deleted successfully!',
+            });
 
-              // Remove the row from the table (simple way)
-              const offerRow = document.querySelector(
-                `tr[data-offer-id="${offerId}"]`
-              );
-              if (offerRow) {
-                offerRow.remove();
-              }
-            } else {
-              Toast.fire({
-                icon: 'error',
-                title: `Error: ${data.message}`,
-              });
+            // Remove the row from the table (simple way)
+            const offerRow = document.querySelector(
+              `tr[data-offer-id="${offerId}"]`
+            );
+            if (offerRow) {
+              offerRow.remove();
             }
-          });
-      }
+          } else {
+            Toast.fire({
+              icon: 'error',
+              title: `Error: ${data.message}`,
+            });
+          }
+        });
     })
     .catch((error) => {
       console.error('Error:', error);
@@ -284,6 +281,21 @@ function deleteOffer(offerId) {
 }
 
 async function toggleOfferStatus(offerId) {
+  const badge = document.getElementById(`statusDisplay${offerId}`);
+  const currentStatus = badge.textContent.trim().toLowerCase();
+  const nextAction = currentStatus === 'active' ? 'Deactivate' : 'Activate';
+
+  const confirmed = await window.adminConfirm.open({
+    title: `${nextAction} Offer`,
+    message: `Do you want to ${nextAction.toLowerCase()} this offer?`,
+    confirmText: nextAction,
+    variant: 'danger',
+  });
+
+  if (!confirmed) {
+    return;
+  }
+
   try {
     const response = await fetch(`/admin/offers/toggle/${offerId}`, {
       method: 'PUT',
@@ -296,7 +308,6 @@ async function toggleOfferStatus(offerId) {
 
     if (result.success) {
       // Update the UI with the new status
-      const badge = document.getElementById(`statusDisplay${offerId}`);
       const newStatus = result.offer.status; // Get the updated value from the response
 
       badge.classList.remove(

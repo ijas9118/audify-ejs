@@ -43,7 +43,8 @@
                 class="form-select admin-status-select"
                 id="orderStatus_<%= order._id %>"
                 name="status"
-                onchange="updateOrderStatus('<%= order._id %>', this.value)"
+                onfocus="this.dataset.previousValue=this.value"
+                onchange="updateOrderStatus('<%= order._id %>', this)"
               >
                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                 <option value="Processed" <%= order.status === 'Processed' ? 'selected' : '' %>>Processed</option>
