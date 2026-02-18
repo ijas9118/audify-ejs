@@ -28,42 +28,53 @@
     extraQuery: { limit: pagination ? pagination.limit : 8 },
   }) %>
 
-  <div class="admin-table-shell">
-    <div class="table-responsive">
-      <table class="table admin-management-table align-middle mb-0">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Product Name</th>
-            <th scope="col">Category</th>
-            <th scope="col">Price</th>
-            <th scope="col">Stock</th>
-            <th scope="col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% products.forEach((product, index) => { %>
-          <tr>
-            <th scope="row" class="admin-row-index"><%= (pagination ? pagination.skip : 0) + index + 1 %></th>
-            <td class="admin-cell-primary"><%= product.name %></td>
-            <td><%= product.categoryDetails.name %></td>
-            <td>₹<%= product.price.toFixed(2) %></td>
-            <td>
-              <span class="admin-stock-pill <%= product.isOutOfStock ? 'is-out' : 'is-in' %>">
-                <% if (product.isOutOfStock) { %>
-                Out of Stock
-                <% } else { %>
-                <%= product.stock %> in stock
-                <% } %>
+  <%
+    const attr = (value = '') =>
+      String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+
+    const productColumns = [
+      { label: '#' },
+      { label: 'Product Name' },
+      { label: 'Category' },
+      { label: 'Price' },
+      { label: 'Stock' },
+      { label: 'Action' },
+    ];
+
+    const productRows = products.map((product, index) => {
+      const isActive = Boolean(product.isActive);
+      const toggleTitle = isActive ? 'Unlist product' : 'List product';
+      const toggleClass = isActive
+        ? 'admin-action-btn-danger'
+        : 'admin-action-btn-success';
+      const toggleIcon = isActive ? 'fa-eye-slash' : 'fa-eye';
+
+      return {
+        cells: [
+          {
+            tag: 'th',
+            className: 'admin-row-index',
+            text: (pagination ? pagination.skip : 0) + index + 1,
+          },
+          { className: 'admin-cell-primary', text: product.name },
+          { text: product.categoryDetails.name },
+          { text: `₹${product.price.toFixed(2)}` },
+          {
+            html: `
+              <span class="admin-stock-pill ${product.isOutOfStock ? 'is-out' : 'is-in'}">
+                ${product.isOutOfStock ? 'Out of Stock' : `${product.stock} in stock`}
               </span>
-            </td>
-            <td class="admin-cell-actions admin-cell-actions-compact">
+            `,
+          },
+          {
+            className: 'admin-cell-actions admin-cell-actions-compact',
+            html: `
               <div class="admin-action-group">
-                <form
-                  action="/admin/products/edit/<%= product._id %>"
-                  method="GET"
-                  class="admin-action-form"
-                >
+                <form action="/admin/products/edit/${product._id}" method="GET" class="admin-action-form">
                   <button
                     type="submit"
                     class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
@@ -74,40 +85,40 @@
                   </button>
                 </form>
                 <form
-                  action="/admin/products/toggle/<%= product._id %>"
+                  action="/admin/products/toggle/${product._id}"
                   method="GET"
                   class="admin-action-form"
                   data-confirm="true"
-                  data-confirm-title="<%= product.isActive ? 'Unlist Product' : 'List Product' %>"
-                  data-confirm-message="<%= product.isActive ? 'This product will be hidden from the storefront.' : 'This product will be visible on the storefront.' %>"
-                  data-confirm-text="<%= product.isActive ? 'Unlist' : 'List' %>"
+                  data-confirm-title="${isActive ? 'Unlist Product' : 'List Product'}"
+                  data-confirm-message="${isActive ? 'This product will be hidden from the storefront.' : 'This product will be visible on the storefront.'}"
+                  data-confirm-text="${isActive ? 'Unlist' : 'List'}"
                   data-confirm-variant="danger"
                 >
-                  <input type="hidden" name="page" value="<%= pagination ? pagination.currentPage : 1 %>" />
-                  <input type="hidden" name="limit" value="<%= pagination ? pagination.limit : 10 %>" />
-                  <input type="hidden" name="search" value="<%= search || '' %>" />
+                  <input type="hidden" name="page" value="${pagination ? pagination.currentPage : 1}" />
+                  <input type="hidden" name="limit" value="${pagination ? pagination.limit : 10}" />
+                  <input type="hidden" name="search" value="${attr(search || '')}" />
                   <button
                     type="submit"
-                    class="btn admin-action-btn admin-action-btn-icon <%= product.isActive ? 'admin-action-btn-danger' : 'admin-action-btn-success' %>"
-                    title="<%= product.isActive ? 'Unlist product' : 'List product' %>"
-                    aria-label="<%= product.isActive ? 'Unlist product' : 'List product' %>"
+                    class="btn admin-action-btn admin-action-btn-icon ${toggleClass}"
+                    title="${toggleTitle}"
+                    aria-label="${toggleTitle}"
                   >
-                    <i class="fa-solid <%= product.isActive ? 'fa-eye-slash' : 'fa-eye' %>"></i>
+                    <i class="fa-solid ${toggleIcon}"></i>
                   </button>
                 </form>
               </div>
-            </td>
-          </tr>
-          <% }); %>
-          <% if (!products.length) { %>
-          <tr>
-            <td colspan="6" class="text-center admin-empty-row">No products found</td>
-          </tr>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-  </div>
+            `,
+          },
+        ],
+      };
+    });
+  %>
+
+  <%- include('../partials/admin_table', {
+    columns: productColumns,
+    rows: productRows,
+    emptyMessage: 'No products found',
+  }) %>
 
   <% if (pagination) { %>
   <%- include('../partials/admin_pagination', {

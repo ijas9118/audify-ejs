@@ -28,86 +28,99 @@
     extraQuery: { limit: pagination.limit },
   }) %>
 
-  <div class="admin-table-shell">
-    <div class="table-responsive">
-      <table class="table admin-management-table align-middle mb-0">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Coupon Code</th>
-            <th scope="col">Discount</th>
-            <th scope="col">Max Discount</th>
-            <th scope="col">Min Cart Value</th>
-            <th scope="col">Usage Limit</th>
-            <th scope="col">Valid From</th>
-            <th scope="col">Valid Until</th>
-            <th scope="col">Status</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% coupons.forEach((coupon, index) => { %>
-          <tr data-coupon-id="<%= coupon._id %>">
-            <th scope="row" class="admin-row-index"><%= pagination.skip + index + 1 %></th>
-            <td id="couponCodeDisplay<%= coupon._id %>" class="admin-cell-primary"><%= coupon.code %></td>
-            <td id="discountTypeDisplay<%= coupon._id %>">
-              <%= coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}` %>
-            </td>
-            <td id="maxDiscountValueDisplay<%= coupon._id %>">
-              <%= coupon.maxDiscountValue ? `₹${coupon.maxDiscountValue}` : '-' %>
-            </td>
-            <td id="minCartValueDisplay<%= coupon._id %>">
-              <%= coupon.minCartValue ? `₹${coupon.minCartValue}` : '-' %>
-            </td>
-            <td id="usageLimitDisplay<%= coupon._id %>">
-              <%= coupon.usageLimit ? coupon.usageLimit : 'Unlimited' %>
-            </td>
-            <td id="validFromDisplay<%= coupon._id %>">
-              <%= new Date(coupon.validFrom).toLocaleDateString() %>
-            </td>
-            <td id="validUntilDisplay<%= coupon._id %>">
-              <%= new Date(coupon.validUntil).toLocaleDateString() %>
-            </td>
-            <td>
-              <span
-                id="isActiveDisplay<%= coupon._id %>"
-                class="admin-status-badge <%= coupon.isActive ? 'is-positive' : 'is-negative' %>"
-                onclick="toggleCouponStatus('<%= coupon._id %>')"
+  <%
+    const couponColumns = [
+      { label: '#' },
+      { label: 'Coupon Code' },
+      { label: 'Discount' },
+      { label: 'Max Discount' },
+      { label: 'Min Cart Value' },
+      { label: 'Usage Limit' },
+      { label: 'Valid From' },
+      { label: 'Valid Until' },
+      { label: 'Status' },
+      { label: 'Actions' },
+    ];
+
+    const couponRows = coupons.map((coupon, index) => ({
+      dataAttrs: { 'coupon-id': coupon._id },
+      cells: [
+        { tag: 'th', className: 'admin-row-index', text: pagination.skip + index + 1 },
+        {
+          id: `couponCodeDisplay${coupon._id}`,
+          className: 'admin-cell-primary',
+          text: coupon.code,
+        },
+        {
+          id: `discountTypeDisplay${coupon._id}`,
+          text:
+            coupon.discountType === 'percentage'
+              ? `${coupon.discountValue}%`
+              : `₹${coupon.discountValue}`,
+        },
+        {
+          id: `maxDiscountValueDisplay${coupon._id}`,
+          text: coupon.maxDiscountValue ? `₹${coupon.maxDiscountValue}` : '-',
+        },
+        {
+          id: `minCartValueDisplay${coupon._id}`,
+          text: coupon.minCartValue ? `₹${coupon.minCartValue}` : '-',
+        },
+        {
+          id: `usageLimitDisplay${coupon._id}`,
+          text: coupon.usageLimit ? coupon.usageLimit : 'Unlimited',
+        },
+        {
+          id: `validFromDisplay${coupon._id}`,
+          text: new Date(coupon.validFrom).toLocaleDateString(),
+        },
+        {
+          id: `validUntilDisplay${coupon._id}`,
+          text: new Date(coupon.validUntil).toLocaleDateString(),
+        },
+        {
+          html: `
+            <span
+              id="isActiveDisplay${coupon._id}"
+              class="admin-status-badge ${coupon.isActive ? 'is-positive' : 'is-negative'}"
+              onclick="toggleCouponStatus('${coupon._id}')"
+            >
+              ${coupon.isActive ? 'Active' : 'Inactive'}
+            </span>
+          `,
+        },
+        {
+          className: 'admin-cell-actions admin-cell-actions-compact',
+          html: `
+            <div class="admin-action-group">
+              <a
+                href="/admin/coupons/edit/${coupon._id}"
+                class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
+                title="Edit coupon"
+                aria-label="Edit coupon"
               >
-                <%= coupon.isActive ? 'Active' : 'Inactive' %>
-              </span>
-            </td>
-            <td class="admin-cell-actions admin-cell-actions-compact">
-              <div class="admin-action-group">
-                <a
-                  href="/admin/coupons/edit/<%= coupon._id %>"
-                  class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
-                  title="Edit coupon"
-                  aria-label="Edit coupon"
-                >
-                  <i class="fa-solid fa-pen-to-square"></i>
-                </a>
-                <button
-                  class="btn admin-action-btn admin-action-btn-icon admin-action-btn-danger-alt"
-                  onclick="deleteCoupon('<%= coupon._id %>')"
-                  title="Delete coupon"
-                  aria-label="Delete coupon"
-                >
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-          <% }) %>
-          <% if (!coupons.length) { %>
-          <tr>
-            <td colspan="10" class="text-center admin-empty-row">No coupons found</td>
-          </tr>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-  </div>
+                <i class="fa-solid fa-pen-to-square"></i>
+              </a>
+              <button
+                class="btn admin-action-btn admin-action-btn-icon admin-action-btn-danger-alt"
+                onclick="deleteCoupon('${coupon._id}')"
+                title="Delete coupon"
+                aria-label="Delete coupon"
+              >
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          `,
+        },
+      ],
+    }));
+  %>
+
+  <%- include('../partials/admin_table', {
+    columns: couponColumns,
+    rows: couponRows,
+    emptyMessage: 'No coupons found',
+  }) %>
 
   <%- include('../partials/admin_pagination', {
     pagination,

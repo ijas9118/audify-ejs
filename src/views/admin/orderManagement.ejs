@@ -9,53 +9,55 @@
     <h3 class="admin-management-title mt-2 mb-0">Order Management</h3>
   </div>
 
-  <div class="admin-table-shell">
-    <div class="table-responsive">
-      <table class="table admin-management-table align-middle mb-0">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">User</th>
-            <th scope="col">Total Amount</th>
-            <th scope="col">Payment Method</th>
-            <th scope="col">Status</th>
-            <th scope="col">Date Ordered</th>
-            <th scope="col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% orders.forEach((order, index) => { %>
-          <tr>
-            <th scope="row" class="admin-row-index"><%= pagination.skip + index + 1 %></th>
-            <td class="admin-cell-primary">
-              <% if (order.user && order.user.firstName) { %>
-              <%= `${order.user.firstName} ${order.user.lastName || ''}`.trim() %>
-              <% } else if (order.user && order.user.email) { %>
-              <%= order.user.email %>
-              <% } else { %>
-              <%= order.user %>
-              <% } %>
-            </td>
-            <td>₹<%= order.finalTotal.toFixed(2) %></td>
-            <td><%= order.paymentMethod %></td>
-            <td>
+  <%
+    const orderColumns = [
+      { label: '#' },
+      { label: 'User' },
+      { label: 'Total Amount' },
+      { label: 'Payment Method' },
+      { label: 'Status' },
+      { label: 'Date Ordered' },
+      { label: 'Action' },
+    ];
+
+    const orderRows = orders.map((order, index) => {
+      let orderUserLabel = '';
+      if (order.user && order.user.firstName) {
+        orderUserLabel = `${order.user.firstName} ${order.user.lastName || ''}`.trim();
+      } else if (order.user && order.user.email) {
+        orderUserLabel = order.user.email;
+      } else {
+        orderUserLabel = order.user || '';
+      }
+
+      return {
+        cells: [
+          { tag: 'th', className: 'admin-row-index', text: pagination.skip + index + 1 },
+          { className: 'admin-cell-primary', text: orderUserLabel },
+          { text: `₹${order.finalTotal.toFixed(2)}` },
+          { text: order.paymentMethod || '' },
+          {
+            html: `
               <select
                 class="form-select admin-status-select"
-                id="orderStatus_<%= order._id %>"
+                id="orderStatus_${order._id}"
                 name="status"
                 onfocus="this.dataset.previousValue=this.value"
-                onchange="updateOrderStatus('<%= order._id %>', this)"
+                onchange="updateOrderStatus('${order._id}', this)"
               >
-                <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-                <option value="Processed" <%= order.status === 'Processed' ? 'selected' : '' %>>Processed</option>
-                <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                <option value="Processed" ${order.status === 'Processed' ? 'selected' : ''}>Processed</option>
+                <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
               </select>
-            </td>
-            <td><%= new Date(order.dateOrdered).toLocaleDateString() %></td>
-            <td class="admin-cell-actions admin-cell-actions-compact">
-              <form action="/admin/orders/<%= order._id %>" method="GET" class="admin-action-form">
+            `,
+          },
+          { text: new Date(order.dateOrdered).toLocaleDateString() },
+          {
+            className: 'admin-cell-actions admin-cell-actions-compact',
+            html: `
+              <form action="/admin/orders/${order._id}" method="GET" class="admin-action-form">
                 <button
                   type="submit"
                   class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
@@ -65,18 +67,18 @@
                   <i class="fa-solid fa-eye"></i>
                 </button>
               </form>
-            </td>
-          </tr>
-          <% }); %>
-          <% if (!orders.length) { %>
-          <tr>
-            <td colspan="7" class="text-center admin-empty-row">No orders found</td>
-          </tr>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-  </div>
+            `,
+          },
+        ],
+      };
+    });
+  %>
+
+  <%- include('../partials/admin_table', {
+    columns: orderColumns,
+    rows: orderRows,
+    emptyMessage: 'No orders found',
+  }) %>
 
   <%- include('../partials/admin_pagination', {
     pagination,
