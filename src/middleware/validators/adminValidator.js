@@ -81,15 +81,21 @@ exports.couponValidation = [
     .trim()
     .notEmpty()
     .withMessage('Discount type is required')
-    .isIn(['Percentage', 'Fixed'])
+    .isIn(['percentage', 'fixed'])
     .withMessage('Invalid discount type'),
 
   body('discountValue')
     .trim()
     .notEmpty()
     .withMessage('Discount value is required')
-    .isFloat({ min: 0 })
-    .withMessage('Discount value must be a positive number'),
+    .isFloat({ gt: 0 })
+    .withMessage('Discount value must be greater than 0')
+    .custom((value, { req }) => {
+      if (req.body.discountType === 'percentage' && Number(value) > 100) {
+        throw new Error('Percentage discount cannot exceed 100');
+      }
+      return true;
+    }),
 
   body('minCartValue')
     .optional()
@@ -102,6 +108,40 @@ exports.couponValidation = [
     .trim()
     .isFloat({ min: 0 })
     .withMessage('Maximum discount value must be a positive number'),
+
+  body('validFrom')
+    .trim()
+    .notEmpty()
+    .withMessage('Valid from date is required')
+    .isISO8601()
+    .withMessage('Valid from must be a valid date'),
+
+  body('validUntil')
+    .trim()
+    .notEmpty()
+    .withMessage('Valid until date is required')
+    .isISO8601()
+    .withMessage('Valid until must be a valid date')
+    .custom((value, { req }) => {
+      const validFrom = new Date(req.body.validFrom);
+      const validUntil = new Date(value);
+      if (
+        Number.isNaN(validFrom.getTime()) ||
+        Number.isNaN(validUntil.getTime())
+      ) {
+        return true;
+      }
+      if (validUntil < validFrom) {
+        throw new Error('Valid until date must be after valid from date');
+      }
+      return true;
+    }),
+
+  body('usageLimit')
+    .optional({ values: 'falsy' })
+    .trim()
+    .isInt({ min: 1 })
+    .withMessage('Usage limit must be a positive integer'),
 ];
 
 // Export the validate function

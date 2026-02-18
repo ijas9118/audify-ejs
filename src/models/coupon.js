@@ -4,6 +4,10 @@ const couponSchema = new mongoose.Schema(
   {
     code: {
       type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+      unique: true,
     },
     discountType: {
       type: String,
@@ -13,25 +17,29 @@ const couponSchema = new mongoose.Schema(
     discountValue: {
       type: Number,
       required: true,
+      min: 0.01,
     },
     minCartValue: {
       type: Number,
       default: 0,
+      min: 0,
     },
     maxDiscountValue: {
       type: Number,
+      min: 0,
     },
     validFrom: {
       type: Date,
-      required: true, // New field to represent when the coupon becomes valid
+      required: true,
     },
     validUntil: {
       type: Date,
-      required: true, // New field to represent coupon expiration date
+      required: true,
     },
     usageLimit: {
       type: Number,
       default: 1,
+      min: 1,
     },
     isActive: {
       type: Boolean,

@@ -77,10 +77,24 @@
                 <%= coupon.isActive ? 'Active' : 'Inactive' %>
               </span>
             </td>
-            <td class="admin-cell-actions">
+            <td class="admin-cell-actions admin-cell-actions-compact">
               <div class="admin-action-group">
-                <button class="btn admin-action-btn admin-action-btn-secondary" data-bs-toggle="modal" data-bs-target="#editCouponModal<%= coupon._id %>">Edit</button>
-                <button class="btn admin-action-btn admin-action-btn-danger-alt" onclick="deleteCoupon('<%= coupon._id %>')">Delete</button>
+                <a
+                  href="/admin/coupons/edit/<%= coupon._id %>"
+                  class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
+                  title="Edit coupon"
+                  aria-label="Edit coupon"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </a>
+                <button
+                  class="btn admin-action-btn admin-action-btn-icon admin-action-btn-danger-alt"
+                  onclick="deleteCoupon('<%= coupon._id %>')"
+                  title="Delete coupon"
+                  aria-label="Delete coupon"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -223,83 +237,11 @@
             </div>
           </div>
 
-          <button type="submit" onclick="addCoupon()" class="btn btn-primary">Add Coupon</button>
+          <button type="submit" class="btn btn-primary">Add Coupon</button>
         </form>
       </div>
     </div>
   </div>
 </div>
-
-<!-- Edit Coupon Modals (one for each coupon) -->
-<% coupons.forEach((coupon) => { %>
-  <div class="modal fade" id="editCouponModal<%= coupon._id %>" tabindex="-1" aria-labelledby="editCouponModalLabel<%= coupon._id %>" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content bg-dark text-light">
-        <div class="modal-header bg-dark text-light">
-          <h5 class="modal-title" id="editCouponModalLabel<%= coupon._id %>">Edit Coupon</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form class="edit-coupon-form" data-coupon-id="<%= coupon._id %>">
-            <div class="mb-3">
-              <label for="couponCode<%= coupon._id %>" class="form-label">Coupon Code</label>
-              <input type="text" class="form-control custom-search-input" id="couponCode<%= coupon._id %>" value="<%= coupon.code %>" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="discountType<%= coupon._id %>" class="form-label">Discount Type</label>
-              <select class="form-select" id="discountType<%= coupon._id %>" value="<%= coupon.discountType %>">
-                <option value="percentage" <%= coupon.discountType === 'percentage' ? 'selected' : '' %>>Percentage</option>
-                <option value="fixed" <%= coupon.discountType === 'fixed' ? 'selected' : '' %>>Fixed Amount</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label for="discountValue<%= coupon._id %>" class="form-label">Discount Value</label>
-              <input type="number" class="form-control custom-search-input" id="discountValue<%= coupon._id %>" value="<%= coupon.discountValue %>" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="maxDiscountValue<%= coupon._id %>" class="form-label">Max Discount Value (Optional)</label>
-              <input type="number" class="form-control custom-search-input" id="maxDiscountValue<%= coupon._id %>" value="<%= coupon.maxDiscountValue || '' %>">
-            </div>
-
-            <div class="mb-3">
-              <label for="minCartValue<%= coupon._id %>" class="form-label">Minimum Cart Value (Optional)</label>
-              <input type="number" class="form-control custom-search-input" id="minCartValue<%= coupon._id %>" value="<%= coupon.minCartValue %>">
-            </div>
-
-            <!-- Valid From field -->
-            <div class="mb-3">
-              <label for="validFrom<%= coupon._id %>" class="form-label">Valid From</label>
-              <input type="date" class="form-control custom-search-input" id="validFrom<%= coupon._id %>" value="<%= new Date(coupon.validFrom).toISOString().split('T')[0] %>" required>
-            </div>
-
-            <!-- Valid Until field -->
-            <div class="mb-3">
-              <label for="validUntil<%= coupon._id %>" class="form-label">Valid Until</label>
-              <input type="date" class="form-control custom-search-input" id="validUntil<%= coupon._id %>" value="<%= new Date(coupon.validUntil).toISOString().split('T')[0] %>" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="usageLimit<%= coupon._id %>" class="form-label">Usage Limit</label>
-              <input type="number" class="form-control custom-search-input" id="usageLimit<%= coupon._id %>" value="<%= coupon.usageLimit %>">
-            </div>
-
-            <div class="mb-3">
-              <label for="isActive<%= coupon._id %>" class="form-label">Active</label>
-              <input type="checkbox" class="form-check-input" id="isActive<%= coupon._id %>" <%= coupon.isActive ? 'checked' : '' %>>
-              <label class="form-check-label" for="isActive<%= coupon._id %>">Is Active</label>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Update Coupon</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-<% }) %>
-
-
 
 <script src="/js/couponManagement.js"></script>

@@ -33,7 +33,7 @@
       <table class="table admin-management-table align-middle mb-0">
         <thead>
           <tr>
-            <th scope="col">Sl</th>
+            <th scope="col">#</th>
             <th scope="col">Product Name</th>
             <th scope="col">Category</th>
             <th scope="col">Price</th>
@@ -57,21 +57,26 @@
                 <% } %>
               </span>
             </td>
-            <td class="admin-cell-actions">
+            <td class="admin-cell-actions admin-cell-actions-compact">
               <div class="admin-action-group">
                 <form
                   action="/admin/products/edit/<%= product._id %>"
                   method="GET"
-                  class="w-100"
+                  class="admin-action-form"
                 >
-                  <button type="submit" class="btn admin-action-btn admin-action-btn-secondary">
-                    Edit
+                  <button
+                    type="submit"
+                    class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
+                    title="Edit product"
+                    aria-label="Edit product"
+                  >
+                    <i class="fa-solid fa-pen-to-square"></i>
                   </button>
                 </form>
                 <form
                   action="/admin/products/toggle/<%= product._id %>"
                   method="GET"
-                  class="w-100"
+                  class="admin-action-form"
                   data-confirm="true"
                   data-confirm-title="<%= product.isActive ? 'Unlist Product' : 'List Product' %>"
                   data-confirm-message="<%= product.isActive ? 'This product will be hidden from the storefront.' : 'This product will be visible on the storefront.' %>"
@@ -83,9 +88,11 @@
                   <input type="hidden" name="search" value="<%= search || '' %>" />
                   <button
                     type="submit"
-                    class="btn admin-action-btn <%= product.isActive ? 'admin-action-btn-danger' : 'admin-action-btn-success' %>"
+                    class="btn admin-action-btn admin-action-btn-icon <%= product.isActive ? 'admin-action-btn-danger' : 'admin-action-btn-success' %>"
+                    title="<%= product.isActive ? 'Unlist product' : 'List product' %>"
+                    aria-label="<%= product.isActive ? 'Unlist product' : 'List product' %>"
                   >
-                    <%= product.isActive ? "Unlist" : "List" %>
+                    <i class="fa-solid <%= product.isActive ? 'fa-eye-slash' : 'fa-eye' %>"></i>
                   </button>
                 </form>
               </div>

@@ -28,14 +28,16 @@ document
     }
 
     const couponData = {
-      code: couponCode,
+      code: couponCode.trim().toUpperCase(),
       discountType,
       discountValue: parseFloat(discountValue),
-      maxDiscountValue: maxDiscountValue ? parseFloat(maxDiscountValue) : 0,
+      maxDiscountValue: maxDiscountValue
+        ? parseFloat(maxDiscountValue)
+        : undefined,
       minCartValue: minCartValue ? parseFloat(minCartValue) : 0,
       validFrom, // New field for start date
       validUntil, // Updated field for expiration date
-      usageLimit: parseInt(usageLimit, 10),
+      usageLimit: usageLimit ? parseInt(usageLimit, 10) : undefined,
       isActive,
     };
 
@@ -44,11 +46,12 @@ document
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify(couponData),
       });
 
-      const result = await response.json();
+      const result = await parseApiResponse(response);
 
       if (response.ok) {
         await Toast.fire({
@@ -66,7 +69,7 @@ document
       } else {
         Toast.fire({
           icon: 'error',
-          title: `Error adding coupon: ${result.message || 'Unknown error'}`,
+          title: `Error adding coupon: ${getErrorMessage(result)}`,
         });
       }
     } catch (error) {
@@ -77,127 +80,6 @@ document
       });
     }
   });
-
-document.querySelectorAll('.edit-coupon-form').forEach((form) => {
-  form.addEventListener('submit', function (event) {
-    event.preventDefault();
-    const couponId = this.getAttribute('data-coupon-id');
-    updateCoupon(couponId);
-  });
-});
-
-async function updateCoupon(couponId) {
-  const couponCode = document.getElementById(`couponCode${couponId}`).value;
-  const discountType = document.getElementById(`discountType${couponId}`).value;
-  const discountValue = document.getElementById(
-    `discountValue${couponId}`
-  ).value;
-  const maxDiscountValue =
-    document.getElementById(`maxDiscountValue${couponId}`).value || null;
-  const minCartValue =
-    document.getElementById(`minCartValue${couponId}`).value || null;
-  const validFrom = document.getElementById(`validFrom${couponId}`).value;
-  const validUntil = document.getElementById(`validUntil${couponId}`).value;
-  const usageLimit =
-    document.getElementById(`usageLimit${couponId}`).value || null;
-  const isActive = document.getElementById(`isActive${couponId}`).checked; // Corrected to boolean
-
-  if (
-    !couponCode ||
-    !discountType ||
-    !discountValue ||
-    !validFrom ||
-    !validUntil
-  ) {
-    await Toast.fire({
-      icon: 'warning',
-      title: 'Please fill in all required fields',
-    });
-    return;
-  }
-
-  const couponData = {
-    code: couponCode,
-    discountType,
-    discountValue: parseFloat(discountValue),
-    maxDiscountValue: maxDiscountValue
-      ? parseFloat(maxDiscountValue)
-      : undefined,
-    minCartValue: minCartValue ? parseFloat(minCartValue) : 0,
-    validFrom,
-    validUntil,
-    usageLimit: parseInt(usageLimit, 10),
-    isActive,
-  };
-
-  try {
-    const response = await fetch(`/admin/coupons/edit/${couponId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(couponData),
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      const updatedCoupon = result.coupon;
-      document.getElementById(`couponCodeDisplay${couponId}`).textContent =
-        updatedCoupon.code;
-
-      document.getElementById(`discountTypeDisplay${couponId}`).textContent =
-        updatedCoupon.discountType === 'percentage'
-          ? `${updatedCoupon.discountValue}%`
-          : `₹${updatedCoupon.discountValue}`;
-
-      document.getElementById(
-        `maxDiscountValueDisplay${couponId}`
-      ).textContent = updatedCoupon.maxDiscountValue
-        ? `₹${updatedCoupon.maxDiscountValue}`
-        : '-';
-      document.getElementById(`minCartValueDisplay${couponId}`).textContent =
-        updatedCoupon.minCartValue ? `₹${updatedCoupon.minCartValue}` : '-';
-      document.getElementById(`usageLimitDisplay${couponId}`).textContent =
-        updatedCoupon.usageLimit || 'Unlimited';
-      document.getElementById(`validFromDisplay${couponId}`).textContent =
-        new Date(updatedCoupon.validFrom).toLocaleDateString();
-      document.getElementById(`validUntilDisplay${couponId}`).textContent =
-        new Date(updatedCoupon.validUntil).toLocaleDateString();
-      const statusBadge = document.getElementById(`isActiveDisplay${couponId}`);
-      statusBadge.classList.remove(
-        'is-positive',
-        'is-negative',
-        'bg-success',
-        'bg-danger'
-      );
-      statusBadge.classList.add(
-        updatedCoupon.isActive ? 'is-positive' : 'is-negative'
-      );
-      statusBadge.textContent = updatedCoupon.isActive ? 'Active' : 'Inactive';
-
-      Toast.fire({
-        icon: 'success',
-        title: result.message,
-      });
-      const modal = bootstrap.Modal.getInstance(
-        document.getElementById(`editCouponModal${couponId}`)
-      );
-      modal.hide();
-    } else {
-      Toast.fire({
-        icon: 'error',
-        title: `Error updating coupon: ${result.message || 'Unknown error'}`,
-      });
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    Toast.fire({
-      icon: 'error',
-      title: `An error occurred while updating the coupon. ${error}`,
-    });
-  }
-}
 
 async function deleteCoupon(couponId) {
   const confirmDelete = await window.adminConfirm.open({
@@ -216,10 +98,11 @@ async function deleteCoupon(couponId) {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     });
 
-    const result = await response.json();
+    const result = await parseApiResponse(response);
 
     if (response.ok) {
       // Remove the coupon's row from the table
@@ -233,7 +116,7 @@ async function deleteCoupon(couponId) {
     } else {
       Toast.fire({
         icon: 'error',
-        title: `Error deleting coupon: ${result.message || 'Unknown error'}`,
+        title: `Error deleting coupon: ${getErrorMessage(result)}`,
       });
     }
   } catch (error) {
@@ -266,10 +149,11 @@ async function toggleCouponStatus(couponId) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     });
 
-    const result = await response.json();
+    const result = await parseApiResponse(response);
 
     if (result.success) {
       // Update the UI with the new status
@@ -290,7 +174,7 @@ async function toggleCouponStatus(couponId) {
     } else {
       Toast.fire({
         icon: 'error',
-        title: result.message || 'Error updating coupon status.',
+        title: getErrorMessage(result),
       });
     }
   } catch (error) {
@@ -299,4 +183,32 @@ async function toggleCouponStatus(couponId) {
       title: 'Error toggling coupon status.',
     });
   }
+}
+
+function getErrorMessage(result) {
+  if (!result) {
+    return 'Unknown error';
+  }
+  if (result.message) {
+    return result.message;
+  }
+  if (Array.isArray(result.errors) && result.errors.length > 0) {
+    return result.errors[0].msg || 'Validation failed';
+  }
+  return 'Unknown error';
+}
+
+async function parseApiResponse(response) {
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+  const rawText = await response.text();
+  return {
+    success: false,
+    message:
+      rawText && rawText.trim()
+        ? 'Request failed and server returned non-JSON response'
+        : 'Request failed',
+  };
 }

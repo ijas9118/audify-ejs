@@ -198,6 +198,95 @@ body {
   letter-spacing: 0.01em;
 }
 
+.admin-coupon-edit-page {
+  padding-bottom: 0.5rem;
+}
+
+.admin-coupon-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem;
+}
+
+.admin-coupon-form-section {
+  padding: 0.95rem 0;
+  border-top: 1px solid #242424;
+}
+
+.admin-coupon-form-section:first-child {
+  border-top: 0;
+}
+
+.admin-coupon-form-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ececec;
+}
+
+.admin-coupon-form-subtitle {
+  margin: 0.2rem 0 0.85rem;
+  color: #acacac;
+  font-size: 0.84rem;
+}
+
+.admin-coupon-input.form-control.custom-search-input,
+.admin-coupon-select.form-select {
+  border-radius: 8px;
+  min-height: 42px;
+  background-color: #171717;
+  border-color: #2f2f2f;
+  color: #f0f0f0;
+}
+
+.admin-coupon-input.form-control.custom-search-input::placeholder {
+  color: #858585;
+}
+
+.admin-coupon-input.form-control.custom-search-input:focus,
+.admin-coupon-select.form-select:focus {
+  border-color: #4f3b70;
+  box-shadow: 0 0 0 0.18rem rgba(79, 59, 112, 0.22);
+}
+
+.admin-coupon-select.form-select option {
+  background-color: #151515;
+  color: #f1f1f1;
+}
+
+.admin-coupon-edit-page .form-label {
+  color: #d8d8d8;
+  margin-bottom: 0.35rem;
+}
+
+.admin-coupon-edit-page .form-control.is-invalid,
+.admin-coupon-edit-page .form-select.is-invalid {
+  border-color: #bb5858;
+}
+
+.admin-coupon-edit-page .was-validated .form-control:valid,
+.admin-coupon-edit-page .was-validated .form-select:valid,
+.admin-coupon-edit-page .form-control.is-valid,
+.admin-coupon-edit-page .form-select.is-valid {
+  border-color: #2f2f2f;
+  padding-right: 0.75rem;
+  background-image: none;
+  box-shadow: none;
+}
+
+.admin-coupon-edit-page .valid-feedback {
+  display: none;
+}
+
+.admin-coupon-actionbar {
+  margin-top: 1.4rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid #242424;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
 .admin-create-btn {
   border-radius: 12px;
   padding: 0.58rem 0.95rem;
@@ -260,6 +349,10 @@ body {
   min-width: 210px;
 }
 
+.admin-cell-actions-compact {
+  min-width: 120px;
+}
+
 .admin-cell-actions-wide {
   min-width: 290px;
 }
@@ -267,6 +360,11 @@ body {
 .admin-action-group {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+}
+
+.admin-action-form {
+  margin: 0;
 }
 
 .admin-action-group-3 .admin-action-btn {
@@ -274,14 +372,16 @@ body {
 }
 
 .admin-action-btn {
-  width: 100%;
-  border-radius: 10px;
+  border-radius: 12px;
+  padding: 0.58rem 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
   border: 1px solid #2f2f2f;
   background: #171717;
   color: #f1f1f1;
   min-height: 38px;
+  min-width: 150px;
   font-size: 0.86rem;
-  font-weight: 600;
 }
 
 .admin-action-btn:hover {
@@ -308,6 +408,17 @@ body {
 .admin-action-btn-danger-alt {
   border-color: #5a3438;
   background: #28181a;
+}
+
+.admin-action-btn-icon {
+  min-width: 38px;
+  width: 38px;
+  min-height: 38px;
+  padding: 0;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .admin-stock-pill {

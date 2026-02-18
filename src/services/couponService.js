@@ -1,10 +1,12 @@
 const Coupon = require('../models/coupon');
 const Cart = require('../models/cart');
+const Order = require('../models/order');
 const { getPaginationMeta } = require('../utils/pagination');
 const { escapeRegex } = require('../utils/regex');
 
 const MIN_LIMIT = 5;
 const MAX_LIMIT = 15;
+const normalizeCouponCode = (code) => (code || '').trim().toUpperCase();
 
 const buildSearchFilter = (search) => {
   const query = (search || '').trim();
@@ -44,6 +46,14 @@ exports.getPaginatedCoupons = async ({ page, limit, search }) => {
   };
 };
 
+exports.getCouponById = async (couponId) => {
+  const coupon = await Coupon.findById(couponId);
+  if (!coupon) {
+    throw new Error('Coupon not found');
+  }
+  return coupon;
+};
+
 exports.createCoupon = async (couponData) => {
   const {
     code,
@@ -57,28 +67,52 @@ exports.createCoupon = async (couponData) => {
     isActive,
   } = couponData;
 
-  if (!code || !discountType || !discountValue || !validFrom || !validUntil) {
+  const normalizedCode = normalizeCouponCode(code);
+
+  if (
+    !normalizedCode ||
+    !discountType ||
+    discountValue === undefined ||
+    !validFrom ||
+    !validUntil
+  ) {
     throw new Error('Missing required fields');
   }
 
-  const existingCoupon = await Coupon.findOne({ code });
+  const existingCoupon = await Coupon.findOne({ code: normalizedCode });
   if (existingCoupon) {
     throw new Error('Coupon already exists');
   }
 
+  const startDate = new Date(validFrom);
+  const endDate = new Date(validUntil);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    throw new Error('Invalid coupon date range');
+  }
+  if (endDate < startDate) {
+    throw new Error('Valid until date must be after valid from date');
+  }
+
   const newCoupon = new Coupon({
-    code,
+    code: normalizedCode,
     discountType,
     discountValue,
-    maxDiscountValue,
+    maxDiscountValue: maxDiscountValue || undefined,
     minCartValue: minCartValue || 0,
-    validFrom,
-    validUntil,
+    validFrom: startDate,
+    validUntil: endDate,
     usageLimit: usageLimit || 1,
     isActive: isActive !== undefined ? isActive : true,
   });
 
-  await newCoupon.save();
+  try {
+    await newCoupon.save();
+  } catch (error) {
+    if (error.code === 11000) {
+      throw new Error('Coupon already exists');
+    }
+    throw error;
+  }
   return newCoupon;
 };
 
@@ -101,17 +135,42 @@ exports.updateCouponById = async (couponId, couponData) => {
     isActive,
   } = couponData;
 
-  coupon.code = code || coupon.code;
-  coupon.discountType = discountType || coupon.discountType;
-  coupon.discountValue = discountValue || coupon.discountValue;
-  coupon.maxDiscountValue = maxDiscountValue;
-  coupon.minCartValue = minCartValue;
-  coupon.validFrom = validFrom || coupon.validFrom;
-  coupon.validUntil = validUntil || coupon.validUntil;
-  coupon.usageLimit = usageLimit || coupon.usageLimit;
+  if (code !== undefined) {
+    const normalizedCode = normalizeCouponCode(code);
+    const existingCoupon = await Coupon.findOne({
+      code: normalizedCode,
+      _id: { $ne: couponId },
+    });
+    if (existingCoupon) {
+      throw new Error('Coupon already exists');
+    }
+    coupon.code = normalizedCode;
+  }
+  coupon.discountType =
+    discountType !== undefined ? discountType : coupon.discountType;
+  coupon.discountValue =
+    discountValue !== undefined ? discountValue : coupon.discountValue;
+  coupon.maxDiscountValue =
+    maxDiscountValue !== undefined ? maxDiscountValue : coupon.maxDiscountValue;
+  coupon.minCartValue =
+    minCartValue !== undefined ? minCartValue : coupon.minCartValue;
+  coupon.validFrom = validFrom !== undefined ? validFrom : coupon.validFrom;
+  coupon.validUntil = validUntil !== undefined ? validUntil : coupon.validUntil;
+  coupon.usageLimit = usageLimit !== undefined ? usageLimit : coupon.usageLimit;
   coupon.isActive = isActive !== undefined ? isActive : coupon.isActive;
 
-  await coupon.save();
+  if (coupon.validUntil < coupon.validFrom) {
+    throw new Error('Valid until date must be after valid from date');
+  }
+
+  try {
+    await coupon.save();
+  } catch (error) {
+    if (error.code === 11000) {
+      throw new Error('Coupon already exists');
+    }
+    throw error;
+  }
   return coupon;
 };
 
@@ -148,7 +207,8 @@ exports.toggleCouponStatusById = async (couponId) => {
  * @returns {Promise<Object>} Validated coupon object
  */
 exports.validateCoupon = async (couponCode) => {
-  const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
+  const normalizedCode = normalizeCouponCode(couponCode);
+  const coupon = await Coupon.findOne({ code: normalizedCode, isActive: true });
 
   if (!coupon) {
     throw new Error('Invalid or inactive coupon code');
@@ -191,7 +251,7 @@ exports.calculateDiscount = (coupon, cartTotal) => {
     discount = coupon.discountValue;
   }
 
-  return discount;
+  return Math.min(discount, cartTotal);
 };
 
 /**
@@ -204,9 +264,9 @@ exports.calculateDiscount = (coupon, cartTotal) => {
  * @param {string} couponCode - Coupon code to apply
  * @returns {Promise<Object>} Updated cart details
  */
-exports.applyCouponToCart = async (cartId, couponCode) => {
+exports.applyCouponToCart = async (cartId, couponCode, userId) => {
   // Fetch cart
-  const cart = await Cart.findById(cartId);
+  const cart = await Cart.findOne({ _id: cartId, user: userId });
   if (!cart) {
     throw new Error('Cart not found');
   }
@@ -219,13 +279,31 @@ exports.applyCouponToCart = async (cartId, couponCode) => {
   // Validate coupon
   const coupon = await exports.validateCoupon(couponCode);
 
+  const cartSubtotal = cart.items.reduce((sum, item) => sum + item.subtotal, 0);
+  if (cartSubtotal < coupon.minCartValue) {
+    throw new Error(
+      `Coupon requires a minimum cart subtotal of ${coupon.minCartValue}`
+    );
+  }
+
+  if (coupon.usageLimit > 0) {
+    const perUserUsageCount = await Order.countDocuments({
+      user: userId,
+      appliedCoupon: coupon.code,
+      status: { $ne: 'Cancelled' },
+    });
+    if (perUserUsageCount >= coupon.usageLimit) {
+      throw new Error('Coupon usage limit reached for this user');
+    }
+  }
+
   // Calculate discount
   const discount = exports.calculateDiscount(coupon, cart.total);
-  const finalTotal = cart.total - discount;
+  const finalTotal = parseFloat((cart.total - discount).toFixed(2));
 
   // Update cart
   await Cart.updateOne(
-    { _id: cartId },
+    { _id: cartId, user: userId },
     {
       $set: {
         appliedCoupon: coupon.code,
@@ -249,8 +327,8 @@ exports.applyCouponToCart = async (cartId, couponCode) => {
  * @param {string} cartId - Cart ID
  * @returns {Promise<Object>} Updated cart details
  */
-exports.removeCouponFromCart = async (cartId) => {
-  const cart = await Cart.findById(cartId);
+exports.removeCouponFromCart = async (cartId, userId) => {
+  const cart = await Cart.findOne({ _id: cartId, user: userId });
 
   if (!cart) {
     throw new Error('Cart not found');
@@ -271,7 +349,7 @@ exports.removeCouponFromCart = async (cartId) => {
 
   // Update cart in database
   await Cart.updateOne(
-    { _id: cartId },
+    { _id: cartId, user: userId },
     {
       $set: {
         appliedCoupon: null,

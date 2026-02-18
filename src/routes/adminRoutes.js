@@ -72,6 +72,11 @@ router.post(
   validate,
   couponManagementController.addCoupon
 );
+router.get(
+  '/coupons/edit/:id',
+  adminAuth,
+  couponManagementController.getEditCouponPage
+);
 router.post(
   '/coupons/edit/:id',
   adminAuth,

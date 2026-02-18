@@ -14,7 +14,7 @@
       <table class="table admin-management-table align-middle mb-0">
         <thead>
           <tr>
-            <th scope="col">Sl</th>
+            <th scope="col">#</th>
             <th scope="col">User</th>
             <th scope="col">Total Amount</th>
             <th scope="col">Payment Method</th>
@@ -54,9 +54,16 @@
               </select>
             </td>
             <td><%= new Date(order.dateOrdered).toLocaleDateString() %></td>
-            <td class="admin-cell-actions">
-              <form action="/admin/orders/<%= order._id %>" method="GET" class="w-100">
-                <button type="submit" class="btn admin-action-btn admin-action-btn-secondary">View</button>
+            <td class="admin-cell-actions admin-cell-actions-compact">
+              <form action="/admin/orders/<%= order._id %>" method="GET" class="admin-action-form">
+                <button
+                  type="submit"
+                  class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
+                  title="View order"
+                  aria-label="View order"
+                >
+                  <i class="fa-solid fa-eye"></i>
+                </button>
               </form>
             </td>
           </tr>

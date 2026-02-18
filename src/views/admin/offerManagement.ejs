@@ -75,10 +75,25 @@
                 <%= offer.status %>
               </span>
             </td>
-            <td class="admin-cell-actions">
+            <td class="admin-cell-actions admin-cell-actions-compact">
               <div class="admin-action-group">
-                <button class="btn admin-action-btn admin-action-btn-secondary" data-bs-toggle="modal" data-bs-target="#editOfferModal<%= offer._id %>">Edit</button>
-                <button class="btn admin-action-btn admin-action-btn-danger-alt" onclick="deleteOffer('<%= offer._id %>')">Delete</button>
+                <button
+                  class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editOfferModal<%= offer._id %>"
+                  title="Edit offer"
+                  aria-label="Edit offer"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button
+                  class="btn admin-action-btn admin-action-btn-icon admin-action-btn-danger-alt"
+                  onclick="deleteOffer('<%= offer._id %>')"
+                  title="Delete offer"
+                  aria-label="Delete offer"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
               </div>
             </td>
           </tr>

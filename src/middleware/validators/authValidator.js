@@ -86,6 +86,8 @@ exports.validate = (req, res, next) => {
     // For AJAX/API requests, return JSON
     if (
       req.xhr ||
+      req.is('application/json') ||
+      req.get('content-type')?.includes('application/json') ||
       (req.headers.accept && req.headers.accept.indexOf('json') > -1)
     ) {
       return res.status(400).json({
@@ -101,6 +103,21 @@ exports.validate = (req, res, next) => {
         errors: fieldErrors,
         formData: { username: req.body.username || '' },
         authError: null,
+      });
+    }
+
+    const isAdminCouponEditRequest =
+      req.method === 'POST' && req.originalUrl.includes('/admin/coupons/edit/');
+    if (isAdminCouponEditRequest) {
+      return res.status(400).render('layout', {
+        title: `Edit Coupon - ${(req.body.code || 'Coupon').toUpperCase()}`,
+        viewName: 'admin/editCoupon',
+        activePage: 'coupon',
+        isAdmin: true,
+        coupon: { _id: req.params.id },
+        errors: fieldErrors,
+        formData: req.body,
+        formError: null,
       });
     }
 
