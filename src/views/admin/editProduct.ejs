@@ -1,235 +1,259 @@
-<div class="container my-5 px-4 text-light">
-  <div class="row justify-content-center">
-    <div class="col-lg-8 col-md-10">
-      <h2 class="mb-4">Edit Product</h2>
-      <form
-        id="editProductForm"
-        action="/admin/products/edit/<%= product._id %>"
-        method="POST"
-        enctype="multipart/form-data"
-      >
-        <!-- Product Details Section -->
-        <div class="form-section">
-          <h4>Product Details</h4>
-          <div class="mb-3">
-            <label for="editProductName" class="form-label">Product Name</label>
-            <input
-              type="text"
-              class="form-control custom-search-input"
-              id="editProductName"
-              name="name"
-              value="<%= product.name %>"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="editProductPrice" class="form-label">Product Price</label>
-            <input
-              type="number"
-              class="form-control custom-search-input"
-              id="editProductPrice"
-              name="price"
-              value="<%= product.price %>"
-              min="0"
-              required
-            />
-          </div>
-          <div class="mb-3">
-            <label for="editProductCategory" class="form-label">Category</label>
-            <select
-              class="form-select"
-              id="editProductCategory"
-              name="categoryId"
-              required
-            >
-              <option value="" disabled>Choose a category</option>
-              <% categories.forEach(category => { %>
-              <option value="<%= category._id %>" <%= product.categoryId._id.equals(category._id) ? 'selected' : '' %>>
-                <%= category.name %>
-              </option>
-              <% }); %>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="editProductStock" class="form-label">Stock</label>
-            <input
-              type="number"
-              class="form-control stock-input custom-search-input"
-              id="editProductStock"
-              name="stock"
-              value="<%= product.stock %>"
-              min="0"
-              max="100"
-            />
-          </div>
-          <div class="form-check mb-4">
-            <input
-              type="checkbox"
-              class="form-check-input custom-search-input"
-              id="outOfStockCheckbox"
-              <% if (product.isOutOfStock) { %> checked <% } %>
-            />
-            <label class="form-check-label" for="outOfStockCheckbox">Out of Stock</label>
-          </div>
-          <div class="mb-3">
-            <label for="editProductDescription" class="form-label">Description</label>
-            <textarea
-              class="form-control custom-search-input"
-              id="editProductDescription"
-              name="description"
-              rows="5"
-            ><%= product.description %></textarea>
-          </div>
-        </div>
-        <!-- Image Upload Section -->
-        <div class="form-section">
-         <h4>Images</h4>
-          <!-- Main Image -->
-          <div class="mb-3">
-            <label for="editMainImage" class="form-label">Main Image</label>
-            <div class="d-flex align-items-start">
-              <img
-                id="currentMainImage"
-                src="<%= product.images.main %>"
-                alt="Current Main Image"
-                class="img-thumbnail me-3"
-              />
-              <div>
-                <input
-                  type="file"
-                  class="form-control custom-search-input"
-                  id="editMainImage"
-                  name="mainImage"
-                  accept="image/*"
-                />
-              </div>
-            </div>
-          </div>
-          <!-- Support Images -->
-          <div class="mb-3">
-            <label class="form-label">Support Images</label>
-            <div class="d-flex flex-column gap-3">
-              <div class="d-flex align-items-start">
-                <img
-                  id="currentSupportImage1"
-                  src="<%= product.images.supports[0] %>"
-                  alt="Current Support Image 1"
-                  class="img-thumbnail me-3"
-                />
-                <div>
-                  <input
-                    type="file"
-                    class="form-control custom-search-input mb-2"
-                    id="editSupportImage1"
-                    name="supportImages"
-                    accept="image/*"
-                  />
-                </div>
-              </div>
-              <div class="d-flex align-items-start">
-                <img
-                  id="currentSupportImage2"
-                  src="<%= product.images.supports[1] %>"
-                  alt="Current Support Image 2"
-                  class="img-thumbnail me-3"
-                />
-                <div>
-                  <input
-                    type="file"
-                    class="form-control custom-search-input"
-                    id="editSupportImage2"
-                    name="supportImages"
-                    accept="image/*"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Submit Section -->
-        <div class="d-flex justify-content-end align-items-center mt-4 gap-3">
-          <a href="/admin/products" class="btn btn-secondary rounded-pill px-4 py-2 shadow-sm">
-            Back
-          </a>
-          <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm">
-            Update Product
-          </button>
-        </div>
-        
-        
-      </form>
+<%
+  const data = formData || product || {};
+  const errorsMap = errors || {};
+  const fieldError = (name) => errorsMap[name] || '';
+  const fieldClass = (name) => (fieldError(name) ? 'is-invalid' : '');
+  const valueOf = (name, fallback = '') =>
+    data[name] !== undefined && data[name] !== null ? data[name] : fallback;
+  const selectedCategoryId =
+    typeof valueOf('categoryId', '') === 'string'
+      ? valueOf('categoryId', '')
+      : valueOf('categoryId', '') && valueOf('categoryId', '')._id
+        ? String(valueOf('categoryId', '')._id)
+        : '';
+%>
+
+<div class="container-fluid mt-3 admin-management-page">
+  <div class="admin-management-header mb-3">
+    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrap">
+      <ol class="breadcrumb admin-breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+        <li class="breadcrumb-item"><a href="/admin/products">Product Management</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><%= product.name %></li>
+      </ol>
+    </nav>
+    <div class="admin-management-title-row mt-2">
+      <h3 class="admin-management-title mb-0">Edit Product</h3>
+      <a href="/admin/products" class="btn btn-primary admin-create-btn">Back to Products</a>
     </div>
   </div>
+
+  <form
+    id="editProductForm"
+    action="/admin/products/edit/<%= product._id %>"
+    method="POST"
+    enctype="multipart/form-data"
+    class="admin-product-edit-page"
+    novalidate
+  >
+    <section class="admin-product-section">
+      <h5 class="admin-product-section-title">Product Details</h5>
+      <p class="admin-product-section-subtitle">Update product information and inventory settings.</p>
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <label for="editProductName" class="form-label">Product Name</label>
+          <input
+            type="text"
+            class="form-control custom-search-input admin-product-input <%= fieldClass('name') %>"
+            id="editProductName"
+            name="name"
+            value="<%= valueOf('name', product.name) %>"
+            data-msg-required="Product name is required."
+            data-msg-invalid="Please enter a valid product name."
+            required
+          />
+          <div class="invalid-feedback"><%= fieldError('name') || 'Product name is required.' %></div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <label for="editProductPrice" class="form-label">Product Price</label>
+          <input
+            type="number"
+            class="form-control custom-search-input admin-product-input <%= fieldClass('price') %>"
+            id="editProductPrice"
+            name="price"
+            value="<%= valueOf('price', product.price) %>"
+            min="0"
+            step="0.01"
+            data-msg-required="Price is required."
+            data-msg-invalid="Price must be a non-negative number."
+            required
+          />
+          <div class="invalid-feedback"><%= fieldError('price') || 'Product price is required.' %></div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <label for="editProductStock" class="form-label">Stock</label>
+          <input
+            type="number"
+            class="form-control custom-search-input admin-product-input <%= fieldClass('stock') %>"
+            id="editProductStock"
+            name="stock"
+            value="<%= valueOf('stock', product.stock) %>"
+            min="0"
+            step="1"
+            data-msg-required="Stock is required."
+            data-msg-invalid="Stock must be a non-negative integer."
+            required
+          />
+          <div class="invalid-feedback"><%= fieldError('stock') || 'Stock is required.' %></div>
+        </div>
+        <div class="col-lg-6">
+          <label for="editProductCategory" class="form-label">Category</label>
+          <select
+            class="form-select admin-product-select <%= fieldClass('categoryId') %>"
+            id="editProductCategory"
+            name="categoryId"
+            data-msg-required="Category is required."
+            data-msg-invalid="Please choose a valid category."
+            required
+          >
+            <option value="" disabled>Choose a category</option>
+            <% categories.forEach((category) => { %>
+            <option value="<%= category._id %>" <%= selectedCategoryId === String(category._id) ? 'selected' : '' %>>
+              <%= category.name %>
+            </option>
+            <% }) %>
+          </select>
+          <div class="invalid-feedback"><%= fieldError('categoryId') || 'Category is required.' %></div>
+        </div>
+        <div class="col-12">
+          <label for="editProductDescription" class="form-label">Description</label>
+          <textarea
+            class="form-control custom-search-input admin-product-input admin-product-textarea <%= fieldClass('description') %>"
+            id="editProductDescription"
+            name="description"
+            rows="5"
+            data-msg-required="Description is required."
+            data-msg-invalid="Please enter a valid description."
+            required
+          ><%= valueOf('description', product.description) %></textarea>
+          <div class="invalid-feedback"><%= fieldError('description') || 'Description is required.' %></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-product-section">
+      <h5 class="admin-product-section-title">Images</h5>
+      <p class="admin-product-section-subtitle">Upload new files to replace existing images.</p>
+
+      <div class="admin-product-image-grid">
+        <article class="admin-product-image-card">
+          <h6 class="admin-product-image-title">Main Image</h6>
+          <div class="admin-product-image-preview-wrap">
+            <img
+              id="currentMainImage"
+              src="<%= product.images.main %>"
+              alt="Current Main Image"
+              class="admin-product-image-preview"
+            />
+          </div>
+          <input
+            type="file"
+            class="form-control custom-search-input admin-product-input mt-2"
+            id="editMainImage"
+            name="mainImage"
+            accept="image/*"
+          />
+        </article>
+
+        <article class="admin-product-image-card">
+          <h6 class="admin-product-image-title">Support Image 1</h6>
+          <div class="admin-product-image-preview-wrap">
+            <img
+              id="currentSupportImage1"
+              src="<%= product.images.supports[0] %>"
+              alt="Current Support Image 1"
+              class="admin-product-image-preview"
+            />
+          </div>
+          <input
+            type="file"
+            class="form-control custom-search-input admin-product-input mt-2"
+            id="editSupportImage1"
+            name="supportImages"
+            accept="image/*"
+          />
+        </article>
+
+        <article class="admin-product-image-card">
+          <h6 class="admin-product-image-title">Support Image 2</h6>
+          <div class="admin-product-image-preview-wrap">
+            <img
+              id="currentSupportImage2"
+              src="<%= product.images.supports[1] %>"
+              alt="Current Support Image 2"
+              class="admin-product-image-preview"
+            />
+          </div>
+          <input
+            type="file"
+            class="form-control custom-search-input admin-product-input mt-2"
+            id="editSupportImage2"
+            name="supportImages"
+            accept="image/*"
+          />
+        </article>
+      </div>
+    </section>
+
+    <div class="admin-product-actionbar">
+      <a href="/admin/products" class="btn admin-action-btn admin-action-btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary admin-create-btn">Update Product</button>
+    </div>
+  </form>
 </div>
 
-<style>
-  .img-thumbnail {
-    max-width: 150px;
-    max-height: 150px;
-    object-fit: cover;
-  }
-  .form-section {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-  .form-section label {
-    font-weight: bold;
-  }
-</style>
-
 <script>
-  // Function to update image preview
-  function updateImagePreview(input, imgElement) {
-    if (input.files && input.files[0]) {
+  (() => {
+    const updateImagePreview = (inputEl, previewEl) => {
+      if (!inputEl || !previewEl || !inputEl.files || !inputEl.files[0]) {
+        return;
+      }
+
       const reader = new FileReader();
-
-      reader.onload = function (e) {
-        imgElement.src = e.target.result;
+      reader.onload = (event) => {
+        previewEl.src = event.target.result;
       };
+      reader.readAsDataURL(inputEl.files[0]);
+    };
 
-      reader.readAsDataURL(input.files[0]);
-    }
-  }
+    const mainInput = document.getElementById('editMainImage');
+    const supportInput1 = document.getElementById('editSupportImage1');
+    const supportInput2 = document.getElementById('editSupportImage2');
 
-  // Event listeners for main image
-  document.getElementById('editMainImage').addEventListener('change', function () {
-    updateImagePreview(this, document.getElementById('currentMainImage'));
-  });
+    mainInput?.addEventListener('change', function onMainChange() {
+      updateImagePreview(this, document.getElementById('currentMainImage'));
+    });
+    supportInput1?.addEventListener('change', function onSupportOneChange() {
+      updateImagePreview(this, document.getElementById('currentSupportImage1'));
+    });
+    supportInput2?.addEventListener('change', function onSupportTwoChange() {
+      updateImagePreview(this, document.getElementById('currentSupportImage2'));
+    });
 
-  // Event listeners for support images
-  document.getElementById('editSupportImage1').addEventListener('change', function () {
-    updateImagePreview(this, document.getElementById('currentSupportImage1'));
-  });
+    const form = document.getElementById('editProductForm');
+    const updateFieldMessage = (field) => {
+      const feedback = field.parentElement?.querySelector('.invalid-feedback');
+      if (!feedback) {
+        return;
+      }
 
-  document.getElementById('editSupportImage2').addEventListener('change', function () {
-    updateImagePreview(this, document.getElementById('currentSupportImage2'));
-  });
+      if (field.validity.valueMissing) {
+        feedback.textContent = field.dataset.msgRequired || 'This field is required.';
+        return;
+      }
 
-  // Event listener for out of stock checkbox
-  document.getElementById('outOfStockCheckbox').addEventListener('change', function () {
-    const stockInput = document.getElementById('editProductStock');
-    const isOutOfStockInput = document.getElementById('isOutOfStock');
-    if (this.checked) {
-      stockInput.disabled = true;
-      stockInput.value = ''; // Clear the stock value
-      isOutOfStockInput.value = 'true'; // Set isOutOfStock to true
-    } else {
-      stockInput.disabled = false;
-      isOutOfStockInput.value = 'false'; // Set isOutOfStock to false
-    }
-  });
-  
-  // Initialize stock field disabled state based on checkbox
-  const stockInput = document.getElementById('editProductStock');
-  const isOutOfStockCheckbox = document.getElementById('outOfStockCheckbox');
-  const isOutOfStockInput = document.getElementById('isOutOfStock');
+      if (!field.validity.valid) {
+        feedback.textContent =
+          field.dataset.msgInvalid || 'Please enter a valid value.';
+      }
+    };
 
-  if (isOutOfStockCheckbox.checked) {
-    stockInput.disabled = true;
-    isOutOfStockInput.value = 'true';
-  } else {
-    isOutOfStockInput.value = 'false';
-  }
+    const fields = form
+      ? form.querySelectorAll('input, select, textarea')
+      : [];
+
+    fields.forEach((field) => {
+      field.addEventListener('input', () => updateFieldMessage(field));
+      field.addEventListener('change', () => updateFieldMessage(field));
+    });
+
+    form?.addEventListener('submit', (event) => {
+      fields.forEach((field) => updateFieldMessage(field));
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    });
+  })();
 </script>

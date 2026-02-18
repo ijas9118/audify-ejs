@@ -1,0 +1,121 @@
+<%
+  const data = formData || category || {};
+  const errorsMap = errors || {};
+  const fieldError = (name) => errorsMap[name] || '';
+  const fieldClass = (name) => (fieldError(name) ? 'is-invalid' : '');
+  const valueOf = (name, fallback = '') =>
+    data[name] !== undefined && data[name] !== null ? data[name] : fallback;
+  const categoryLabel = valueOf('name', category?.name || 'Category');
+%>
+
+<div class="container-fluid mt-3 admin-management-page">
+  <div class="admin-management-header mb-3">
+    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrap">
+      <ol class="breadcrumb admin-breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+        <li class="breadcrumb-item"><a href="/admin/category">Category Management</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><%= categoryLabel %></li>
+      </ol>
+    </nav>
+    <div class="admin-management-title-row mt-2">
+      <h3 class="admin-management-title mb-0">Edit Category</h3>
+      <a href="/admin/category" class="btn btn-primary admin-create-btn">Back to Categories</a>
+    </div>
+  </div>
+
+  <div class="admin-coupon-edit-page">
+    <% if (formError) { %>
+    <div class="alert alert-danger mb-3" role="alert"><%= formError %></div>
+    <% } %>
+
+    <form
+      action="/admin/category/edit/<%= category._id %>"
+      method="POST"
+      class="admin-coupon-form"
+      id="editCategoryForm"
+      novalidate
+    >
+      <div class="admin-coupon-form-grid">
+        <section class="admin-coupon-form-section">
+          <h5 class="admin-coupon-form-title">Category Details</h5>
+          <p class="admin-coupon-form-subtitle">Update display name and storefront description.</p>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="name" class="form-label">Category Name</label>
+              <input
+                type="text"
+                class="form-control custom-search-input admin-coupon-input <%= fieldClass('name') %>"
+                id="name"
+                name="name"
+                value="<%= valueOf('name', category.name) %>"
+                maxlength="50"
+                data-msg-required="Category name is required."
+                data-msg-invalid="Category name must be less than 50 characters."
+                required
+              />
+              <div class="invalid-feedback"><%= fieldError('name') || 'Category name is required.' %></div>
+            </div>
+            <div class="col-12">
+              <label for="description" class="form-label">Description</label>
+              <textarea
+                class="form-control custom-search-input admin-coupon-input <%= fieldClass('description') %>"
+                id="description"
+                name="description"
+                rows="5"
+                maxlength="500"
+                data-msg-invalid="Description must be less than 500 characters."
+              ><%= valueOf('description', category.description || '') %></textarea>
+              <div class="invalid-feedback"><%= fieldError('description') || 'Description must be less than 500 characters.' %></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="admin-coupon-actionbar">
+        <a href="/admin/category" class="btn admin-action-btn admin-action-btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary admin-create-btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const form = document.getElementById('editCategoryForm');
+    if (!form) {
+      return;
+    }
+
+    const updateFieldMessage = (field) => {
+      const feedback = field.parentElement?.querySelector('.invalid-feedback');
+      if (!feedback) {
+        return;
+      }
+
+      if (field.validity.valueMissing) {
+        feedback.textContent = field.dataset.msgRequired || 'This field is required.';
+        return;
+      }
+
+      if (!field.validity.valid) {
+        feedback.textContent = field.dataset.msgInvalid || 'Please enter a valid value.';
+      }
+    };
+
+    const fields = form.querySelectorAll('input, select, textarea');
+    fields.forEach((field) => {
+      field.addEventListener('input', () => updateFieldMessage(field));
+      field.addEventListener('change', () => updateFieldMessage(field));
+    });
+
+    form.addEventListener('submit', (event) => {
+      fields.forEach((field) => updateFieldMessage(field));
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    });
+  })();
+</script>

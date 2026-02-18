@@ -264,13 +264,15 @@ body {
   border-color: #bb5858;
 }
 
+.admin-coupon-edit-page.was-validated .form-control:valid,
+.admin-coupon-edit-page.was-validated .form-select:valid,
 .admin-coupon-edit-page .was-validated .form-control:valid,
 .admin-coupon-edit-page .was-validated .form-select:valid,
 .admin-coupon-edit-page .form-control.is-valid,
 .admin-coupon-edit-page .form-select.is-valid {
   border-color: #2f2f2f;
   padding-right: 0.75rem;
-  background-image: none;
+  background-image: none !important;
   box-shadow: none;
 }
 
@@ -285,6 +287,234 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 0.65rem;
+}
+
+.admin-product-edit-page {
+  padding-bottom: 0.5rem;
+}
+
+.admin-product-section {
+  padding: 0.95rem 0;
+  border-top: 1px solid #242424;
+}
+
+.admin-product-section:first-of-type {
+  border-top: 0;
+}
+
+.admin-product-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ececec;
+}
+
+.admin-product-section-subtitle {
+  margin: 0.2rem 0 0.85rem;
+  color: #acacac;
+  font-size: 0.84rem;
+}
+
+.admin-product-input.form-control.custom-search-input,
+.admin-product-select.form-select {
+  border-radius: 8px;
+  min-height: 42px;
+  background-color: #171717;
+  border-color: #2f2f2f;
+  color: #f0f0f0;
+}
+
+.admin-product-input.form-control.custom-search-input:focus,
+.admin-product-select.form-select:focus {
+  border-color: #4f3b70;
+  box-shadow: 0 0 0 0.18rem rgba(79, 59, 112, 0.22);
+}
+
+.admin-product-textarea {
+  min-height: 130px;
+}
+
+.admin-product-image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-product-image-card {
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background: #121212;
+  padding: 0.75rem;
+}
+
+.admin-product-image-title {
+  margin: 0 0 0.55rem;
+  color: #d6d6d6;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.admin-product-image-preview-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #0c0c0c;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-product-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.admin-product-actionbar {
+  margin-top: 1.4rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid #242424;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.admin-product-edit-page.was-validated .form-control:valid,
+.admin-product-edit-page.was-validated .form-select:valid,
+.admin-product-edit-page .was-validated .form-control:valid,
+.admin-product-edit-page .was-validated .form-select:valid,
+.admin-product-edit-page .form-control.is-valid,
+.admin-product-edit-page .form-select.is-valid {
+  border-color: #2f2f2f;
+  padding-right: 0.75rem;
+  background-image: none !important;
+  box-shadow: none;
+}
+
+.admin-product-edit-page .valid-feedback {
+  display: none;
+}
+
+.admin-order-view-page {
+  padding-bottom: 0.5rem;
+}
+
+.admin-order-section {
+  padding: 0.95rem 0;
+  border-top: 1px solid #242424;
+}
+
+.admin-order-section:first-child {
+  border-top: 0;
+}
+
+.admin-order-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ececec;
+}
+
+.admin-order-section-subtitle {
+  margin: 0.2rem 0 0.85rem;
+  color: #acacac;
+  font-size: 0.84rem;
+}
+
+.admin-order-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-order-info-card {
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background: #121212;
+  padding: 0.85rem;
+}
+
+.admin-order-card-title {
+  margin: 0 0 0.55rem;
+  color: #d6d6d6;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.admin-order-meta {
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.admin-order-meta dt {
+  color: #a9a9a9;
+  font-size: 0.74rem;
+  margin: 0 0 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-order-meta dd {
+  margin: 0;
+  color: #ececec;
+}
+
+.admin-order-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #3b3b3b;
+  background: #1a1a1a;
+  color: #d9d9d9;
+  padding: 0.18rem 0.62rem;
+  font-size: 0.76rem;
+}
+
+.admin-order-address-card {
+  color: #ececec;
+}
+
+.admin-order-summary-list {
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background: #121212;
+  overflow: hidden;
+}
+
+.admin-order-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid #242424;
+  color: #dcdcdc;
+}
+
+.admin-order-summary-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-order-summary-row.is-total {
+  background: #17141f;
+  color: #f5f5f5;
+}
+
+@media (max-width: 991.98px) {
+  .admin-product-image-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-order-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .admin-product-image-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-create-btn {

@@ -1,6 +1,7 @@
-document
-  .getElementById('addCategoryForm')
-  .addEventListener('submit', async (e) => {
+const addCategoryForm = document.getElementById('addCategoryForm');
+
+if (addCategoryForm) {
+  addCategoryForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const categoryName = document.getElementById('categoryName').value;
@@ -60,67 +61,6 @@ document
       });
     }
   });
-
-async function handleCategoryUpdate(categoryId) {
-  const categoryName = document.getElementById(
-    `categoryName${categoryId}`
-  ).value;
-  const categoryDescription = document.getElementById(
-    `categoryDescription${categoryId}`
-  ).value;
-
-  const data = {
-    name: categoryName,
-    description: categoryDescription,
-  };
-
-  try {
-    const response = await fetch(`/admin/category/edit/${categoryId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json();
-
-    // Handle validation errors (400 status)
-    if (response.status === 400 && result.errors) {
-      // Display validation errors
-      const errorMessages = result.errors.map((err) => err.msg).join('<br>');
-      await Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        html: errorMessages,
-      });
-      return;
-    }
-
-    if (response.ok) {
-      await Toast.fire({
-        icon: 'success',
-        title: result.message,
-      });
-      const modal = bootstrap.Modal.getInstance(
-        document.getElementById(`editCategoryModal${categoryId}`)
-      );
-      modal.hide();
-      window.location.reload();
-    } else {
-      Toast.fire({
-        icon: 'error',
-        title:
-          result.message || 'An error occurred while updating the category.',
-      });
-    }
-  } catch (error) {
-    Toast.fire({
-      icon: 'error',
-      title: 'An error occurred while updating the category.',
-    });
-  }
 }
 
 async function handleCategoryDelete(categoryId) {

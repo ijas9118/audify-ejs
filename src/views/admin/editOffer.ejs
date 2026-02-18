@@ -1,0 +1,368 @@
+<%
+  const data = formData || offer || {};
+  const errorsMap = errors || {};
+  const fieldError = (name) => errorsMap[name] || '';
+  const fieldClass = (name) => (fieldError(name) ? 'is-invalid' : '');
+  const valueOf = (name, fallback = '') =>
+    data[name] !== undefined && data[name] !== null ? data[name] : fallback;
+  const formatDateInput = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
+  const allProducts = Array.isArray(products) ? products : [];
+  const allCategories = Array.isArray(categories) ? categories : [];
+  const currentOfferType = valueOf('type', offer.type || 'product');
+  const selectedProductId =
+    typeof valueOf('product', '') === 'string'
+      ? valueOf('product', '')
+      : valueOf('product', '') && valueOf('product', '')._id
+        ? String(valueOf('product', '')._id)
+        : offer?.product?._id
+          ? String(offer.product._id)
+          : '';
+  const selectedCategoryId =
+    typeof valueOf('category', '') === 'string'
+      ? valueOf('category', '')
+      : valueOf('category', '') && valueOf('category', '')._id
+        ? String(valueOf('category', '')._id)
+        : offer?.category?._id
+          ? String(offer.category._id)
+          : '';
+  const breadcrumbLabel =
+    currentOfferType === 'product'
+      ? 'Product Offer'
+      : currentOfferType === 'category'
+        ? 'Category Offer'
+        : 'Referral Offer';
+%>
+
+<div class="container-fluid mt-3 admin-management-page">
+  <div class="admin-management-header mb-3">
+    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrap">
+      <ol class="breadcrumb admin-breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+        <li class="breadcrumb-item"><a href="/admin/offers">Offer Management</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><%= breadcrumbLabel %></li>
+      </ol>
+    </nav>
+    <div class="admin-management-title-row mt-2">
+      <h3 class="admin-management-title mb-0">Edit Offer</h3>
+      <a href="/admin/offers" class="btn btn-primary admin-create-btn">Back to Offers</a>
+    </div>
+  </div>
+
+  <div class="admin-coupon-edit-page">
+    <% if (formError) { %>
+    <div class="alert alert-danger mb-3" role="alert"><%= formError %></div>
+    <% } %>
+
+    <form
+      action="/admin/offers/edit/<%= offer._id %>"
+      method="POST"
+      class="admin-coupon-form"
+      id="editOfferForm"
+      novalidate
+    >
+      <div class="admin-coupon-form-grid">
+        <section class="admin-coupon-form-section">
+          <h5 class="admin-coupon-form-title">Offer Scope</h5>
+          <p class="admin-coupon-form-subtitle">Choose where this offer applies.</p>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="type" class="form-label">Offer Type</label>
+              <select
+                id="type"
+                name="type"
+                class="form-select admin-coupon-select <%= fieldClass('type') %>"
+                data-msg-required="Offer type is required."
+                data-msg-invalid="Please choose a valid offer type."
+                required
+              >
+                <option value="product" <%= currentOfferType === 'product' ? 'selected' : '' %>>Product</option>
+                <option value="category" <%= currentOfferType === 'category' ? 'selected' : '' %>>Category</option>
+                <option value="referral" <%= currentOfferType === 'referral' ? 'selected' : '' %>>Referral</option>
+              </select>
+              <div class="invalid-feedback"><%= fieldError('type') || 'Offer type is required.' %></div>
+            </div>
+
+            <div class="col-md-6 <%= currentOfferType === 'product' ? '' : 'd-none' %>" id="productGroup">
+              <label for="product" class="form-label">Applicable Product</label>
+              <select
+                id="product"
+                name="product"
+                class="form-select admin-coupon-select <%= fieldClass('product') %>"
+                data-msg-required="Please select a product."
+                data-msg-invalid="Please select a valid product."
+              >
+                <option value="">Select Product</option>
+                <% allProducts.forEach((product) => { %>
+                <option value="<%= product._id %>" <%= selectedProductId === String(product._id) ? 'selected' : '' %>>
+                  <%= product.name %>
+                </option>
+                <% }) %>
+              </select>
+              <div class="invalid-feedback"><%= fieldError('product') || 'Please select a product.' %></div>
+            </div>
+
+            <div class="col-md-6 <%= currentOfferType === 'category' ? '' : 'd-none' %>" id="categoryGroup">
+              <label for="category" class="form-label">Applicable Category</label>
+              <select
+                id="category"
+                name="category"
+                class="form-select admin-coupon-select <%= fieldClass('category') %>"
+                data-msg-required="Please select a category."
+                data-msg-invalid="Please select a valid category."
+              >
+                <option value="">Select Category</option>
+                <% allCategories.forEach((category) => { %>
+                <option value="<%= category._id %>" <%= selectedCategoryId === String(category._id) ? 'selected' : '' %>>
+                  <%= category.name %>
+                </option>
+                <% }) %>
+              </select>
+              <div class="invalid-feedback"><%= fieldError('category') || 'Please select a category.' %></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-coupon-form-section">
+          <h5 class="admin-coupon-form-title">Discount Configuration</h5>
+          <p class="admin-coupon-form-subtitle">Update value, constraints, and validity period.</p>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="discountType" class="form-label">Discount Type</label>
+              <select
+                class="form-select admin-coupon-select <%= fieldClass('discountType') %>"
+                id="discountType"
+                name="discountType"
+                data-msg-required="Discount type is required."
+                data-msg-invalid="Please choose a valid discount type."
+                required
+              >
+                <option value="percentage" <%= valueOf('discountType', offer.discountType) === 'percentage' ? 'selected' : '' %>>
+                  Percentage
+                </option>
+                <option value="fixed" <%= valueOf('discountType', offer.discountType) === 'fixed' ? 'selected' : '' %>>
+                  Fixed Amount
+                </option>
+              </select>
+              <div class="invalid-feedback"><%= fieldError('discountType') || 'Discount type is required.' %></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="discountValue" class="form-label">Discount Value</label>
+              <input
+                type="number"
+                class="form-control custom-search-input admin-coupon-input <%= fieldClass('discountValue') %>"
+                id="discountValue"
+                name="discountValue"
+                value="<%= valueOf('discountValue', offer.discountValue) %>"
+                min="0.01"
+                step="0.01"
+                data-msg-required="Discount value is required."
+                data-msg-invalid="Discount value must be greater than 0."
+                required
+              />
+              <div class="invalid-feedback"><%= fieldError('discountValue') || 'Discount value is required.' %></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="maxDiscountAmount" class="form-label">Max Discount Amount</label>
+              <input
+                type="number"
+                class="form-control custom-search-input admin-coupon-input <%= fieldClass('maxDiscountAmount') %>"
+                id="maxDiscountAmount"
+                name="maxDiscountAmount"
+                value="<%= valueOf('maxDiscountAmount', offer.maxDiscountAmount ?? '') %>"
+                min="0"
+                step="0.01"
+                data-msg-invalid="Maximum discount amount must be non-negative."
+              />
+              <div class="invalid-feedback"><%= fieldError('maxDiscountAmount') || 'Maximum discount amount must be non-negative.' %></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="minCartValue" class="form-label">Minimum Cart Subtotal</label>
+              <input
+                type="number"
+                class="form-control custom-search-input admin-coupon-input <%= fieldClass('minCartValue') %>"
+                id="minCartValue"
+                name="minCartValue"
+                value="<%= valueOf('minCartValue', offer.minCartValue ?? 0) %>"
+                min="0"
+                step="0.01"
+                data-msg-invalid="Minimum cart subtotal must be non-negative."
+              />
+              <div class="invalid-feedback"><%= fieldError('minCartValue') || 'Minimum cart subtotal must be non-negative.' %></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="validFrom" class="form-label">Valid From</label>
+              <input
+                type="date"
+                class="form-control custom-search-input admin-coupon-input <%= fieldClass('validFrom') %>"
+                id="validFrom"
+                name="validFrom"
+                value="<%= formatDateInput(valueOf('validFrom', offer.validFrom)) %>"
+                data-msg-required="Valid from date is required."
+                data-msg-invalid="Please choose a valid start date."
+                required
+              />
+              <div class="invalid-feedback"><%= fieldError('validFrom') || 'Valid from date is required.' %></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="validUntil" class="form-label">Valid Until</label>
+              <input
+                type="date"
+                class="form-control custom-search-input admin-coupon-input <%= fieldClass('validUntil') %>"
+                id="validUntil"
+                name="validUntil"
+                value="<%= formatDateInput(valueOf('validUntil', offer.validUntil)) %>"
+                data-msg-required="Valid until date is required."
+                data-msg-invalid="Please choose a valid end date."
+                required
+              />
+              <div class="invalid-feedback"><%= fieldError('validUntil') || 'Valid until date is required.' %></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="admin-coupon-actionbar">
+        <a href="/admin/offers" class="btn admin-action-btn admin-action-btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary admin-create-btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const form = document.getElementById('editOfferForm');
+    if (!form) {
+      return;
+    }
+
+    const offerTypeField = form.querySelector('#type');
+    const productField = form.querySelector('#product');
+    const categoryField = form.querySelector('#category');
+    const productGroup = form.querySelector('#productGroup');
+    const categoryGroup = form.querySelector('#categoryGroup');
+    const discountTypeField = form.querySelector('#discountType');
+    const discountValueField = form.querySelector('#discountValue');
+    const validFromField = form.querySelector('#validFrom');
+    const validUntilField = form.querySelector('#validUntil');
+
+    const getFeedback = (field) => field.parentElement?.querySelector('.invalid-feedback');
+
+    const toggleApplicableField = () => {
+      const type = offerTypeField?.value;
+      const useProduct = type === 'product';
+      const useCategory = type === 'category';
+
+      productGroup?.classList.toggle('d-none', !useProduct);
+      categoryGroup?.classList.toggle('d-none', !useCategory);
+
+      if (productField) {
+        productField.disabled = !useProduct;
+        productField.required = useProduct;
+        if (!useProduct) {
+          productField.setCustomValidity('');
+        }
+      }
+
+      if (categoryField) {
+        categoryField.disabled = !useCategory;
+        categoryField.required = useCategory;
+        if (!useCategory) {
+          categoryField.setCustomValidity('');
+        }
+      }
+    };
+
+    const updateFieldMessage = (field) => {
+      const feedback = getFeedback(field);
+      if (!feedback) {
+        return;
+      }
+
+      field.setCustomValidity('');
+
+      if (field.validity.valueMissing) {
+        feedback.textContent = field.dataset.msgRequired || 'This field is required.';
+        return;
+      }
+
+      if (field.id === 'discountValue') {
+        const discountValue = Number(field.value);
+        const isPercentage = discountTypeField?.value === 'percentage';
+        if (Number.isFinite(discountValue) && isPercentage && discountValue > 100) {
+          feedback.textContent = 'Percentage discount cannot exceed 100.';
+          field.setCustomValidity('Percentage discount cannot exceed 100.');
+          return;
+        }
+      }
+
+      if (field.id === 'validUntil') {
+        const start = validFromField?.value ? new Date(validFromField.value) : null;
+        const end = field.value ? new Date(field.value) : null;
+        if (
+          start &&
+          end &&
+          !Number.isNaN(start.getTime()) &&
+          !Number.isNaN(end.getTime()) &&
+          end < start
+        ) {
+          feedback.textContent = 'Valid until date must be after valid from date.';
+          field.setCustomValidity('Valid until date must be after valid from date.');
+          return;
+        }
+      }
+
+      if (!field.validity.valid) {
+        feedback.textContent = field.dataset.msgInvalid || 'Please enter a valid value.';
+      }
+    };
+
+    const fields = form.querySelectorAll('input, select, textarea');
+    fields.forEach((field) => {
+      field.addEventListener('input', () => updateFieldMessage(field));
+      field.addEventListener('change', () => updateFieldMessage(field));
+    });
+
+    offerTypeField?.addEventListener('change', () => {
+      toggleApplicableField();
+      updateFieldMessage(productField);
+      updateFieldMessage(categoryField);
+    });
+
+    discountTypeField?.addEventListener('change', () => {
+      updateFieldMessage(discountValueField);
+    });
+
+    validFromField?.addEventListener('change', () => {
+      updateFieldMessage(validUntilField);
+    });
+
+    toggleApplicableField();
+
+    form.addEventListener('submit', (event) => {
+      toggleApplicableField();
+      fields.forEach((field) => {
+        if (!field.disabled) {
+          updateFieldMessage(field);
+        }
+      });
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    });
+  })();
+</script>

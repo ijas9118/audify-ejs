@@ -113,15 +113,24 @@ exports.updateCategory = async (categoryId, name, description) => {
     throw new Error('Category not found');
   }
 
-  category.name = name;
+  if (!name || !name.trim()) {
+    throw new Error('Category name is required');
+  }
+
+  const existingCategory = await Category.findOne({
+    name: name.trim(),
+    _id: { $ne: categoryId },
+  });
+  if (existingCategory) {
+    throw new Error('Category already exists');
+  }
+
+  category.name = name.trim();
   category.description = description;
 
   await category.save();
 
-  return {
-    name: category.name,
-    description: category.description,
-  };
+  return category;
 };
 
 /**

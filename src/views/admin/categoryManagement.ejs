@@ -84,8 +84,7 @@
                 </form>
                 <button
                   class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editCategoryModal${category._id}"
+                  onclick="window.location.href='/admin/category/edit/${category._id}'"
                   title="Edit category"
                   aria-label="Edit category"
                 >
@@ -176,43 +175,5 @@
     </div>
   </div>
 </div>
-
-<!-- Edit category Modals (one for each category) -->
-<% categories.forEach((category) => { %>
-  <div class="modal fade" id="editCategoryModal<%= category._id %>" tabindex="-1" aria-labelledby="editCategoryModalLabel<%= category._id %>" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content bg-dark text-light">
-        <div class="modal-header bg-dark text-light">
-          <h5 class="modal-title" id="editcategoryModalLabel<%= category._id %>">Edit Category</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="categoryName<%= category._id %>" class="form-label">Category Name</label>
-            <input
-              type="text"
-              class="form-control custom-search-input"
-              id="categoryName<%= category._id %>"
-              name="name"
-              value="<%= category.name %>"         
-            />
-          </div>
-          <div class="mb-3">
-            <label for="categoryDescription<%= category._id %>" class="form-label">Description</label>
-            <textarea
-              class="form-control custom-search-input"
-              id="categoryDescription<%= category._id %>"
-              name="description"
-              rows="2"
-              
-            ><%= category.description %></textarea>
-          </div>
-          <button type="button" class="btn btn-primary" onclick="handleCategoryUpdate('<%= category._id %>')">Update category</button>
-        </div>
-      </div>
-    </div>
-  </div>
-<% }) %>
-
 
 <script src="/js/categoryManagement.js"></script>

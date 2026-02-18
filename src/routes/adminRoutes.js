@@ -12,6 +12,7 @@ const offerManagementController = require('../controllers/admin/offerManagementC
 const salesReportController = require('../controllers/admin/salesReportController');
 const {
   couponValidation,
+  offerValidation,
   validate,
 } = require('../middleware/validators/adminValidator');
 const { adminAuthLimiter } = require('../middleware/rateLimiter');
@@ -99,10 +100,23 @@ router.get(
 // Offer Management Routes
 // ============================
 router.get('/offers', adminAuth, offerManagementController.getOffers);
-router.post('/offers', adminAuth, offerManagementController.addOffer);
+router.post(
+  '/offers',
+  adminAuth,
+  offerValidation,
+  validate,
+  offerManagementController.addOffer
+);
+router.get(
+  '/offers/edit/:id',
+  adminAuth,
+  offerManagementController.getEditOfferPage
+);
 router.post(
   '/offers/edit/:id',
   adminAuth,
+  offerValidation,
+  validate,
   offerManagementController.updateOffer
 );
 router.delete('/offers/:id', adminAuth, offerManagementController.deleteOffer);
