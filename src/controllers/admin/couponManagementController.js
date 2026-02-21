@@ -41,7 +41,8 @@ const addCoupon = asyncHandler(async (req, res) => {
     minCartValue,
     validFrom,
     validUntil,
-    perUserLimit, totalUsageLimit,
+    perUserLimit,
+    totalUsageLimit,
     isActive,
   } = req.body;
 
@@ -54,7 +55,8 @@ const addCoupon = asyncHandler(async (req, res) => {
       minCartValue,
       validFrom,
       validUntil,
-      perUserLimit, totalUsageLimit,
+      perUserLimit,
+      totalUsageLimit,
       isActive,
     });
 
@@ -174,7 +176,8 @@ const updateCoupon = asyncHandler(async (req, res) => {
     minCartValue,
     validFrom,
     validUntil,
-    perUserLimit, totalUsageLimit,
+    perUserLimit,
+    totalUsageLimit,
     isActive,
   } = req.body;
 
@@ -190,7 +193,8 @@ const updateCoupon = asyncHandler(async (req, res) => {
       minCartValue,
       validFrom,
       validUntil,
-      perUserLimit, totalUsageLimit,
+      perUserLimit,
+      totalUsageLimit,
       isActive,
     });
   } catch (error) {

@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars */
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const User = require('../models/userModel');
+const logger = require('../config/logger');
 
 // Configure Nodemailer
 const transporter = nodemailer.createTransport({
@@ -64,7 +66,8 @@ exports.sendOtp = async (email) => {
     text: `Your OTP is ${otp}. It will expire in 5 minutes.`,
   };
 
-  await transporter.sendMail(mailOptions);
+  logger.debug('OTP: ', otp);
+  // await transporter.sendMail(mailOptions);
   return { otp, otpExpiry };
 };
 
@@ -227,5 +230,5 @@ exports.sendOrderConfirmationEmail = async (orderDetails) => {
     html: htmlContent,
   };
 
-  await transporter.sendMail(mailOptions);
+  // await transporter.sendMail(mailOptions);
 };

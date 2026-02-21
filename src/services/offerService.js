@@ -284,7 +284,10 @@ exports.updateOfferById = async (offerId, offerData) => {
   // Handle reference updates in related models
   if (oldType === 'product' && oldProduct) {
     // Check if product changed or type changed
-    if (nextType !== 'product' || String(oldProduct) !== String(offer.product)) {
+    if (
+      nextType !== 'product' ||
+      String(oldProduct) !== String(offer.product)
+    ) {
       await Product.findByIdAndUpdate(oldProduct, { $set: { offerId: null } });
     }
   } else if (oldType === 'category' && oldCategory) {
@@ -293,7 +296,9 @@ exports.updateOfferById = async (offerId, offerData) => {
       nextType !== 'category' ||
       String(oldCategory) !== String(offer.category)
     ) {
-      await Category.findByIdAndUpdate(oldCategory, { $set: { offerId: null } });
+      await Category.findByIdAndUpdate(oldCategory, {
+        $set: { offerId: null },
+      });
     }
   }
 

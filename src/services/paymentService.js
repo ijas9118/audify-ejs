@@ -1,203 +1,131 @@
+const crypto = require('crypto');
 const Razorpay = require('razorpay');
 const User = require('../models/userModel');
-const Order = require('../models/order');
+const Cart = require('../models/cart');
+const orderService = require('./orderService');
 const authService = require('./authService');
 const logger = require('../config/logger');
 
 /**
- * Payment Gateway Integration
+ * Build Razorpay instance
  */
-
-/**
- * Create a Razorpay order
- * @param {string} orderId - Database order ID
- * @param {Object} options - Razorpay order options
- * @returns {Promise<Object>} Razorpay order and database order
- */
-exports.createRazorpayOrder = async (orderId, options) => {
-  const orderData = await Order.findById(orderId);
-
-  if (!orderData) {
-    throw new Error('Order not found');
-  }
-
-  const razorpay = new Razorpay({
+const getRazorpayInstance = () =>
+  new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_SECRET,
   });
 
-  const razorpayOrder = await razorpay.orders.create(options);
-
-  if (!razorpayOrder) {
-    throw new Error('Failed to create Razorpay order');
-  }
-
-  return {
-    razorpayOrder,
-    orderData,
-  };
-};
-
 /**
- * COD Payment Validation
- */
-
-/**
- * Validate if order is eligible for Cash on Delivery
- * @param {number} orderAmount - Order total amount
- * @returns {boolean} True if eligible, throws error otherwise
- */
-exports.validateCODEligibility = (orderAmount) => {
-  const COD_LIMIT = 1000;
-
-  if (orderAmount > COD_LIMIT) {
-    throw new Error(
-      `Cash on Delivery is not available for orders above ₹${COD_LIMIT}`
-    );
-  }
-
-  return true;
-};
-
-/**
- * Wallet Payment Processing
- */
-
-/**
- * Process wallet payment for an order
+ * Create a Razorpay order using the cart total (no DB order created yet).
  * @param {string} userId - User ID
- * @param {string} orderId - Order ID
- * @returns {Promise<Object>} Updated order
+ * @returns {Promise<Object>} Razorpay order object
  */
-exports.processWalletPayment = async (userId, orderId) => {
-  // Find user and order
-  const user = await User.findById(userId);
-  if (!user) {
-    throw new Error('User not found');
-  }
+exports.createRazorpayOrderFromCart = async (userId) => {
+  const cart = await Cart.findOne({ user: userId });
 
-  const order = await Order.findById(orderId).populate({
-    path: 'orderItems',
-    populate: {
-      path: 'product',
-    },
-  });
-  if (!order) {
-    throw new Error('Order not found');
-  }
+  if (!cart) throw new Error('Cart not found');
+  if (cart.items.length === 0)
+    throw new Error('Cannot place order with empty cart');
 
-  // Validate wallet balance
-  if (user.walletBalance < order.finalTotal) {
-    throw new Error(
-      `Insufficient wallet balance. Required: ₹${order.finalTotal}, Available: ₹${user.walletBalance}`
-    );
-  }
+  const amount = cart.finalTotal || cart.total;
 
-  // Calculate updated balance
-  const updatedWalletBalance = parseFloat(
-    (user.walletBalance - order.finalTotal).toFixed(2)
-  );
+  const razorpay = getRazorpayInstance();
 
-  // Update user wallet and add transaction
-  await User.updateOne(
-    { _id: userId },
-    {
-      $set: { walletBalance: updatedWalletBalance },
-      $push: {
-        walletTransactions: {
-          transactionType: 'Debit',
-          amount: order.finalTotal,
-          description: `Payment for Order ID: ${orderId}`,
-          date: new Date(),
-        },
-      },
-    }
-  );
-
-  // Update order payment method and status
-  order.paymentMethod = 'Wallet';
-  order.status = 'Processed';
-  await order.save();
-
-  // Send order confirmation email (non-blocking)
+  let razorpayOrder;
   try {
-    const items = order.orderItems.map((item) => ({
-      name: item.product.name,
-      quantity: item.quantity,
-      price: item.product.price,
-    }));
-
-    await authService.sendOrderConfirmationEmail({
-      email: user.email,
-      orderId: order._id,
-      totalAmount: order.finalTotal,
-      items,
-      paymentMethod: 'Wallet',
-      shippingAddress: {
-        name: order.name,
-        location: order.location,
-        city: order.city,
-        state: order.state,
-        zip: order.zip,
-        mobile: order.mobile,
-      },
+    razorpayOrder = await razorpay.orders.create({
+      amount: Math.round(amount * 100), // Razorpay expects paise
+      currency: 'INR',
+      receipt: `rcpt_${String(userId).slice(-8)}_${Date.now().toString(36)}`, // ≤40 chars
     });
-  } catch (emailError) {
-    // Log error but don't fail the order
-    logger.error('Failed to send order confirmation email:', emailError);
+  } catch (razorpayErr) {
+    // Razorpay SDK throws plain objects, not Error instances.
+    // Normalize to a proper Error so controllers can safely read .message
+    const description =
+      razorpayErr?.error?.description ||
+      razorpayErr?.description ||
+      razorpayErr?.message ||
+      JSON.stringify(razorpayErr);
+    throw new Error(`Razorpay order creation failed: ${description}`);
   }
 
-  return order;
+  if (!razorpayOrder) throw new Error('Failed to create Razorpay order');
+
+  return razorpayOrder;
 };
 
 /**
- * Payment Method Confirmation
+ * Verify Razorpay payment signature.
+ * Throws if the signature is invalid.
+ * @param {string} razorpayOrderId
+ * @param {string} razorpayPaymentId
+ * @param {string} razorpaySignature
  */
+exports.verifyRazorpaySignature = (
+  razorpayOrderId,
+  razorpayPaymentId,
+  razorpaySignature
+) => {
+  const body = `${razorpayOrderId}|${razorpayPaymentId}`;
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.RAZORPAY_SECRET)
+    .update(body)
+    .digest('hex');
+
+  if (expectedSignature !== razorpaySignature) {
+    throw new Error('Invalid payment signature');
+  }
+};
 
 /**
- * Confirm payment method for an order
- * @param {string} orderId - Order ID
- * @param {string} paymentMethod - Payment method (COD, Razorpay, Wallet)
- * @returns {Promise<Object>} Updated order
+ * Verify Razorpay signature then create the DB order.
+ * @param {string} userId
+ * @param {Object} shippingDetails
+ * @param {Object} paymentData - { razorpay_payment_id, razorpay_order_id, razorpay_signature }
+ * @returns {Promise<Object>} Created order
  */
-exports.confirmPayment = async (orderId, paymentMethod) => {
-  const order = await Order.findById(orderId).populate({
-    path: 'orderItems',
-    populate: {
-      path: 'product',
-    },
-  });
+exports.verifyAndCreateRazorpayOrder = async (
+  userId,
+  shippingDetails,
+  paymentData
+) => {
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+    paymentData;
 
-  if (!order) {
-    throw new Error('Order not found');
-  }
+  // ✅ Verify signature BEFORE touching the DB
+  exports.verifyRazorpaySignature(
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature
+  );
 
-  // Validate COD if selected
-  if (paymentMethod === 'COD') {
-    exports.validateCODEligibility(order.finalTotal);
-  }
-
-  // Update order
-  order.paymentMethod = paymentMethod;
-  order.status = 'Processed';
-  await order.save();
-
-  // Send order confirmation email (non-blocking)
-  try {
-    const user = await User.findById(order.user);
-    if (user) {
-      const items = order.orderItems.map((item) => ({
-        name: item.product.name,
+  // Capture cart items for email before cart is deleted
+  const cart = await Cart.findOne({ user: userId });
+  const cartItemsForEmail = cart
+    ? cart.items.map((item) => ({
+        name: item.name,
         quantity: item.quantity,
-        price: item.product.price,
-      }));
+        price: item.price,
+      }))
+    : [];
 
+  // ✅ Create DB order only after signature verified
+  const order = await orderService.createOrderFromCart(
+    userId,
+    shippingDetails,
+    'Razorpay'
+  );
+
+  // Send confirmation email (non-blocking)
+  try {
+    const user = await User.findById(userId);
+    if (user) {
       await authService.sendOrderConfirmationEmail({
         email: user.email,
         orderId: order._id,
         totalAmount: order.finalTotal,
-        items,
-        paymentMethod,
+        items: cartItemsForEmail,
+        paymentMethod: 'Razorpay',
         shippingAddress: {
           name: order.name,
           location: order.location,
@@ -209,7 +137,6 @@ exports.confirmPayment = async (orderId, paymentMethod) => {
       });
     }
   } catch (emailError) {
-    // Log error but don't fail the order
     logger.error('Failed to send order confirmation email:', emailError);
   }
 
@@ -217,23 +144,176 @@ exports.confirmPayment = async (orderId, paymentMethod) => {
 };
 
 /**
- * Wallet Transaction Recording
+ * COD Payment Validation
  */
 
 /**
- * Record a wallet transaction
- * @param {string} userId - User ID
- * @param {string} type - Transaction type (Credit/Debit)
- * @param {number} amount - Transaction amount
- * @param {string} description - Transaction description
- * @returns {Promise<Object>} Updated user
+ * Validate if order total is eligible for Cash on Delivery
+ * @param {number} orderAmount - Order total amount
+ */
+exports.validateCODEligibility = (orderAmount) => {
+  const COD_LIMIT = Number(process.env.COD_LIMIT) || 1000;
+
+  if (orderAmount > COD_LIMIT) {
+    throw new Error(
+      `Cash on Delivery is not available for orders above ₹${COD_LIMIT}`
+    );
+  }
+};
+
+/**
+ * Confirm a COD order — validates limit then creates the DB order.
+ * @param {string} userId
+ * @param {Object} shippingDetails
+ * @returns {Promise<Object>} Created order
+ */
+exports.confirmCODOrder = async (userId, shippingDetails) => {
+  const cart = await Cart.findOne({ user: userId });
+
+  if (!cart) throw new Error('Cart not found');
+  if (cart.items.length === 0)
+    throw new Error('Cannot place order with empty cart');
+
+  const amount = cart.finalTotal || cart.total;
+
+  // Validate COD limit
+  exports.validateCODEligibility(amount);
+
+  // Capture cart items for email before cart is deleted
+  const cartItemsForEmail = cart.items.map((item) => ({
+    name: item.name,
+    quantity: item.quantity,
+    price: item.price,
+  }));
+
+  // Create the order
+  const order = await orderService.createOrderFromCart(
+    userId,
+    shippingDetails,
+    'COD'
+  );
+
+  // Send confirmation email (non-blocking)
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      await authService.sendOrderConfirmationEmail({
+        email: user.email,
+        orderId: order._id,
+        totalAmount: order.finalTotal,
+        items: cartItemsForEmail,
+        paymentMethod: 'COD',
+        shippingAddress: {
+          name: order.name,
+          location: order.location,
+          city: order.city,
+          state: order.state,
+          zip: order.zip,
+          mobile: order.mobile,
+        },
+      });
+    }
+  } catch (emailError) {
+    logger.error('Failed to send order confirmation email:', emailError);
+  }
+
+  return order;
+};
+
+/**
+ * Wallet Payment Processing
+ */
+
+/**
+ * Process wallet payment — validate balance, create order, then deduct wallet.
+ * @param {string} userId
+ * @param {Object} shippingDetails
+ * @returns {Promise<Object>} Created order
+ */
+exports.processWalletPayment = async (userId, shippingDetails) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error('User not found');
+
+  const cart = await Cart.findOne({ user: userId });
+  if (!cart) throw new Error('Cart not found');
+  if (cart.items.length === 0)
+    throw new Error('Cannot place order with empty cart');
+
+  const walletBalance = user.walletBalance || 0;
+  const amount = cart.finalTotal || cart.total;
+
+  // Validate wallet balance
+  if (walletBalance < amount) {
+    throw new Error(
+      `Insufficient wallet balance. Required: ₹${amount}, Available: ₹${walletBalance}`
+    );
+  }
+
+  // Capture cart items for email before cart is deleted
+  const cartItemsForEmail = cart.items.map((item) => ({
+    name: item.name,
+    quantity: item.quantity,
+    price: item.price,
+  }));
+
+  // Create the order first
+  const order = await orderService.createOrderFromCart(
+    userId,
+    shippingDetails,
+    'Wallet'
+  );
+
+  // Deduct from wallet AFTER order is confirmed
+  const updatedWalletBalance = parseFloat(
+    (walletBalance - order.finalTotal).toFixed(2)
+  );
+
+  await User.updateOne(
+    { _id: userId },
+    {
+      $set: { walletBalance: updatedWalletBalance },
+      $push: {
+        walletTransactions: {
+          transactionType: 'Debit',
+          amount: order.finalTotal,
+          description: `Payment for Order ID: ${order._id}`,
+          date: new Date(),
+        },
+      },
+    }
+  );
+
+  // Send confirmation email (non-blocking)
+  try {
+    await authService.sendOrderConfirmationEmail({
+      email: user.email,
+      orderId: order._id,
+      totalAmount: order.finalTotal,
+      items: cartItemsForEmail,
+      paymentMethod: 'Wallet',
+      shippingAddress: {
+        name: order.name,
+        location: order.location,
+        city: order.city,
+        state: order.state,
+        zip: order.zip,
+        mobile: order.mobile,
+      },
+    });
+  } catch (emailError) {
+    logger.error('Failed to send order confirmation email:', emailError);
+  }
+
+  return order;
+};
+
+/**
+ * Wallet Transaction Recording (standalone utility)
  */
 exports.recordWalletTransaction = async (userId, type, amount, description) => {
   const user = await User.findById(userId);
 
-  if (!user) {
-    throw new Error('User not found');
-  }
+  if (!user) throw new Error('User not found');
 
   const transaction = {
     transactionType: type,
@@ -244,9 +324,7 @@ exports.recordWalletTransaction = async (userId, type, amount, description) => {
 
   await User.updateOne(
     { _id: userId },
-    {
-      $push: { walletTransactions: transaction },
-    }
+    { $push: { walletTransactions: transaction } }
   );
 
   return user;

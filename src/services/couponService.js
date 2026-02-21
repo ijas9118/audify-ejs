@@ -63,7 +63,9 @@ exports.getCouponUsageDetailsById = async (couponId) => {
   })
     .populate('user', 'firstName lastName email')
     .sort({ createdAt: -1 })
-    .select('_id user status dateOrdered totalAmount discountApplied finalTotal');
+    .select(
+      '_id user status dateOrdered totalAmount discountApplied finalTotal'
+    );
 
   const usedCount = orders.length;
   const uniqueCustomerIds = new Set(
@@ -113,7 +115,8 @@ exports.createCoupon = async (couponData) => {
     minCartValue,
     validFrom,
     validUntil,
-    perUserLimit, totalUsageLimit,
+    perUserLimit,
+    totalUsageLimit,
     isActive,
   } = couponData;
 
@@ -186,7 +189,8 @@ exports.updateCouponById = async (couponId, couponData) => {
     minCartValue,
     validFrom,
     validUntil,
-    perUserLimit, totalUsageLimit,
+    perUserLimit,
+    totalUsageLimit,
     isActive,
   } = couponData;
 
@@ -291,7 +295,7 @@ exports.validateCoupon = async (couponCode) => {
       status: { $ne: 'Cancelled' },
     });
     if (totalUsageCount >= coupon.totalUsageLimit) {
-      throw new Error('Coupon global usage limit reached');
+      throw new Error('Coupon usage limit reached');
     }
   }
 

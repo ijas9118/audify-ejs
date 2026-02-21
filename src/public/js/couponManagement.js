@@ -52,7 +52,9 @@ if (addCouponForm) {
     }
 
     if (field === validUntilField) {
-      const start = validFromField.value ? new Date(validFromField.value) : null;
+      const start = validFromField.value
+        ? new Date(validFromField.value)
+        : null;
       const end = field.value ? new Date(field.value) : null;
       if (
         start &&
@@ -61,8 +63,11 @@ if (addCouponForm) {
         !Number.isNaN(end.getTime()) &&
         end < start
       ) {
-        field.setCustomValidity('Valid until date must be after valid from date.');
-        feedback.textContent = 'Valid until date must be after valid from date.';
+        field.setCustomValidity(
+          'Valid until date must be after valid from date.'
+        );
+        feedback.textContent =
+          'Valid until date must be after valid from date.';
         return;
       }
     }
@@ -198,7 +203,8 @@ if (addCouponForm) {
 async function deleteCoupon(couponId) {
   const confirmDelete = await window.adminConfirm.open({
     title: 'Archive Coupon',
-    message: 'This coupon will be soft deleted and hidden from active listings.',
+    message:
+      'This coupon will be soft deleted and hidden from active listings.',
     confirmText: 'Archive',
     variant: 'danger',
   });
