@@ -1,3 +1,51 @@
 body {
   background: linear-gradient(to right, #f3f9fe, #faf3fe);
 }
+
+.order-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  border-radius: 999px;
+  padding: 0.28rem 0.72rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+
+.order-status-pill.is-delivered {
+  color: #1f6b4f;
+  background: #e7f6ee;
+  border-color: #c2e8d3;
+}
+
+.order-status-pill.is-cancelled {
+  color: #9b3a4c;
+  background: #fdeef1;
+  border-color: #f7cfd8;
+}
+
+.order-status-pill.is-shipped {
+  color: #285e97;
+  background: #e9f2fe;
+  border-color: #c8ddfb;
+}
+
+.order-status-pill.is-processed {
+  color: #2c6a77;
+  background: #e7f6f8;
+  border-color: #c7e6ec;
+}
+
+.order-status-pill.is-pending {
+  color: #8b5d16;
+  background: #fff6df;
+  border-color: #f5e2ac;
+}
+
+.order-status-pill-requested {
+  color: #7f601e;
+  background: #fff4d6;
+  border-color: #f2dfab;
+}

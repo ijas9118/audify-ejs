@@ -1,3 +1,26 @@
+<%
+  /**
+   * Status state machine (mirrors orderManagementService.VALID_TRANSITIONS).
+   * Defined here so the template can compute which <option>s to render
+   * without a round-trip — the server still enforces the same rules.
+   */
+  const STATUS_TRANSITIONS = {
+    Pending:   ['Processed', 'Cancelled'],
+    Processed: ['Shipped',   'Cancelled'],
+    Shipped:   ['Delivered', 'Cancelled'],
+    Delivered: [],   // terminal
+    Cancelled: [],   // terminal
+  };
+
+  const STATUS_BADGE = {
+    Pending:   'bg-warning text-dark',
+    Processed: 'bg-info text-dark',
+    Shipped:   'bg-primary',
+    Delivered: 'admin-order-status admin-order-status-delivered',
+    Cancelled: 'admin-order-status admin-order-status-cancelled',
+  };
+%>
+
 <div class="container-fluid mt-3 admin-management-page">
   <div class="admin-management-header mb-3">
     <nav aria-label="breadcrumb" class="admin-breadcrumb-wrap">
@@ -31,33 +54,52 @@
         orderUserLabel = order.user || '';
       }
 
-      // Prefer human-readable orderId; fall back to MongoDB _id for legacy orders
-      const displayId = order.orderId || order._id;
+      const displayId  = order.orderId || order._id;
+      const current    = order.status;
+      const allowed    = STATUS_TRANSITIONS[current] ?? [];
+      const isTerminal = allowed.length === 0;
+
+      // Build the status cell: locked badge for terminals, select for active.
+      let statusCell;
+      if (isTerminal) {
+        statusCell = `
+          <span
+            class="${STATUS_BADGE[current] || 'badge bg-secondary'}"
+            title="This order is in a final state and cannot be changed."
+          >${current}</span>
+        `;
+      } else {
+        // Only show the current status + allowed transitions
+        const options = [current, ...allowed].map(s =>
+          `<option value="${s}" ${s === current ? 'selected' : ''}>${s}</option>`
+        ).join('');
+
+        statusCell = `
+          <select
+            class="form-select admin-status-select"
+            id="orderStatus_${order._id}"
+            name="status"
+            onfocus="this.dataset.previousValue=this.value"
+            onchange="updateOrderStatus('${order._id}', this)"
+            title="Current: ${current} — select a status to advance"
+          >${options}</select>
+        `;
+      }
 
       return {
         cells: [
           { tag: 'th', className: 'admin-row-index', text: pagination.skip + index + 1 },
-          { className: 'admin-cell-primary', text: displayId },
+          { className: 'admin-cell-primary', html: `
+            ${displayId}
+            ${order.cancellationRequested && order.status !== 'Cancelled'
+              ? '<br><span class="badge bg-warning text-dark mt-1" title="User requested cancellation"><i class="fa-solid fa-triangle-exclamation"></i> Cancel Req.</span>'
+              : ''
+            }
+          ` },
           { text: orderUserLabel },
           { text: `₹${order.finalTotal.toFixed(2)}` },
           { text: order.paymentMethod || '' },
-          {
-            html: `
-              <select
-                class="form-select admin-status-select"
-                id="orderStatus_${order._id}"
-                name="status"
-                onfocus="this.dataset.previousValue=this.value"
-                onchange="updateOrderStatus('${order._id}', this)"
-              >
-                <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                <option value="Processed" ${order.status === 'Processed' ? 'selected' : ''}>Processed</option>
-                <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-              </select>
-            `,
-          },
+          { html: statusCell },
           { text: new Date(order.createdAt).toLocaleDateString() },
           {
             className: 'admin-cell-actions admin-cell-actions-compact',

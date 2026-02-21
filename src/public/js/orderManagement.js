@@ -2,9 +2,12 @@ async function updateOrderStatus(orderId, selectElement) {
   const nextStatus = selectElement.value;
   const previousStatus = selectElement.dataset.previousValue || '';
 
+  // Don't even call the server if nothing changed
+  if (nextStatus === previousStatus) return;
+
   const confirmed = await window.adminConfirm.open({
     title: 'Update Order Status',
-    message: `Change order status from "${previousStatus || 'current'}" to "${nextStatus}"?`,
+    message: `Change order status from ${previousStatus || 'current'} to ${nextStatus}?`,
     confirmText: 'Update Status',
     variant: 'danger',
   });
@@ -25,14 +28,18 @@ async function updateOrderStatus(orderId, selectElement) {
     const data = await response.json();
 
     if (!data.success) {
+      // Revert the select back to the previous valid state
       selectElement.value = previousStatus || selectElement.value;
+
+      // Show the exact server error (state machine violation, etc.)
       Toast.fire({
         icon: 'error',
-        title: 'Could not update order status.',
+        title: data.message || 'Could not update order status.',
       });
       return;
     }
 
+    // Persist the new value as the baseline for future changes
     selectElement.dataset.previousValue = nextStatus;
     Toast.fire({
       icon: 'success',
@@ -42,7 +49,7 @@ async function updateOrderStatus(orderId, selectElement) {
     selectElement.value = previousStatus || selectElement.value;
     Toast.fire({
       icon: 'error',
-      title: 'Could not update order status.',
+      title: 'Network error — could not update order status.',
     });
   }
 }

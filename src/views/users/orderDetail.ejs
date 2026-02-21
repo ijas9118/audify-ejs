@@ -91,16 +91,36 @@
     </div>
   </div>
 
-  <!-- Cancel Order Button -->
-  <% if (order.status === 'Processed') { %>
-  <div class="text-end">
-    <input type="hidden" name="orderId" value="<%= displayId %>" />
-    <button onclick="cancelOrder('<%= order._id %>')" class="btn btn-danger">Cancel Order</button>
-  </div>
+  <!-- Order Action Area -->
+  <%
+    const canRequestCancel = ['Pending', 'Processed', 'Shipped'].includes(order.status)
+      && !order.cancellationRequested;
+    const cancelPending = order.cancellationRequested && order.status !== 'Cancelled';
+  %>
+
+  <% if (cancelPending) { %>
+    <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+      <i class="fa-solid fa-clock"></i>
+      <span>
+        <strong>Cancellation Requested</strong> — Your request is awaiting admin review.
+        We'll process it shortly.
+      </span>
+    </div>
+  <% } else if (canRequestCancel) { %>
+    <div class="text-end">
+      <button
+        id="cancel-order-btn"
+        onclick="cancelOrder('<%= order._id %>')"
+        class="btn btn-outline-danger"
+      >
+        <i class="fa-solid fa-xmark me-1"></i>Request Cancellation
+      </button>
+    </div>
   <% } else if (order.status === 'Pending') { %>
     <div class="text-end">
-      <input type="hidden" name="orderId" value="<%= displayId %>" />
-      <button class="btn btn-success" onclick="redirectToPayment('<%= order._id %>')">Proceed to Payment</button>
+      <button class="btn btn-success" onclick="redirectToPayment('<%= order._id %>')">
+        Proceed to Payment
+      </button>
     </div>
   <% } %>
 </div>

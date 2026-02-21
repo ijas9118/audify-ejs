@@ -756,6 +756,30 @@ body {
   border-color: #654154;
 }
 
+.admin-order-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.28rem 0.72rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+
+.admin-order-status-delivered {
+  color: #cde7d8;
+  background: #1a2a23;
+  border-color: #335545;
+}
+
+.admin-order-status-cancelled {
+  color: #e5cfd6;
+  background: #2a1d22;
+  border-color: #4f3941;
+}
+
 /* Admin search */
 .admin-search-bar {
   display: flex;

@@ -316,13 +316,17 @@ exports.restoreStockForCancelledOrder = async (orderItems) => {
 };
 
 /**
- * Cancel an order with status validation
- * @param {string} orderId - Order ID
- * @param {string} userId - User ID (for validation)
+ * Request cancellation of an order.
+ * This ONLY marks cancellationRequested = true.
+ * Actual cancellation (status change, stock restore, refund) is performed
+ * by the admin when they approve the request via updateOrderStatus → 'Cancelled'.
+ *
+ * @param {string} orderId - MongoDB _id of the order
+ * @param {string} userId  - ID of the requesting user (for ownership check)
  * @returns {Promise<Object>} Result object
  */
 exports.cancelOrder = async (orderId, userId) => {
-  const order = await Order.findById(orderId).populate('orderItems');
+  const order = await Order.findById(orderId);
 
   if (!order) {
     throw new Error('Order not found');
@@ -337,45 +341,26 @@ exports.cancelOrder = async (orderId, userId) => {
     throw new Error('Order is already cancelled');
   }
 
-  if (order.status === 'Shipped' || order.status === 'Delivered') {
-    // For shipped/delivered orders, just mark as cancelled request
-    await Order.findByIdAndUpdate(orderId, { cancellationRequested: true });
-
-    return {
-      success: true,
-      message: 'Cancellation request submitted for shipped/delivered order',
-      refunded: false,
-    };
+  if (order.cancellationRequested) {
+    throw new Error(
+      'A cancellation request has already been submitted for this order'
+    );
   }
 
-  if (order.status === 'Pending' || order.status === 'Processed') {
-    // Restore product stock
-    await exports.restoreStockForCancelledOrder(order.orderItems);
-
-    // Only refund if payment was actually made online (not COD and not unpaid)
-    const shouldRefund =
-      order.paymentMethod === 'Wallet' || order.paymentMethod === 'Razorpay';
-
-    if (shouldRefund) {
-      // Pass the full order so processOrderRefund can use the friendly orderId
-      await exports.processOrderRefund(userId, order, order.finalTotal);
-    }
-
-    await Order.findByIdAndUpdate(orderId, {
-      status: 'Cancelled',
-    });
-
-    return {
-      success: true,
-      message: shouldRefund
-        ? 'Order cancelled and refund processed to wallet'
-        : 'Order cancelled successfully',
-      refunded: shouldRefund,
-      refundAmount: shouldRefund ? order.finalTotal : 0,
-    };
+  // Delivered orders cannot be cancelled by the user
+  if (order.status === 'Delivered') {
+    throw new Error(
+      'Delivered orders cannot be cancelled. Please contact support.'
+    );
   }
 
-  throw new Error(
-    'Order cannot be cancelled at this stage. Please contact support.'
-  );
+  // For all other statuses (Pending, Processed, Shipped) — flag it and wait for admin
+  await Order.findByIdAndUpdate(orderId, { cancellationRequested: true });
+
+  return {
+    success: true,
+    requested: true,
+    message:
+      'Cancellation request submitted. Our team will review it and process it shortly.',
+  };
 };

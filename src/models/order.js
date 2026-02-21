@@ -3,11 +3,6 @@ const Counter = require('./counter');
 
 const orderSchema = mongoose.Schema(
   {
-    /**
-     * Human-readable sequential order ID: ORD-00001, ORD-00002, …
-     * Generated automatically on first save via pre-save hook.
-     * Unique index enables fast look-ups and guarantees no collisions.
-     */
     orderId: {
       type: String,
       unique: true,
