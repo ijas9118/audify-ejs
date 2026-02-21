@@ -8,12 +8,18 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
+const APP_URL =
+  process.env.APP_URL ||
+  (process.env.NODE_ENV === 'production'
+    ? 'https://audify.duckdns.org'
+    : 'http://localhost:3000');
+
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID, // Your Credentials here.
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Your Credentials here.
-      callbackURL: 'https://audifysound.shop/auth/google/callback',
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: `${APP_URL}/auth/google/callback`,
       passReqToCallback: true,
     },
     (request, accessToken, refreshToken, profile, done) => done(null, profile)
