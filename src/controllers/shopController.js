@@ -1,6 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const productService = require('../services/productService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const { calculateDiscountedPrice } = require('../services/offerService');
+const Offer = require('../models/offer');
 
 const getShop = asyncHandler(async (req, res) => {
   const category = '';
@@ -109,13 +111,34 @@ const getWishList = asyncHandler(async (req, res) => {
       .send(RESPONSE_MESSAGES.USER_NOT_FOUND);
   }
 
-  const wishlist = user.wishlist.map((product) => ({
-    _id: product._id,
-    name: product.name,
-    price: product.price,
-    image: product.images.main,
-    description: product.description,
-  }));
+  const wishlist = await Promise.all(
+    user.wishlist
+      .filter((product) => product.isActive) // exclude soft-deleted products
+      .map(async (product) => {
+        // Resolve offer prices the same way the shop page does
+        const productOffer = product.offerId
+          ? await Offer.findById(product.offerId)
+          : null;
+        const categoryOffer = product.categoryId?.offerId
+          ? await Offer.findById(product.categoryId.offerId)
+          : null;
+        const discountedPrice = calculateDiscountedPrice(
+          product.price,
+          productOffer,
+          categoryOffer
+        );
+
+        return {
+          _id: product._id,
+          name: product.name,
+          price: product.price, // original price
+          discountedPrice, // offer price (equals price if no offer)
+          image: product.images.main,
+          description: product.description,
+          isOutOfStock: product.isOutOfStock,
+        };
+      })
+  );
 
   return res.render('layout', {
     title: 'Wishlist',
@@ -137,11 +160,29 @@ const addToWishlist = asyncHandler(async (req, res) => {
       .json({ message: 'User ID and Product ID are required' });
   }
 
-  const user = await productService.addToWishlist(userId, productId);
-  return res.status(StatusCodes.OK).json({
-    message: RESPONSE_MESSAGES.PRODUCT_ADDED_TO_WISHLIST,
-    wishlist: user.wishlist,
-  });
+  try {
+    const user = await productService.addToWishlist(userId, productId);
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: RESPONSE_MESSAGES.PRODUCT_ADDED_TO_WISHLIST,
+      wishlist: user.wishlist,
+    });
+  } catch (error) {
+    if (error.message.includes('already in')) {
+      return res
+        .status(StatusCodes.CONFLICT) // 409 — duplicate
+        .json({ success: false, message: error.message });
+    }
+    if (
+      error.message.includes('not found') ||
+      error.message.includes('not available')
+    ) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: error.message });
+    }
+    throw error;
+  }
 });
 
 const removeWishlist = asyncHandler(async (req, res) => {

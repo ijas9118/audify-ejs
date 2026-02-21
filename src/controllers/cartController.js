@@ -35,14 +35,12 @@ const getCartItemID = asyncHandler(async (req, res) => {
         .json({ error: RESPONSE_MESSAGES.CART_NOT_FOUND });
     }
 
-    // Extract product IDs and quantities
     const products = cart.items.map((item) => ({
       productId: item.productId._id.toString(),
       quantity: item.quantity,
       name: item.name,
     }));
 
-    // Return product IDs and quantities as response
     return res.json({ products });
   } catch (error) {
     logger.error('Error fetching cart items:', error);
@@ -55,16 +53,31 @@ const getCartItemID = asyncHandler(async (req, res) => {
 const addToCart = asyncHandler(async (req, res) => {
   const userId = req.session.user;
   const productId = req.params.id;
+
   try {
     await cartService.addToCart(userId, productId, 1);
-    res
+    return res
       .status(StatusCodes.OK)
-      .json({ message: RESPONSE_MESSAGES.ITEM_ADDED_TO_CART });
+      .json({ success: true, message: RESPONSE_MESSAGES.ITEM_ADDED_TO_CART });
   } catch (error) {
     logger.error(error);
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ message: RESPONSE_MESSAGES.FAILED_TO_ADD_TO_CART });
+    const isClientError =
+      error.message.includes('not found') ||
+      error.message.includes('not available') ||
+      error.message.includes('out of stock') ||
+      error.message.includes('Only') ||
+      error.message.includes('Maximum');
+
+    return res
+      .status(
+        isClientError
+          ? StatusCodes.BAD_REQUEST
+          : StatusCodes.INTERNAL_SERVER_ERROR
+      )
+      .json({
+        success: false,
+        message: error.message || RESPONSE_MESSAGES.FAILED_TO_ADD_TO_CART,
+      });
   }
 });
 
@@ -72,9 +85,30 @@ const updateCart = asyncHandler(async (req, res) => {
   const { productId, quantity } = req.body;
   const userId = req.session.user;
 
-  const cart = await cartService.addToCart(userId, productId, quantity);
+  try {
+    const cart = await cartService.addToCart(userId, productId, quantity);
+    return res.status(StatusCodes.OK).json({ success: true, cart });
+  } catch (error) {
+    logger.error('Error updating cart:', error);
+    const isClientError =
+      error.message.includes('not found') ||
+      error.message.includes('not available') ||
+      error.message.includes('out of stock') ||
+      error.message.includes('Only') ||
+      error.message.includes('Maximum') ||
+      error.message.includes('Quantity');
 
-  res.json(cart);
+    return res
+      .status(
+        isClientError
+          ? StatusCodes.BAD_REQUEST
+          : StatusCodes.INTERNAL_SERVER_ERROR
+      )
+      .json({
+        success: false,
+        message: error.message,
+      });
+  }
 });
 
 const deleteItemFromCart = asyncHandler(async (req, res) => {
@@ -83,14 +117,17 @@ const deleteItemFromCart = asyncHandler(async (req, res) => {
 
   try {
     const cart = await cartService.removeItemFromCart(userId, productId);
-    res
-      .status(StatusCodes.OK)
-      .json({ message: RESPONSE_MESSAGES.ITEM_REMOVED_FROM_CART, cart });
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: RESPONSE_MESSAGES.ITEM_REMOVED_FROM_CART,
+      cart,
+    });
   } catch (error) {
     logger.error(error);
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ message: RESPONSE_MESSAGES.SERVER_ERROR });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: RESPONSE_MESSAGES.SERVER_ERROR,
+    });
   }
 });
 

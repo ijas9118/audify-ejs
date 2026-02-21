@@ -224,21 +224,28 @@ exports.searchProducts = async (query) => {
 };
 
 exports.getWishlist = async (userId) =>
-  User.findById(userId).populate('wishlist');
+  User.findById(userId).populate({
+    path: 'wishlist',
+    populate: { path: 'categoryId' },
+  });
 
 exports.addToWishlist = async (userId, productId) => {
-  const product = await Product.findById(productId);
+  const product = await Product.findById(productId).populate('categoryId');
   if (!product) throw new Error('Product not found');
+  if (!product.isActive) throw new Error('This product is no longer available');
+  if (!product.categoryId?.isActive)
+    throw new Error('This product category is no longer available');
 
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
 
-  if (user.wishlist.includes(productId)) {
-    throw new Error('Product is already in the wishlist');
+  // Use .equals() for proper MongoDB ObjectId comparison — NOT .includes()
+  if (user.wishlist.some((id) => id.equals(productId))) {
+    throw new Error('Product is already in your wishlist');
   }
 
-  await User.updateOne({ _id: userId }, { $push: { wishlist: productId } });
-  // Refresh user to get updated wishlist
+  // $addToSet is atomic and guaranteed idempotent at the DB level
+  await User.updateOne({ _id: userId }, { $addToSet: { wishlist: productId } });
   return User.findById(userId);
 };
 
