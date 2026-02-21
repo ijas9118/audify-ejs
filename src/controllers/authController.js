@@ -22,7 +22,7 @@ const successGoogleLogin = asyncHandler(async (req, res) => {
 });
 
 const failureGoogleLogin = (req, res) => {
-  res.send('Error');
+  res.redirect('/login?error=google_auth_failed');
 };
 
 const sendOtp = asyncHandler(async (req, res) => {

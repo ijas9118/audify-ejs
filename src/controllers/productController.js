@@ -129,6 +129,9 @@ const getProductById = asyncHandler(async (req, res) => {
     isAdmin: true,
     product,
     categories,
+    errors: {},
+    formData: null,
+    formError: null,
   });
 });
 

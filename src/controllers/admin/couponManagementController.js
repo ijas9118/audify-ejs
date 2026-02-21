@@ -2,6 +2,12 @@ const asyncHandler = require('express-async-handler');
 const couponService = require('../../services/couponService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../../constants/constants');
 
+const expectsJsonResponse = (req) =>
+  req.xhr ||
+  req.is('application/json') ||
+  req.get('content-type')?.includes('application/json') ||
+  req.get('accept')?.includes('application/json');
+
 // ============================
 //  Coupon Management Controllers
 // ============================
@@ -35,7 +41,8 @@ const addCoupon = asyncHandler(async (req, res) => {
     minCartValue,
     validFrom,
     validUntil,
-    usageLimit,
+    perUserLimit,
+    totalUsageLimit,
     isActive,
   } = req.body;
 
@@ -48,7 +55,8 @@ const addCoupon = asyncHandler(async (req, res) => {
       minCartValue,
       validFrom,
       validUntil,
-      usageLimit,
+      perUserLimit,
+      totalUsageLimit,
       isActive,
     });
 
@@ -70,6 +78,90 @@ const addCoupon = asyncHandler(async (req, res) => {
       });
     }
 
+    if (
+      error.message === 'Invalid coupon date range' ||
+      error.message === 'Valid until date must be after valid from date'
+    ) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    throw error;
+  }
+});
+
+const getEditCouponPage = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  let coupon;
+
+  try {
+    coupon = await couponService.getCouponById(id);
+  } catch (error) {
+    if (error.message === 'Coupon not found') {
+      return res.status(StatusCodes.NOT_FOUND).render('layout', {
+        title: RESPONSE_MESSAGES.COUPON_NOT_FOUND,
+        viewName: '404',
+        isAdmin: true,
+        activePage: 'coupon',
+      });
+    }
+    throw error;
+  }
+
+  return res.render('layout', {
+    title: `Edit Coupon - ${coupon.code}`,
+    viewName: 'admin/editCoupon',
+    activePage: 'coupon',
+    isAdmin: true,
+    coupon,
+    errors: {},
+    formData: null,
+    formError: null,
+  });
+});
+
+const getViewCouponPage = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  let couponData;
+
+  try {
+    couponData = await couponService.getCouponUsageDetailsById(id);
+  } catch (error) {
+    if (error.message === 'Coupon not found') {
+      return res.status(StatusCodes.NOT_FOUND).render('layout', {
+        title: RESPONSE_MESSAGES.COUPON_NOT_FOUND,
+        viewName: '404',
+        isAdmin: true,
+        activePage: 'coupon',
+      });
+    }
+    throw error;
+  }
+
+  return res.render('layout', {
+    title: `Coupon - ${couponData.coupon.code}`,
+    viewName: 'admin/viewCoupon',
+    activePage: 'coupon',
+    isAdmin: true,
+    coupon: couponData.coupon,
+    usage: couponData.usage,
+  });
+});
+
+const getCouponDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const couponData = await couponService.getCouponUsageDetailsById(id);
+    return res.status(StatusCodes.OK).json({ success: true, ...couponData });
+  } catch (error) {
+    if (error.message === 'Coupon not found') {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
+    }
     throw error;
   }
 });
@@ -84,11 +176,13 @@ const updateCoupon = asyncHandler(async (req, res) => {
     minCartValue,
     validFrom,
     validUntil,
-    usageLimit,
+    perUserLimit,
+    totalUsageLimit,
     isActive,
   } = req.body;
 
   let coupon;
+  const wantsJson = expectsJsonResponse(req);
 
   try {
     coupon = await couponService.updateCouponById(id, {
@@ -99,24 +193,72 @@ const updateCoupon = asyncHandler(async (req, res) => {
       minCartValue,
       validFrom,
       validUntil,
-      usageLimit,
+      perUserLimit,
+      totalUsageLimit,
       isActive,
     });
   } catch (error) {
     if (error.message === 'Coupon not found') {
+      if (!wantsJson) {
+        return res.status(StatusCodes.NOT_FOUND).render('layout', {
+          title: RESPONSE_MESSAGES.COUPON_NOT_FOUND,
+          viewName: '404',
+          isAdmin: true,
+          activePage: 'coupon',
+        });
+      }
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
     }
 
+    if (error.message === 'Coupon already exists') {
+      if (!wantsJson) {
+        return res.status(StatusCodes.BAD_REQUEST).render('layout', {
+          title: `Edit Coupon - ${code || 'Coupon'}`,
+          viewName: 'admin/editCoupon',
+          activePage: 'coupon',
+          isAdmin: true,
+          coupon: { _id: id },
+          errors: {},
+          formData: req.body,
+          formError: RESPONSE_MESSAGES.COUPON_EXISTS,
+        });
+      }
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: RESPONSE_MESSAGES.COUPON_EXISTS });
+    }
+
+    if (error.message === 'Valid until date must be after valid from date') {
+      if (!wantsJson) {
+        return res.status(StatusCodes.BAD_REQUEST).render('layout', {
+          title: `Edit Coupon - ${code || 'Coupon'}`,
+          viewName: 'admin/editCoupon',
+          activePage: 'coupon',
+          isAdmin: true,
+          coupon: { _id: id },
+          errors: {},
+          formData: req.body,
+          formError: error.message,
+        });
+      }
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
     throw error;
   }
 
-  return res.status(StatusCodes.OK).json({
-    success: true,
-    message: RESPONSE_MESSAGES.COUPON_UPDATED,
-    coupon,
-  });
+  if (!wantsJson) {
+    return res.redirect('/admin/coupons');
+  }
+
+  return res
+    .status(StatusCodes.OK)
+    .json({ success: true, message: RESPONSE_MESSAGES.COUPON_UPDATED, coupon });
 });
 
 const deleteCoupon = asyncHandler(async (req, res) => {
@@ -165,6 +307,9 @@ const toggleCouponStatus = asyncHandler(async (req, res) => {
 module.exports = {
   getCoupons,
   addCoupon,
+  getViewCouponPage,
+  getCouponDetails,
+  getEditCouponPage,
   updateCoupon,
   deleteCoupon,
   toggleCouponStatus,

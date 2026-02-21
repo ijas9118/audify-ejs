@@ -1,41 +1,152 @@
-document
-  .querySelector('#addCouponform')
-  .addEventListener('submit', async (event) => {
-    event.preventDefault();
+const addCouponForm = document.getElementById('addCouponForm');
 
-    const couponCode = document.getElementById('couponCode').value;
-    const discountType = document.getElementById('discountType').value;
-    const discountValue = document.getElementById('discountValue').value;
-    const maxDiscountValue = document.getElementById('maxDiscountValue').value;
-    const minCartValue = document.getElementById('minCartValue').value;
-    const validFrom = document.getElementById('validFrom').value;
-    const validUntil = document.getElementById('validUntil').value;
-    const usageLimit = document.getElementById('usageLimit').value;
-    const isActive = document.getElementById('isActive').value === 'true';
+if (addCouponForm) {
+  const couponCodeField = document.getElementById('couponCode');
+  const discountTypeField = document.getElementById('discountType');
+  const discountValueField = document.getElementById('discountValue');
+  const maxDiscountValueField = document.getElementById('maxDiscountValue');
+  const minCartValueField = document.getElementById('minCartValue');
+  const validFromField = document.getElementById('validFrom');
+  const validUntilField = document.getElementById('validUntil');
+  const perUserLimitField = document.getElementById('perUserLimit');
+  const totalUsageLimitField = document.getElementById('totalUsageLimit');
 
-    if (
-      !couponCode ||
-      !discountType ||
-      !discountValue ||
-      !validFrom ||
-      !validUntil
-    ) {
-      await Toast.fire({
-        icon: 'warning',
-        title: 'Please fill in all required fields',
-      });
+  const getFeedback = (field) =>
+    field?.parentElement?.querySelector('.invalid-feedback');
+
+  const updateFieldMessage = (field) => {
+    const feedback = getFeedback(field);
+    if (!feedback || !field) {
       return;
     }
 
+    field.setCustomValidity('');
+
+    if (field.validity.valueMissing) {
+      feedback.textContent =
+        field.dataset.msgRequired || 'This field is required.';
+      return;
+    }
+
+    if (field === couponCodeField) {
+      const code = field.value.trim().toUpperCase();
+      if (code && !/^[A-Z0-9]{3,20}$/.test(code)) {
+        field.setCustomValidity('Coupon code must be 3-20 letters or numbers.');
+        feedback.textContent = 'Coupon code must be 3-20 letters or numbers.';
+        return;
+      }
+    }
+
+    if (field === discountValueField) {
+      const discountType = discountTypeField.value;
+      const discountValue = Number(field.value);
+      if (
+        discountType === 'percentage' &&
+        Number.isFinite(discountValue) &&
+        discountValue > 100
+      ) {
+        field.setCustomValidity('Percentage discount cannot exceed 100.');
+        feedback.textContent = 'Percentage discount cannot exceed 100.';
+        return;
+      }
+    }
+
+    if (field === validUntilField) {
+      const start = validFromField.value
+        ? new Date(validFromField.value)
+        : null;
+      const end = field.value ? new Date(field.value) : null;
+      if (
+        start &&
+        end &&
+        !Number.isNaN(start.getTime()) &&
+        !Number.isNaN(end.getTime()) &&
+        end < start
+      ) {
+        field.setCustomValidity(
+          'Valid until date must be after valid from date.'
+        );
+        feedback.textContent =
+          'Valid until date must be after valid from date.';
+        return;
+      }
+    }
+
+    if (!field.validity.valid) {
+      feedback.textContent =
+        field.dataset.msgInvalid || 'Please enter a valid value.';
+    }
+  };
+
+  [
+    couponCodeField,
+    discountTypeField,
+    discountValueField,
+    maxDiscountValueField,
+    minCartValueField,
+    validFromField,
+    validUntilField,
+    perUserLimitField,
+    totalUsageLimitField,
+  ].forEach((field) => {
+    if (!field) {
+      return;
+    }
+    field.addEventListener('input', () => updateFieldMessage(field));
+    field.addEventListener('change', () => updateFieldMessage(field));
+  });
+
+  discountTypeField?.addEventListener('change', () => {
+    updateFieldMessage(discountValueField);
+  });
+
+  validFromField?.addEventListener('change', () => {
+    updateFieldMessage(validUntilField);
+  });
+
+  addCouponForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    [
+      couponCodeField,
+      discountTypeField,
+      discountValueField,
+      maxDiscountValueField,
+      minCartValueField,
+      validFromField,
+      validUntilField,
+      perUserLimitField,
+      totalUsageLimitField,
+    ].forEach((field) => updateFieldMessage(field));
+
+    if (!addCouponForm.checkValidity()) {
+      addCouponForm.classList.add('was-validated');
+      return;
+    }
+
+    const couponCode = couponCodeField.value;
+    const discountType = discountTypeField.value;
+    const discountValue = discountValueField.value;
+    const maxDiscountValue = maxDiscountValueField.value;
+    const minCartValue = minCartValueField.value;
+    const validFrom = validFromField.value;
+    const validUntil = validUntilField.value;
+    const perUserLimit = perUserLimitField.value;
+    const totalUsageLimit = totalUsageLimitField.value;
+    const isActive = document.getElementById('isActive').value === 'true';
+
     const couponData = {
-      code: couponCode,
+      code: couponCode.trim().toUpperCase(),
       discountType,
       discountValue: parseFloat(discountValue),
-      maxDiscountValue: maxDiscountValue ? parseFloat(maxDiscountValue) : 0,
+      maxDiscountValue: maxDiscountValue
+        ? parseFloat(maxDiscountValue)
+        : undefined,
       minCartValue: minCartValue ? parseFloat(minCartValue) : 0,
       validFrom, // New field for start date
       validUntil, // Updated field for expiration date
-      usageLimit: parseInt(usageLimit, 10),
+      perUserLimit: perUserLimit ? parseInt(perUserLimit, 10) : 1,
+      totalUsageLimit: totalUsageLimit ? parseInt(totalUsageLimit, 10) : 0,
       isActive,
     };
 
@@ -44,29 +155,39 @@ document
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify(couponData),
       });
 
-      const result = await response.json();
+      const result = await parseApiResponse(response);
 
       if (response.ok) {
         await Toast.fire({
           icon: 'success',
           title: 'Coupon added successfully!',
         });
-        document.getElementById('addCouponform').reset();
+        addCouponForm.reset();
+        addCouponForm.classList.remove('was-validated');
 
         // Hide the modal
-        const addCouponModal = new bootstrap.Modal(
-          document.getElementById('addCouponModal')
-        );
+        const addCouponModalEl = document.getElementById('addCouponModal');
+        const addCouponModal =
+          bootstrap.Modal.getInstance(addCouponModalEl) ||
+          new bootstrap.Modal(addCouponModalEl);
         addCouponModal.hide();
+        addCouponModalEl.addEventListener(
+          'hidden.bs.modal',
+          () => {
+            addCouponForm.classList.remove('was-validated');
+          },
+          { once: true }
+        );
         window.location.reload();
       } else {
         Toast.fire({
           icon: 'error',
-          title: `Error adding coupon: ${result.message || 'Unknown error'}`,
+          title: `Error adding coupon: ${getErrorMessage(result)}`,
         });
       }
     } catch (error) {
@@ -77,133 +198,14 @@ document
       });
     }
   });
-
-document.querySelectorAll('.edit-coupon-form').forEach((form) => {
-  form.addEventListener('submit', function (event) {
-    event.preventDefault();
-    const couponId = this.getAttribute('data-coupon-id');
-    updateCoupon(couponId);
-  });
-});
-
-async function updateCoupon(couponId) {
-  const couponCode = document.getElementById(`couponCode${couponId}`).value;
-  const discountType = document.getElementById(`discountType${couponId}`).value;
-  const discountValue = document.getElementById(
-    `discountValue${couponId}`
-  ).value;
-  const maxDiscountValue =
-    document.getElementById(`maxDiscountValue${couponId}`).value || null;
-  const minCartValue =
-    document.getElementById(`minCartValue${couponId}`).value || null;
-  const validFrom = document.getElementById(`validFrom${couponId}`).value;
-  const validUntil = document.getElementById(`validUntil${couponId}`).value;
-  const usageLimit =
-    document.getElementById(`usageLimit${couponId}`).value || null;
-  const isActive = document.getElementById(`isActive${couponId}`).checked; // Corrected to boolean
-
-  if (
-    !couponCode ||
-    !discountType ||
-    !discountValue ||
-    !validFrom ||
-    !validUntil
-  ) {
-    await Toast.fire({
-      icon: 'warning',
-      title: 'Please fill in all required fields',
-    });
-    return;
-  }
-
-  const couponData = {
-    code: couponCode,
-    discountType,
-    discountValue: parseFloat(discountValue),
-    maxDiscountValue: maxDiscountValue
-      ? parseFloat(maxDiscountValue)
-      : undefined,
-    minCartValue: minCartValue ? parseFloat(minCartValue) : 0,
-    validFrom,
-    validUntil,
-    usageLimit: parseInt(usageLimit, 10),
-    isActive,
-  };
-
-  try {
-    const response = await fetch(`/admin/coupons/edit/${couponId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(couponData),
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      const updatedCoupon = result.coupon;
-      document.getElementById(`couponCodeDisplay${couponId}`).textContent =
-        updatedCoupon.code;
-
-      document.getElementById(`discountTypeDisplay${couponId}`).textContent =
-        updatedCoupon.discountType === 'percentage'
-          ? `${updatedCoupon.discountValue}%`
-          : `₹${updatedCoupon.discountValue}`;
-
-      document.getElementById(
-        `maxDiscountValueDisplay${couponId}`
-      ).textContent = updatedCoupon.maxDiscountValue
-        ? `₹${updatedCoupon.maxDiscountValue}`
-        : '-';
-      document.getElementById(`minCartValueDisplay${couponId}`).textContent =
-        updatedCoupon.minCartValue ? `₹${updatedCoupon.minCartValue}` : '-';
-      document.getElementById(`usageLimitDisplay${couponId}`).textContent =
-        updatedCoupon.usageLimit || 'Unlimited';
-      document.getElementById(`validFromDisplay${couponId}`).textContent =
-        new Date(updatedCoupon.validFrom).toLocaleDateString();
-      document.getElementById(`validUntilDisplay${couponId}`).textContent =
-        new Date(updatedCoupon.validUntil).toLocaleDateString();
-      const statusBadge = document.getElementById(`isActiveDisplay${couponId}`);
-      statusBadge.classList.remove(
-        'is-positive',
-        'is-negative',
-        'bg-success',
-        'bg-danger'
-      );
-      statusBadge.classList.add(
-        updatedCoupon.isActive ? 'is-positive' : 'is-negative'
-      );
-      statusBadge.textContent = updatedCoupon.isActive ? 'Active' : 'Inactive';
-
-      Toast.fire({
-        icon: 'success',
-        title: result.message,
-      });
-      const modal = bootstrap.Modal.getInstance(
-        document.getElementById(`editCouponModal${couponId}`)
-      );
-      modal.hide();
-    } else {
-      Toast.fire({
-        icon: 'error',
-        title: `Error updating coupon: ${result.message || 'Unknown error'}`,
-      });
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    Toast.fire({
-      icon: 'error',
-      title: `An error occurred while updating the coupon. ${error}`,
-    });
-  }
 }
 
 async function deleteCoupon(couponId) {
   const confirmDelete = await window.adminConfirm.open({
-    title: 'Delete Coupon',
-    message: 'This coupon will be permanently deleted.',
-    confirmText: 'Delete',
+    title: 'Archive Coupon',
+    message:
+      'This coupon will be soft deleted and hidden from active listings.',
+    confirmText: 'Archive',
     variant: 'danger',
   });
 
@@ -216,31 +218,31 @@ async function deleteCoupon(couponId) {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     });
 
-    const result = await response.json();
+    const result = await parseApiResponse(response);
 
     if (response.ok) {
-      // Remove the coupon's row from the table
-      const row = document.querySelector(`tr[data-coupon-id="${couponId}"]`);
-      if (row) row.remove();
-
       Toast.fire({
         icon: 'success',
-        title: 'Coupon deleted successfully!',
+        title: 'Coupon archived successfully!',
       });
+
+      // Refresh to keep pagination and filtered lists aligned with server state.
+      window.location.reload();
     } else {
       Toast.fire({
         icon: 'error',
-        title: `Error deleting coupon: ${result.message || 'Unknown error'}`,
+        title: `Error archiving coupon: ${getErrorMessage(result)}`,
       });
     }
   } catch (error) {
     console.error('Error:', error);
     Toast.fire({
       icon: 'error',
-      title: 'An error occurred while deleting the coupon.',
+      title: 'An error occurred while archiving the coupon.',
     });
   }
 }
@@ -266,10 +268,11 @@ async function toggleCouponStatus(couponId) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     });
 
-    const result = await response.json();
+    const result = await parseApiResponse(response);
 
     if (result.success) {
       // Update the UI with the new status
@@ -290,7 +293,7 @@ async function toggleCouponStatus(couponId) {
     } else {
       Toast.fire({
         icon: 'error',
-        title: result.message || 'Error updating coupon status.',
+        title: getErrorMessage(result),
       });
     }
   } catch (error) {
@@ -299,4 +302,32 @@ async function toggleCouponStatus(couponId) {
       title: 'Error toggling coupon status.',
     });
   }
+}
+
+function getErrorMessage(result) {
+  if (!result) {
+    return 'Unknown error';
+  }
+  if (result.message) {
+    return result.message;
+  }
+  if (Array.isArray(result.errors) && result.errors.length > 0) {
+    return result.errors[0].msg || 'Validation failed';
+  }
+  return 'Unknown error';
+}
+
+async function parseApiResponse(response) {
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+  const rawText = await response.text();
+  return {
+    success: false,
+    message:
+      rawText && rawText.trim()
+        ? 'Request failed and server returned non-JSON response'
+        : 'Request failed',
+  };
 }

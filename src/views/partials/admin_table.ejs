@@ -1,0 +1,47 @@
+<div class="admin-table-shell">
+  <div class="table-responsive">
+    <table class="table admin-management-table align-middle mb-0">
+      <thead>
+        <tr>
+          <% columns.forEach((column) => { %>
+          <th scope="col" class="<%= column.className || '' %>"><%= column.label %></th>
+          <% }) %>
+        </tr>
+      </thead>
+      <tbody <% if (typeof tbodyId !== 'undefined' && tbodyId) { %>id="<%= tbodyId %>"<% } %>>
+        <% if (rows.length) { %>
+        <% rows.forEach((row) => { %>
+        <tr
+          class="<%= row.className || '' %>"
+          <% Object.entries(row.dataAttrs || {}).forEach(([key, value]) => { %>
+          data-<%= key %>="<%= value %>"
+          <% }) %>
+        >
+          <% row.cells.forEach((cell) => { %>
+          <% const tag = cell.tag === 'th' ? 'th' : 'td'; %>
+          <<%= tag %>
+            <% if (tag === 'th') { %>scope="<%= cell.scope || 'row' %>"<% } %>
+            <% if (cell.className) { %>class="<%= cell.className %>"<% } %>
+            <% if (cell.id) { %>id="<%= cell.id %>"<% } %>
+            <% if (cell.colspan) { %>colspan="<%= cell.colspan %>"<% } %>
+          >
+            <% if (cell.html !== undefined) { %>
+            <%- cell.html %>
+            <% } else { %>
+            <%= cell.text || '' %>
+            <% } %>
+          </<%= tag %>>
+          <% }) %>
+        </tr>
+        <% }) %>
+        <% } else { %>
+        <tr>
+          <td colspan="<%= columns.length %>" class="text-center admin-empty-row">
+            <%= emptyMessage || 'No records found' %>
+          </td>
+        </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

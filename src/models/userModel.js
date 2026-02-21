@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
       match: [/\S+@\S+.\S+/, 'Please enter a valid email address'],
     },
     mobile: {
-      type: Number,
+      type: String,
       match: [/^\d{10}$/, 'Please provide a valid 10-digit mobile number'],
     },
     password: {
@@ -46,6 +46,7 @@ const userSchema = new mongoose.Schema(
     },
     walletBalance: {
       type: Number,
+      default: 0,
     },
     walletTransactions: [
       {

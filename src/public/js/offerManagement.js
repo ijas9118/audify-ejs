@@ -5,6 +5,17 @@ document.addEventListener('DOMContentLoaded', () => {
   );
   const referralSection = document.getElementById('referralSection');
   const productOrCategorySelect = document.getElementById('productOrCategory');
+  const addOfferForm = document.getElementById('addOfferForm');
+
+  if (
+    !offerTypeSelect ||
+    !productCategorySection ||
+    !referralSection ||
+    !productOrCategorySelect ||
+    !addOfferForm
+  ) {
+    return;
+  }
 
   function fetchOptions(offerType) {
     const url =
@@ -57,17 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.querySelector('form').addEventListener('submit', (event) => {
+  addOfferForm.addEventListener('submit', (event) => {
     event.preventDefault();
     addOffer();
-  });
-
-  document.querySelectorAll('.edit-offer-form').forEach((form) => {
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
-      const { offerId } = this.dataset;
-      updateOffer(offerId);
-    });
   });
 });
 
@@ -122,64 +125,6 @@ function addOffer() {
         });
         const modal = bootstrap.Modal.getInstance(
           document.getElementById('addOfferModal')
-        );
-        modal.hide();
-        window.location.reload();
-      } else {
-        Toast.fire({
-          icon: 'error',
-          title: `${data.message}`,
-        });
-      }
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-      Toast.fire({
-        icon: 'error',
-        title: 'An error occurred while adding the offer.',
-      });
-    });
-}
-
-function updateOffer(offerId) {
-  const offerType = document.getElementById(`offerType${offerId}`).value;
-  const discountType = document.getElementById(`discountType${offerId}`).value;
-  const discountValue = document.getElementById(
-    `discountValue${offerId}`
-  ).value;
-  const maxDiscountAmount =
-    document.getElementById(`maxDiscount${offerId}`).value || null;
-  const validFrom = document.getElementById(`validFrom${offerId}`).value;
-  const validUntil = document.getElementById(`validUntil${offerId}`).value;
-  const minCartValue =
-    document.getElementById(`minCartValue${offerId}`).value || null;
-
-  const offerData = {
-    type: offerType,
-    discountType,
-    discountValue,
-    maxDiscountAmount,
-    validFrom,
-    validUntil,
-    minCartValue,
-  };
-
-  fetch(`/admin/offers/edit/${offerId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(offerData),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        Toast.fire({
-          icon: 'success',
-          title: `${data.message}`,
-        });
-        const modal = bootstrap.Modal.getInstance(
-          document.getElementById(`editOfferModal${offerId}`)
         );
         modal.hide();
         window.location.reload();

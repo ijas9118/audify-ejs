@@ -12,6 +12,7 @@ const offerManagementController = require('../controllers/admin/offerManagementC
 const salesReportController = require('../controllers/admin/salesReportController');
 const {
   couponValidation,
+  offerValidation,
   validate,
 } = require('../middleware/validators/adminValidator');
 const { adminAuthLimiter } = require('../middleware/rateLimiter');
@@ -65,12 +66,27 @@ router.post('/sales-report', adminAuth, salesReportController.getSalesReport);
 // Coupon Management Routes
 // ============================
 router.get('/coupons', adminAuth, couponManagementController.getCoupons);
+router.get(
+  '/coupons/details/:id',
+  adminAuth,
+  couponManagementController.getCouponDetails
+);
+router.get(
+  '/coupons/view/:id',
+  adminAuth,
+  couponManagementController.getViewCouponPage
+);
 router.post(
   '/coupons',
   adminAuth,
   couponValidation,
   validate,
   couponManagementController.addCoupon
+);
+router.get(
+  '/coupons/edit/:id',
+  adminAuth,
+  couponManagementController.getEditCouponPage
 );
 router.post(
   '/coupons/edit/:id',
@@ -94,10 +110,23 @@ router.get(
 // Offer Management Routes
 // ============================
 router.get('/offers', adminAuth, offerManagementController.getOffers);
-router.post('/offers', adminAuth, offerManagementController.addOffer);
+router.post(
+  '/offers',
+  adminAuth,
+  offerValidation,
+  validate,
+  offerManagementController.addOffer
+);
+router.get(
+  '/offers/edit/:id',
+  adminAuth,
+  offerManagementController.getEditOfferPage
+);
 router.post(
   '/offers/edit/:id',
   adminAuth,
+  offerValidation,
+  validate,
   offerManagementController.updateOffer
 );
 router.delete('/offers/:id', adminAuth, offerManagementController.deleteOffer);

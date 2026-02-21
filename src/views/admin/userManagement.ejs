@@ -18,60 +18,73 @@
     extraQuery: { limit: pagination.limit },
   }) %>
 
-  <div class="admin-table-shell">
-    <div class="table-responsive">
-      <table class="table admin-management-table align-middle mb-0">
-        <thead>
-          <tr>
-            <th scope="col">Sl</th>
-            <th scope="col">Name</th>
-            <th scope="col">Email</th>
-            <th scope="col">Phone</th>
-            <th scope="col">Gender</th>
-            <th scope="col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% users.forEach((user, index) => { %>
-          <tr>
-            <th scope="row" class="admin-row-index"><%= pagination.skip + index + 1 %></th>
-            <td class="admin-cell-primary"><%= user.firstName %> <%= user.lastName %></td>
-            <td><%= user.email %></td>
-            <td><%= user.mobile %></td>
-            <td><%= user.gender %></td>
-            <td class="admin-cell-actions">
+  <%
+    const attr = (value = '') =>
+      String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+
+    const userColumns = [
+      { label: '#' },
+      { label: 'Name' },
+      { label: 'Email' },
+      { label: 'Phone' },
+      { label: 'Gender' },
+      { label: 'Action' },
+    ];
+
+    const userRows = users.map((user, index) => {
+      const toggleTitle = user.status === 'Active' ? 'Block user' : 'Unblock user';
+      const toggleIcon = user.status === 'Active' ? 'fa-user-slash' : 'fa-user-check';
+      const toggleClass =
+        user.status === 'Active' ? 'admin-action-btn-danger' : 'admin-action-btn-success';
+
+      return {
+        cells: [
+          { tag: 'th', className: 'admin-row-index', text: pagination.skip + index + 1 },
+          { className: 'admin-cell-primary', text: `${user.firstName} ${user.lastName || ''}`.trim() },
+          { text: user.email || '' },
+          { text: user.mobile || '' },
+          { text: user.gender || '' },
+          {
+            className: 'admin-cell-actions admin-cell-actions-compact',
+            html: `
               <form
-                action="/admin/users/toggle/<%= user._id %>"
+                action="/admin/users/toggle/${user._id}"
                 method="GET"
-                class="w-100"
+                class="admin-action-form"
                 data-confirm="true"
-                data-confirm-title="<%= user.status === 'Active' ? 'Block User' : 'Unblock User' %>"
-                data-confirm-message="<%= user.status === 'Active' ? 'This user will be blocked from accessing the account.' : 'This user will regain account access.' %>"
-                data-confirm-text="<%= user.status === 'Active' ? 'Block' : 'Unblock' %>"
+                data-confirm-title="${user.status === 'Active' ? 'Block User' : 'Unblock User'}"
+                data-confirm-message="${user.status === 'Active' ? 'This user will be blocked from accessing the account.' : 'This user will regain account access.'}"
+                data-confirm-text="${user.status === 'Active' ? 'Block' : 'Unblock'}"
                 data-confirm-variant="danger"
               >
-                <input type="hidden" name="page" value="<%= pagination.currentPage %>" />
-                <input type="hidden" name="limit" value="<%= pagination.limit %>" />
-                <input type="hidden" name="search" value="<%= search || '' %>" />
+                <input type="hidden" name="page" value="${pagination.currentPage}" />
+                <input type="hidden" name="limit" value="${pagination.limit}" />
+                <input type="hidden" name="search" value="${attr(search || '')}" />
                 <button
                   type="submit"
-                  class="btn admin-action-btn <%= user.status === 'Active' ? 'admin-action-btn-danger' : 'admin-action-btn-success' %>"
+                  class="btn admin-action-btn admin-action-btn-icon ${toggleClass}"
+                  title="${toggleTitle}"
+                  aria-label="${toggleTitle}"
                 >
-                  <%= user.status === 'Active' ? 'Block' : 'Unblock' %>
+                  <i class="fa-solid ${toggleIcon}"></i>
                 </button>
               </form>
-            </td>
-          </tr>
-          <% }); %>
-          <% if (!users.length) { %>
-          <tr>
-            <td colspan="6" class="text-center admin-empty-row">No users found</td>
-          </tr>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-  </div>
+            `,
+          },
+        ],
+      };
+    });
+  %>
+
+  <%- include('../partials/admin_table', {
+    columns: userColumns,
+    rows: userRows,
+    emptyMessage: 'No users found',
+  }) %>
 
   <%- include('../partials/admin_pagination', {
     pagination,

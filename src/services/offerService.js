@@ -60,17 +60,19 @@ const buildSearchRegex = (search) => {
 
 exports.getPaginatedOffers = async ({ page, limit, search }) => {
   const regex = buildSearchRegex(search);
-  const matchStage = regex
-    ? {
-        $or: [
-          { type: regex },
-          { discountType: regex },
-          { status: regex },
-          { 'product.name': regex },
-          { 'category.name': regex },
-        ],
-      }
-    : {};
+  const matchStage = {
+    'category.isDeleted': { $ne: true },
+  };
+
+  if (regex) {
+    matchStage.$or = [
+      { type: regex },
+      { discountType: regex },
+      { status: regex },
+      { 'product.name': regex },
+      { 'category.name': regex },
+    ];
+  }
 
   const countPipeline = [
     {
@@ -156,6 +158,15 @@ exports.createOffer = async (offerData) => {
     throw new Error('Missing required fields');
   }
 
+  const startDate = new Date(validFrom);
+  const endDate = new Date(validUntil);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    throw new Error('Invalid offer date range');
+  }
+  if (endDate < startDate) {
+    throw new Error('Valid until date must be after valid from date');
+  }
+
   const newOffer = new Offer({
     type,
     product: type === 'product' ? product : undefined,
@@ -164,8 +175,8 @@ exports.createOffer = async (offerData) => {
     discountValue,
     maxDiscountAmount,
     minCartValue,
-    validFrom,
-    validUntil,
+    validFrom: startDate,
+    validUntil: endDate,
     referralBonus: type === 'referral' ? referralBonus : undefined,
   });
 
@@ -185,6 +196,16 @@ exports.createOffer = async (offerData) => {
   return newOffer;
 };
 
+exports.getOfferById = async (offerId) => {
+  const offer = await Offer.findById(offerId)
+    .populate('product', 'name')
+    .populate('category', 'name');
+  if (!offer) {
+    throw new Error('Offer not found');
+  }
+  return offer;
+};
+
 exports.updateOfferById = async (offerId, offerData) => {
   const offer = await Offer.findById(offerId);
 
@@ -194,6 +215,8 @@ exports.updateOfferById = async (offerId, offerData) => {
 
   const {
     type,
+    product,
+    category,
     discountType,
     discountValue,
     maxDiscountAmount,
@@ -202,15 +225,94 @@ exports.updateOfferById = async (offerId, offerData) => {
     minCartValue,
   } = offerData;
 
-  offer.type = type || offer.type;
-  offer.discountType = discountType || offer.discountType;
-  offer.discountValue = discountValue || offer.discountValue;
-  offer.maxDiscountAmount = maxDiscountAmount || offer.maxDiscountAmount;
-  offer.validFrom = validFrom || offer.validFrom;
-  offer.validUntil = validUntil || offer.validUntil;
-  offer.minCartValue = minCartValue || offer.minCartValue;
+  const nextType = type !== undefined ? type : offer.type;
+  offer.type = nextType;
+  offer.discountType =
+    discountType !== undefined ? discountType : offer.discountType;
+  offer.discountValue =
+    discountValue !== undefined ? discountValue : offer.discountValue;
+  offer.maxDiscountAmount =
+    maxDiscountAmount !== undefined
+      ? maxDiscountAmount
+      : offer.maxDiscountAmount;
+  const nextValidFrom =
+    validFrom !== undefined ? new Date(validFrom) : offer.validFrom;
+  const nextValidUntil =
+    validUntil !== undefined ? new Date(validUntil) : offer.validUntil;
+
+  if (
+    Number.isNaN(new Date(nextValidFrom).getTime()) ||
+    Number.isNaN(new Date(nextValidUntil).getTime())
+  ) {
+    throw new Error('Invalid offer date range');
+  }
+
+  offer.validFrom = nextValidFrom;
+  offer.validUntil = nextValidUntil;
+  offer.minCartValue =
+    minCartValue !== undefined ? minCartValue : offer.minCartValue;
+
+  const oldProduct = offer.product;
+  const oldCategory = offer.category;
+  const oldType = offer.type;
+
+  if (nextType === 'product') {
+    const nextProduct = product !== undefined ? product : offer.product;
+    if (!nextProduct) {
+      throw new Error('Product is required for product offer');
+    }
+    offer.product = nextProduct;
+    offer.category = undefined;
+  } else if (nextType === 'category') {
+    const nextCategory = category !== undefined ? category : offer.category;
+    if (!nextCategory) {
+      throw new Error('Category is required for category offer');
+    }
+    offer.category = nextCategory;
+    offer.product = undefined;
+  } else {
+    offer.product = undefined;
+    offer.category = undefined;
+  }
+
+  if (offer.validUntil < offer.validFrom) {
+    throw new Error('Valid until date must be after valid from date');
+  }
 
   await offer.save();
+
+  // Handle reference updates in related models
+  if (oldType === 'product' && oldProduct) {
+    // Check if product changed or type changed
+    if (
+      nextType !== 'product' ||
+      String(oldProduct) !== String(offer.product)
+    ) {
+      await Product.findByIdAndUpdate(oldProduct, { $set: { offerId: null } });
+    }
+  } else if (oldType === 'category' && oldCategory) {
+    // Check if category changed or type changed
+    if (
+      nextType !== 'category' ||
+      String(oldCategory) !== String(offer.category)
+    ) {
+      await Category.findByIdAndUpdate(oldCategory, {
+        $set: { offerId: null },
+      });
+    }
+  }
+
+  // Set new reference
+  if (offer.type === 'product' && offer.product) {
+    await Product.findByIdAndUpdate(offer.product, {
+      $set: { offerId: offer._id },
+    });
+  } else if (offer.type === 'category' && offer.category) {
+    await Category.findByIdAndUpdate(offer.category, {
+      $set: { offerId: offer._id },
+    });
+  }
+
   return offer;
 };
 
@@ -219,6 +321,15 @@ exports.deleteOfferById = async (offerId) => {
 
   if (!offer) {
     throw new Error('Offer not found');
+  }
+
+  // Clear references in Product or Category
+  if (offer.type === 'product' && offer.product) {
+    await Product.findByIdAndUpdate(offer.product, { $set: { offerId: null } });
+  } else if (offer.type === 'category' && offer.category) {
+    await Category.findByIdAndUpdate(offer.category, {
+      $set: { offerId: null },
+    });
   }
 
   await Offer.deleteOne({ _id: offerId });
@@ -238,7 +349,8 @@ exports.toggleOfferStatusById = async (offerId) => {
   return offer;
 };
 
-exports.getOfferCategories = async () => Category.find({});
+exports.getOfferCategories = async () =>
+  Category.find({ isDeleted: { $ne: true } });
 exports.getOfferProducts = async () => Product.find({});
 
 exports.calculateDiscountedPrice = calculateDiscountedPrice;

@@ -1,87 +1,111 @@
-<div class="container my-5 col-md-10 col-sm-12"
-style="min-height: 50vh">
+<div class="container my-5 col-md-10 col-sm-12" style="min-height: 50vh">
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="/">Home</a></li>
       <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
       <li class="breadcrumb-item"><a href="/shop/cart">Cart</a></li>
+      <li class="breadcrumb-item"><a href="/checkout">Checkout</a></li>
       <li class="breadcrumb-item active" aria-current="page">Payment</li>
     </ol>
     <h3 class="mb-4">Select Payment Method</h3>
   </nav>
+
+  <%# ── Hidden config read by payment.js (no hardcoded keys in JS) ─────────── %>
+  <div
+    id="paymentConfig"
+    data-razorpay-key="<%= razorpayKeyId %>"
+    data-finaltotal="<%= cart.finalTotal || cart.total %>"
+    data-shipping-name=""
+    data-shipping-mobile=""
+    style="display:none"
+  ></div>
+
   <div class="row">
+    <%# ── Payment Form ─────────────────────────────────────────────────────── %>
     <div class="col-md-6">
-    
       <form id="paymentForm" class="payment-form p-4 shadow-sm rounded bg-light">
-        
+
         <div class="form-check mt-3">
           <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="COD" checked>
           <label class="form-check-label d-flex align-items-center ms-3" for="cod">
-            <i class="fas fa-truck me-3 text-primary" style="font-size: 1.2em;"></i>
-            <span class="ml-2">Cash On Delivery</span>
+            <i class="fas fa-truck me-3 text-primary" style="font-size:1.2em"></i>
+            <span>Cash On Delivery</span>
           </label>
         </div>
-    
+
         <div class="form-check mt-4">
           <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="Wallet">
           <label class="form-check-label d-flex align-items-center ms-3" for="wallet">
-            <i class="fas fa-wallet me-3 text-success" style="font-size: 1.2em;"></i>
-            <span class="ml-2">Wallet <small class="text-muted">(Balance: ₹<%= walletBalance %>)</small></span>
+            <i class="fas fa-wallet me-3 text-success" style="font-size:1.2em"></i>
+            <span>Wallet <small class="text-muted">(Balance: ₹<%= walletBalance.toFixed(2) %>)</small></span>
           </label>
         </div>
-    
+
         <div class="form-check mt-4">
           <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="Razorpay">
           <label class="form-check-label d-flex align-items-center ms-3" for="razorpay">
-            <i class="fas fa-credit-card me-3 text-info" style="font-size: 1.2em;"></i>
-            <span class="ml-2">Online Payment (Razorpay)</span>
+            <i class="fas fa-credit-card me-3 text-info" style="font-size:1.2em"></i>
+            <span>Online Payment (Razorpay)</span>
           </label>
         </div>
-    
-        <button type="submit" class="btn btn-dark mt-5 w-100" id="confirmBtn" data-orderid="<%= order._id %>" data-finaltotal="<%= order.finalTotal %>">
-          <i class="fas fa-check-circle me-3"></i>Confirm and Pay
+
+        <button
+          type="submit"
+          class="btn btn-dark mt-5 w-100"
+          id="confirmBtn"
+        >
+          <i class="fas fa-check-circle me-2"></i>Confirm and Pay
         </button>
-    
+
+        <a href="/checkout" class="btn btn-outline-secondary mt-2 w-100">
+          <i class="fas fa-arrow-left me-2"></i>Back to Checkout
+        </a>
+
       </form>
     </div>
 
+    <%# ── Order Summary ────────────────────────────────────────────────────── %>
     <div class="col-md-6">
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">Order Summary</h5>
           <hr>
-          
-          <h6>Shipping to:</h6>
-          <p><%= order.location %>, <%= order.city %>, <%= order.state %>, <%= order.country %> - <%= order.zip %></p>
 
-          <hr>
-
-          <% order.orderItems.forEach(item => { %>
+          <% cart.items.forEach(item => { %>
           <div class="d-flex justify-content-between mb-2">
-            <span><strong><%= item.product.name %></strong> (x<%= item.quantity %>)</span>
-            <span>₹<%= item.product.price %></span>
+            <span><strong><%= item.name %></strong> (x<%= item.quantity %>)</span>
+            <span>₹<%= item.price.toFixed(2) %></span>
           </div>
           <% }) %>
 
+          <hr>
+
           <div class="d-flex justify-content-between">
             <span>Subtotal:</span>
-            <span>₹<%= order.totalAmount %></span>
+            <span>₹<%= cart.items.reduce((acc, i) => acc + i.subtotal, 0).toFixed(2) %></span>
           </div>
 
           <div class="d-flex justify-content-between">
             <span>Shipping Charge:</span>
-            <span>₹<%= order.shippingCharge %></span>
+            <span>₹<%= cart.shippingCharge.toFixed(2) %></span>
           </div>
 
+          <% if (cart.discountApplied && cart.discountApplied > 0) { %>
           <div class="d-flex justify-content-between text-success">
-            <span>Discount Applied:</span>
-            <span>-₹<%= order.discountApplied %></span>
+            <span>Discount
+              <% if (cart.appliedCoupon) { %>
+              (<%= cart.appliedCoupon %>)
+              <% } %>:
+            </span>
+            <span>- ₹<%= cart.discountApplied.toFixed(2) %></span>
           </div>
+          <% } %>
 
           <hr>
-          <div class="d-flex justify-content-between">
-            <strong>Grand Total:</strong>
-            <strong>₹<%= order.finalTotal %></strong>
+
+          <div class="d-flex justify-content-between fw-bold fs-5">
+            <span>Grand Total:</span>
+            <span>₹<%= (cart.finalTotal || cart.total).toFixed(2) %></span>
           </div>
         </div>
       </div>

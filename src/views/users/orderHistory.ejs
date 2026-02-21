@@ -32,7 +32,7 @@
           <% orders.forEach((order) => { %>
             <tr onclick="window.location.href='/account/order-history/<%= order._id %>'" style="cursor: pointer;">
               <td class="align-middle"><%= order._id %></td>
-              <td class="align-middle"><%= new Date(order.dateOrdered).toLocaleDateString() %></td>
+              <td class="align-middle"><%= new Date(order.createdAt).toLocaleDateString() %></td>
               <td class="align-middle">
                 <span class="badge 
                   <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Canceled' ? 'bg-danger' : 'bg-primary' %>">

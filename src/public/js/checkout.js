@@ -1,44 +1,43 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Address selection functionality
   setupAddressSelection();
-
   setupCouponApplication();
+  setupCheckoutFormSubmit();
 });
 
-// Function to handle address selection
+// ─── Address Card Selection ───────────────────────────────────────────────────
+
 function setupAddressSelection() {
   const addressCards = document.querySelectorAll('.address-card');
   const selectedAddressIdInput = document.getElementById('selectedAddressId');
 
   addressCards.forEach((card) => {
     card.addEventListener('click', async () => {
-      const currentlySelectedCard = document.querySelector(
-        '.address-card.active-address'
-      );
+      const isAlreadySelected = card.classList.contains('active-address');
 
-      if (card.classList.contains('active-address')) {
+      if (isAlreadySelected) {
         deselectAddress(card, selectedAddressIdInput);
       } else {
-        if (currentlySelectedCard) {
-          deselectAddress(currentlySelectedCard, selectedAddressIdInput);
+        const currentlySelected = document.querySelector(
+          '.address-card.active-address'
+        );
+        if (currentlySelected) {
+          deselectAddress(currentlySelected, selectedAddressIdInput);
         }
-        selectAddress(card, selectedAddressIdInput);
+        await selectAddress(card, selectedAddressIdInput);
       }
     });
   });
 }
 
-// Function to handle address deselection
 function deselectAddress(card, inputElement) {
   card.classList.remove('active-address');
-  inputElement.value = ''; // Clear the hidden input
-  clearAddressForm(); // Optionally clear form fields
+  inputElement.value = '';
+  clearAddressForm();
 }
 
-// Function to handle address selection
 async function selectAddress(card, inputElement) {
   card.classList.add('active-address');
-  inputElement.value = card.dataset.id; // Set the hidden input with the selected address ID
+  inputElement.value = card.dataset.id;
 
   try {
     const addressData = await fetchAddressDetails(card.dataset.id);
@@ -48,16 +47,12 @@ async function selectAddress(card, inputElement) {
   }
 }
 
-// Function to fetch address details from the server
 async function fetchAddressDetails(addressId) {
   const response = await fetch(`/account/addresses/${addressId}`);
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
+  if (!response.ok) throw new Error('Failed to fetch address');
   return response.json();
 }
 
-// Function to fill address form fields
 function fillAddressForm(address) {
   document.getElementById('name').value = address.name || '';
   document.getElementById('mobile').value = address.mobile || '';
@@ -70,139 +65,37 @@ function fillAddressForm(address) {
   document.getElementById('zip').value = address.zip || '';
 }
 
-// Function to clear address form fields
 function clearAddressForm() {
-  document.getElementById('name').value = '';
-  document.getElementById('mobile').value = '';
-  document.getElementById('alternateMobile').value = '';
-  document.getElementById('location').value = '';
-  document.getElementById('city').value = '';
-  document.getElementById('state').value = '';
-  document.getElementById('landmark').value = '';
-  document.getElementById('zip').value = '';
+  [
+    'name',
+    'mobile',
+    'alternateMobile',
+    'location',
+    'city',
+    'state',
+    'landmark',
+    'zip',
+  ].forEach((id) => {
+    document.getElementById(id).value = '';
+  });
 }
 
-const couponBtn = document.getElementById('applyCouponBtn');
-const couponCodeInput = document.getElementById('couponCode');
-const cartId = couponCode.getAttribute('data-cartId');
-const applyCouponDiv = document.getElementById('applyCouponDiv');
-const appliedCouponDiv = document.getElementById('appliedCouponDiv');
-const appliedCouponCodeSpan = document.getElementById('appliedCouponCode');
-const removeCouponBtn = document.getElementById('removeCouponBtn');
-const grandTotal = document.getElementById('grandTotal');
+// ─── Coupon Application ───────────────────────────────────────────────────────
 
-couponBtn.addEventListener('click', () => {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 2500,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
-  const couponCode = couponCodeInput.value.trim();
-  if (couponCode) {
-    const data = {
-      couponCode,
-      cartId,
-    };
-    fetch('/checkout/apply-coupons', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        if (result.success) {
-          Toast.fire({
-            icon: 'success',
-            title: result.message,
-          });
-          appliedCouponCodeSpan.querySelector('strong').textContent =
-            couponCode;
-          applyCouponDiv.classList.add('d-none');
-          appliedCouponDiv.classList.remove('d-none');
-          grandTotal.textContent = `₹${result.finalTotal.toFixed(2)}`;
-        } else {
-          Toast.fire({
-            icon: 'error',
-            title: result.message,
-          });
-          console.error('Failed to apply coupon:', couponCode, result.message);
-        }
-      })
-      .catch((error) => {
-        Toast.fire({
-          icon: 'error',
-          title: `Error: ${error}`,
-        });
-        console.error('Error:', error);
-      });
-  } else {
-    Toast.fire({
-      icon: 'warning',
-      title: 'Please enter a coupon code.',
-    });
-    console.log('Please enter a coupon code.');
-  }
-});
+function setupCouponApplication() {
+  const couponBtn = document.getElementById('applyCouponBtn');
+  const couponCodeInput = document.getElementById('couponCode');
+  const cartId = couponCodeInput
+    ? couponCodeInput.getAttribute('data-cartId')
+    : null;
+  const applyCouponDiv = document.getElementById('applyCouponDiv');
+  const appliedCouponDiv = document.getElementById('appliedCouponDiv');
+  const appliedCouponCodeSpan = document.getElementById('appliedCouponCode');
+  const removeCouponBtn = document.getElementById('removeCouponBtn');
+  const grandTotal = document.getElementById('grandTotal');
 
-removeCouponBtn.addEventListener('click', async () => {
-  applyCouponDiv.classList.remove('d-none');
-  appliedCouponDiv.classList.add('d-none');
-  couponCodeInput.value = '';
-
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 2500,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
-
-  fetch(`/checkout/remove-coupon/${cartId}`)
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.success) {
-        Toast.fire({
-          icon: 'success',
-          title: result.message,
-        });
-        grandTotal.textContent = `₹${result.finalTotal.toFixed(2)}`;
-      } else {
-        Toast.fire({
-          icon: 'error',
-          title: result.message,
-        });
-      }
-    })
-    .catch((error) => {
-      Toast.fire({
-        icon: 'error',
-        title: `Error: ${error}`,
-      });
-      console.error('Error:', error);
-    });
-});
-
-document
-  .getElementById('checkoutForm')
-  .addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
-
-    const Toast = Swal.mixin({
+  const makeToast = () =>
+    Swal.mixin({
       toast: true,
       position: 'top',
       showConfirmButton: false,
@@ -214,33 +107,119 @@ document
       },
     });
 
-    try {
-      const response = await fetch('checkout/place-order', {
+  if (couponBtn) {
+    couponBtn.addEventListener('click', () => {
+      const Toast = makeToast();
+      const couponCode = couponCodeInput.value.trim();
+
+      if (!couponCode) {
+        Toast.fire({ icon: 'warning', title: 'Please enter a coupon code.' });
+        return;
+      }
+
+      fetch('/checkout/apply-coupons', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponCode, cartId }),
+      })
+        .then((r) => r.json())
+        .then((result) => {
+          if (result.success) {
+            Toast.fire({ icon: 'success', title: result.message });
+            appliedCouponCodeSpan.querySelector('strong').textContent =
+              couponCode;
+            applyCouponDiv.classList.add('d-none');
+            appliedCouponDiv.classList.remove('d-none');
+            grandTotal.textContent = `₹${result.finalTotal.toFixed(2)}`;
+          } else {
+            Toast.fire({ icon: 'error', title: result.message });
+          }
+        })
+        .catch((err) => {
+          Toast.fire({ icon: 'error', title: 'Failed to apply coupon.' });
+          console.error(err);
+        });
+    });
+  }
+
+  if (removeCouponBtn) {
+    removeCouponBtn.addEventListener('click', () => {
+      const Toast = makeToast();
+      applyCouponDiv.classList.remove('d-none');
+      appliedCouponDiv.classList.add('d-none');
+      couponCodeInput.value = '';
+
+      fetch(`/checkout/remove-coupon/${cartId}`)
+        .then((r) => r.json())
+        .then((result) => {
+          if (result.success) {
+            Toast.fire({ icon: 'success', title: result.message });
+            grandTotal.textContent = `₹${result.finalTotal.toFixed(2)}`;
+          } else {
+            Toast.fire({ icon: 'error', title: result.message });
+          }
+        })
+        .catch((err) => {
+          Toast.fire({ icon: 'error', title: 'Failed to remove coupon.' });
+          console.error(err);
+        });
+    });
+  }
+}
+
+// ─── Checkout Form Submit ─────────────────────────────────────────────────────
+
+function setupCheckoutFormSubmit() {
+  const form = document.getElementById('checkoutForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const placeOrderBtn = document.getElementById('placeOrder');
+    placeOrderBtn.disabled = true;
+    placeOrderBtn.textContent = 'Processing…';
+
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      },
+    });
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch('/checkout/save-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
       const result = await response.json();
+
       if (result.success) {
-        await Toast.fire({
-          icon: 'success',
-          title: result.message,
-        });
-        window.location.href = `/checkout/payment/${result.orderId}`;
+        // Redirect to payment page — order is NOT created yet
+        window.location.href = result.redirectUrl;
       } else {
-        Toast.fire({
-          icon: 'error',
-          title: result.message,
-        });
+        Toast.fire({ icon: 'error', title: result.message });
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.textContent = 'Proceed to Payment';
       }
     } catch (error) {
       Toast.fire({
-        icon: 'success',
-        title: `Error placing order: ${error}`,
+        icon: 'error',
+        title: 'An unexpected error occurred. Please try again.',
       });
-      console.error('Error placing order:', error);
+      console.error('Error saving address:', error);
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.textContent = 'Proceed to Payment';
     }
   });
+}

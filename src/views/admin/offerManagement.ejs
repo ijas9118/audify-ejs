@@ -28,70 +28,86 @@
     extraQuery: { limit: pagination.limit },
   }) %>
 
-  <div class="admin-table-shell">
-    <div class="table-responsive">
-      <table class="table admin-management-table align-middle mb-0">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Offer Type</th>
-            <th scope="col">Applicable To</th>
-            <th scope="col">Discount</th>
-            <th scope="col">Max Discount</th>
-            <th scope="col">Valid From</th>
-            <th scope="col">Valid Until</th>
-            <th scope="col">Status</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% offers.forEach((offer, index) => { %>
-          <tr data-offer-id="<%= offer._id %>">
-            <th scope="row" class="admin-row-index"><%= pagination.skip + index + 1 %></th>
-            <td class="admin-cell-primary"><%= offer.type %></td>
-            <td>
-              <% if (offer.type === 'product') { %>
-                <%= offer.product && offer.product.name ? offer.product.name : '-' %>
-              <% } else if (offer.type === 'category') { %>
-                <%= offer.category && offer.category.name ? offer.category.name : '-' %>
-              <% } else { %>
-                Referral
-              <% } %>
-            </td>
-            <td>
-              <%= offer.discountType === 'percentage' ? `${offer.discountValue}%` : `₹${offer.discountValue}` %>
-            </td>
-            <td>
-              <%= offer.maxDiscountAmount ? `₹${offer.maxDiscountAmount}` : '-' %>
-            </td>
-            <td><%= new Date(offer.validFrom).toLocaleDateString() %></td>
-            <td><%= new Date(offer.validUntil).toLocaleDateString() %></td>
-            <td>
+  <%
+    const offerColumns = [
+      { label: '#' },
+      { label: 'Offer Type' },
+      { label: 'Applicable To' },
+      { label: 'Discount' },
+      { label: 'Max Discount' },
+      { label: 'Valid From' },
+      { label: 'Valid Until' },
+      { label: 'Status' },
+      { label: 'Actions' },
+    ];
+
+    const offerRows = offers.map((offer, index) => {
+      let applicableTo = 'Referral';
+      if (offer.type === 'product') {
+        applicableTo = offer.product && offer.product.name ? offer.product.name : '-';
+      } else if (offer.type === 'category') {
+        applicableTo = offer.category && offer.category.name ? offer.category.name : '-';
+      }
+
+      return {
+        dataAttrs: { 'offer-id': offer._id },
+        cells: [
+          { tag: 'th', className: 'admin-row-index', text: pagination.skip + index + 1 },
+          { className: 'admin-cell-primary', text: offer.type },
+          { text: applicableTo },
+          {
+            text:
+              offer.discountType === 'percentage'
+                ? `${offer.discountValue}%`
+                : `₹${offer.discountValue}`,
+          },
+          { text: offer.maxDiscountAmount ? `₹${offer.maxDiscountAmount}` : '-' },
+          { text: new Date(offer.validFrom).toLocaleDateString() },
+          { text: new Date(offer.validUntil).toLocaleDateString() },
+          {
+            html: `
               <span
-                id="statusDisplay<%= offer._id %>"
-                class="admin-status-badge <%= offer.status === 'active' ? 'is-positive' : 'is-negative' %>"
-                onclick="toggleOfferStatus('<%= offer._id %>')"
+                id="statusDisplay${offer._id}"
+                class="admin-status-badge ${offer.status === 'active' ? 'is-positive' : 'is-negative'}"
+                onclick="toggleOfferStatus('${offer._id}')"
               >
-                <%= offer.status %>
+                ${offer.status}
               </span>
-            </td>
-            <td class="admin-cell-actions">
+            `,
+          },
+          {
+            className: 'admin-cell-actions admin-cell-actions-compact',
+            html: `
               <div class="admin-action-group">
-                <button class="btn admin-action-btn admin-action-btn-secondary" data-bs-toggle="modal" data-bs-target="#editOfferModal<%= offer._id %>">Edit</button>
-                <button class="btn admin-action-btn admin-action-btn-danger-alt" onclick="deleteOffer('<%= offer._id %>')">Delete</button>
+                <button
+                  class="btn admin-action-btn admin-action-btn-icon admin-action-btn-secondary"
+                  onclick="window.location.href='/admin/offers/edit/${offer._id}'"
+                  title="Edit offer"
+                  aria-label="Edit offer"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button
+                  class="btn admin-action-btn admin-action-btn-icon admin-action-btn-danger-alt"
+                  onclick="deleteOffer('${offer._id}')"
+                  title="Delete offer"
+                  aria-label="Delete offer"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
               </div>
-            </td>
-          </tr>
-          <% }) %>
-          <% if (!offers.length) { %>
-          <tr>
-            <td colspan="9" class="text-center admin-empty-row">No offers found</td>
-          </tr>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-  </div>
+            `,
+          },
+        ],
+      };
+    });
+  %>
+
+  <%- include('../partials/admin_table', {
+    columns: offerColumns,
+    rows: offerRows,
+    emptyMessage: 'No offers found',
+  }) %>
 
   <%- include('../partials/admin_pagination', {
     pagination,
@@ -121,7 +137,7 @@
       </div>
       <div class="modal-body">
         <!-- Add Offer Form -->
-        <form>
+        <form id="addOfferForm" novalidate>
           <div class="mb-3">
             <label for="offerType" class="form-label">Offer Type</label>
             <select class="form-select" id="offerType" required>
@@ -229,80 +245,11 @@
               />
             </div>
           </div>
-          <button type="submit" onclick="addOffer()" class="btn btn-primary">Add Offer</button>
+          <button type="submit" class="btn btn-primary">Add Offer</button>
         </form>
       </div>
     </div>
   </div>
 </div>
-
-<!-- Edit Offer Modals (one for each offer) -->
-<% offers.forEach((offer) => { %>
-  <div class="modal fade" id="editOfferModal<%= offer._id %>" tabindex="-1" aria-labelledby="editOfferModalLabel<%= offer._id %>" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content bg-dark text-light">
-        <div class="modal-header bg-dark text-light">
-          <h5 class="modal-title" id="editOfferModalLabel<%= offer._id %>">Edit Offer</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form class="edit-offer-form" data-offer-id="<%= offer._id %>">
-            <div class="mb-3">
-              <label for="offerType" class="form-label">Offer Type</label>
-              <select class="form-select" id="offerType<%= offer._id %>" value="<%= offer.type %>">
-                <option value="product" <%= offer.type === 'product' ? 'selected' : '' %>>Product</option>
-                <option value="category" <%= offer.type === 'category' ? 'selected' : '' %>>Category</option>
-                <option value="referral" <%= offer.type === 'referral' ? 'selected' : '' %>>Referral</option>
-              </select>
-            </div>
-
-            <% if (offer.type === 'category' && offer.category && offer.category.name) { %>
-              <div class="mb-3">
-                <label for="categoryName<%= offer._id %>" class="form-label">Category Name</label>
-                <input type="text" class="form-control custom-search-input" id="categoryName<%= offer._id %>" value="<%= offer.category.name %>" readonly>
-              </div>
-            <% } else if (offer.type === 'product' && offer.product && offer.product.name) { %>
-              <div class="mb-3">
-                <label for="productName<%= offer._id %>" class="form-label">Product Name</label>
-                <input type="text" class="form-control custom-search-input" id="productName<%= offer._id %>" value="<%= offer.product.name %>" readonly>
-              </div>
-            <% } %>
-
-            <div class="mb-3">
-              <label for="discountType<%= offer._id %>" class="form-label">Discount Type</label>
-              <select class="form-select" id="discountType<%= offer._id %>" value="<%= offer.discountType %>">
-                <option value="percentage" <%= offer.discountType === 'percentage' ? 'selected' : '' %>>Percentage</option>
-                <option value="fixed" <%= offer.discountType === 'fixed' ? 'selected' : '' %>>Fixed Amount</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label for="discountValue<%= offer._id %>" class="form-label">Discount Value</label>
-              <input type="number" class="form-control custom-search-input" id="discountValue<%= offer._id %>" value="<%= offer.discountValue %>">
-            </div>
-            <div class="mb-3">
-              <label for="maxDiscount<%= offer._id %>" class="form-label">Max Discount Amount</label>
-              <input type="number" class="form-control custom-search-input" id="maxDiscount<%= offer._id %>" value="<%= offer.maxDiscountAmount %>">
-            </div>
-            <div class="mb-3">
-              <label for="validFrom<%= offer._id %>" class="form-label">Valid From</label>
-              <input type="date" class="form-control custom-search-input" id="validFrom<%= offer._id %>" value="<%= new Date(offer.validFrom).toISOString().split('T')[0] %>">
-            </div>
-            <div class="mb-3">
-              <label for="validUntil<%= offer._id %>" class="form-label">Valid Until</label>
-              <input type="date" class="form-control custom-search-input" id="validUntil<%= offer._id %>" value="<%= new Date(offer.validUntil).toISOString().split('T')[0] %>">
-            </div>
-            <div class="mb-3">
-              <label for="minCartValue<%= offer._id %>" class="form-label">Minimum Cart Value</label>
-              <input type="number" class="form-control custom-search-input" id="minCartValue<%= offer._id %>" value="<%= offer.minCartValue %>">
-            </div>
-            <button type="submit" class="btn btn-primary">Update Offer</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-<% }) %>
-
 
 <script src="/js/offerManagement.js"></script>

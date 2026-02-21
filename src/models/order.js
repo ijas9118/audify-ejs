@@ -7,38 +7,26 @@ const orderSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    name: {
-      type: String,
-      require: true,
-    },
+
+    name: String,
+
     mobile: {
-      type: Number,
-      require: true,
+      type: String,
       match: [/^\d{10}$/, 'Please provide a valid 10-digit mobile number'],
+      required: true,
     },
+
     alternateMobile: {
-      type: Number,
+      type: String,
       match: [/^\d{10}$/, 'Please provide a valid 10-digit mobile number'],
     },
-    location: {
-      type: String,
-      required: [true, 'Location is required'],
-    },
-    city: {
-      type: String,
-      required: [true, 'City is required'],
-    },
-    state: {
-      type: String,
-      required: [true, 'State is required'],
-    },
-    landmark: {
-      type: String,
-    },
-    zip: {
-      type: String,
-      required: [true, 'ZIP Code is required'],
-    },
+
+    location: String,
+    city: String,
+    state: String,
+    landmark: String,
+    zip: String,
+
     orderItems: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -46,39 +34,41 @@ const orderSchema = mongoose.Schema(
         required: true,
       },
     ],
+
     paymentMethod: {
       type: String,
       enum: ['Razorpay', 'Wallet', 'COD'],
     },
+
     shippingCharge: {
       type: Number,
       default: 0,
     },
+
     totalAmount: {
       type: Number,
       required: true,
     },
+
     discountApplied: {
-      type: Number, // store the discount amount
+      type: Number,
       default: 0,
     },
+
     finalTotal: {
-      type: Number, // total after discount
+      type: Number,
       required: true,
     },
-    appliedCoupon: {
-      type: String, // coupon code
-    },
+
+    appliedCoupon: String,
+
     status: {
       type: String,
       enum: ['Pending', 'Processed', 'Shipped', 'Delivered', 'Cancelled'],
       default: 'Pending',
     },
-    dateOrdered: {
-      type: Date,
-      default: Date.now(),
-    },
-    isCancelled: {
+
+    cancellationRequested: {
       type: Boolean,
       default: false,
     },

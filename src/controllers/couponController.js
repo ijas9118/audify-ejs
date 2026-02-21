@@ -8,9 +8,14 @@ const logger = require('../config/logger');
  */
 const applyCoupon = asyncHandler(async (req, res) => {
   const { couponCode, cartId } = req.body;
+  const userId = req.authUser?._id || req.session.user;
 
   try {
-    const result = await couponService.applyCouponToCart(cartId, couponCode);
+    const result = await couponService.applyCouponToCart(
+      cartId,
+      couponCode,
+      userId
+    );
 
     return res.json({
       success: true,
@@ -47,6 +52,18 @@ const applyCoupon = asyncHandler(async (req, res) => {
       });
     }
 
+    if (error.message.includes('minimum cart subtotal')) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: error.message });
+    }
+
+    if (error.message === 'Coupon usage limit reached') {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: error.message });
+    }
+
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'An error occurred while applying the coupon',
@@ -59,9 +76,10 @@ const applyCoupon = asyncHandler(async (req, res) => {
  */
 const removeCoupon = asyncHandler(async (req, res) => {
   const { cartId } = req.params;
+  const userId = req.authUser?._id || req.session.user;
 
   try {
-    const result = await couponService.removeCouponFromCart(cartId);
+    const result = await couponService.removeCouponFromCart(cartId, userId);
 
     return res.json({
       success: true,

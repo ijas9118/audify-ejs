@@ -9,16 +9,16 @@ const MAX_LIMIT = 15;
 const buildSearchFilter = (search) => {
   const query = (search || '').trim();
 
-  if (!query) {
-    return {};
-  }
+  const filter = { isDeleted: { $ne: true } };
 
-  return {
-    $or: [
+  if (query) {
+    filter.$or = [
       { name: { $regex: escapeRegex(query), $options: 'i' } },
       { description: { $regex: escapeRegex(query), $options: 'i' } },
-    ],
-  };
+    ];
+  }
+
+  return filter;
 };
 
 /**
@@ -30,7 +30,7 @@ const buildSearchFilter = (search) => {
  * @returns {Promise<Array>} Array of category objects
  */
 exports.getAllCategories = async () => {
-  const categories = await Category.find();
+  const categories = await Category.find({ isDeleted: { $ne: true } });
   if (!categories) {
     throw new Error('Failed to fetch categories');
   }
@@ -66,7 +66,10 @@ exports.getPaginatedCategories = async ({ page, limit, search }) => {
  * @returns {Promise<Object>} Category object
  */
 exports.getCategoryById = async (categoryId) => {
-  const category = await Category.findById(categoryId);
+  const category = await Category.findOne({
+    _id: categoryId,
+    isDeleted: { $ne: true },
+  });
   if (!category) {
     throw new Error('Category not found');
   }
@@ -84,17 +87,22 @@ exports.getCategoryById = async (categoryId) => {
  * @returns {Promise<Object>} Created category
  */
 exports.createCategory = async (name, description) => {
-  if (!name) {
+  if (!name || !name.trim()) {
     throw new Error('Category name is required');
   }
 
-  // Check if category already exists
-  const existingCategory = await Category.findOne({ name });
+  const normalizedName = name.trim();
+
+  // Check if category already exists (case-insensitive)
+  const existingCategory = await Category.findOne({
+    name: { $regex: escapeRegex(normalizedName), $options: 'i' },
+    isDeleted: { $ne: true },
+  });
   if (existingCategory) {
     throw new Error('Category already exists');
   }
 
-  const newCategory = new Category({ name, description });
+  const newCategory = new Category({ name: normalizedName, description });
   await newCategory.save();
 
   return newCategory;
@@ -108,20 +116,35 @@ exports.createCategory = async (name, description) => {
  * @returns {Promise<Object>} Updated category
  */
 exports.updateCategory = async (categoryId, name, description) => {
-  const category = await Category.findById(categoryId);
+  const category = await Category.findOne({
+    _id: categoryId,
+    isDeleted: { $ne: true },
+  });
   if (!category) {
     throw new Error('Category not found');
   }
 
-  category.name = name;
+  if (!name || !name.trim()) {
+    throw new Error('Category name is required');
+  }
+
+  const normalizedName = name.trim();
+
+  const existingCategory = await Category.findOne({
+    name: { $regex: escapeRegex(normalizedName), $options: 'i' },
+    _id: { $ne: categoryId },
+    isDeleted: { $ne: true },
+  });
+  if (existingCategory) {
+    throw new Error('Category already exists');
+  }
+
+  category.name = normalizedName;
   category.description = description;
 
   await category.save();
 
-  return {
-    name: category.name,
-    description: category.description,
-  };
+  return category;
 };
 
 /**
@@ -130,7 +153,10 @@ exports.updateCategory = async (categoryId, name, description) => {
  * @returns {Promise<Object>} Updated category
  */
 exports.toggleCategoryStatus = async (categoryId) => {
-  const category = await Category.findById(categoryId);
+  const category = await Category.findOne({
+    _id: categoryId,
+    isDeleted: { $ne: true },
+  });
   if (!category) {
     throw new Error('Category not found');
   }
@@ -148,22 +174,30 @@ exports.toggleCategoryStatus = async (categoryId) => {
  */
 exports.deleteCategory = async (categoryId) => {
   // Find the category by ID
-  const category = await Category.findById(categoryId);
+  const category = await Category.findOne({
+    _id: categoryId,
+    isDeleted: { $ne: true },
+  });
   if (!category) {
     throw new Error('Category not found');
   }
 
   // Count products associated with this category
-  const productCount = await Product.countDocuments({ categoryId });
+  const productCount = await Product.countDocuments({
+    categoryId,
+    isActive: true,
+  });
 
   if (productCount > 0) {
     throw new Error(
-      `Cannot delete category. There are ${productCount} product(s) associated with this category.`
+      `Cannot delete category. There are ${productCount} active product(s) associated with this category.`
     );
   }
 
-  // Delete the category
-  await Category.findByIdAndDelete(categoryId);
+  // Soft delete the category
+  category.isDeleted = true;
+  category.isActive = false; // Also deactivate it for safety
+  await category.save();
 
   return category;
 };

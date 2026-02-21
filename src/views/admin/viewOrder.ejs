@@ -1,176 +1,142 @@
-<div class="container-fluid mt-4">
-  <div class="row">
-    <!-- Order Details Header -->
-    <div class="col-12">
-      <h4 class="text-light mb-3">Order Details</h4>
+<div class="container-fluid mt-3 admin-management-page">
+  <div class="admin-management-header mb-3">
+    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrap">
+      <ol class="breadcrumb admin-breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+        <li class="breadcrumb-item"><a href="/admin/orders">Order Management</a></li>
+        <li class="breadcrumb-item active" aria-current="page">#<%= order._id.toString().slice(-6) %></li>
+      </ol>
+    </nav>
+    <div class="admin-management-title-row mt-2">
+      <h3 class="admin-management-title mb-0">Order Details</h3>
+      <a href="/admin/orders" class="btn btn-primary admin-create-btn">Back to Orders</a>
     </div>
+  </div>
 
-    <!-- User Information -->
-    <div class="col-lg-6 mb-4">
-      <div class="card shadow-lg bg-dark text-light">
-        <div class="card-header text-light">
-          <h6 class="mb-0 text-info">User Information</h6>
-        </div>
-        <div class="card-body">
-          <div class="mb-3">
-            <h6 class="mb-2">User ID</h6>
-            <p class="card-text">
-              <span class="badge bg-secondary"><%= order.user._id %></span>
-            </p>
-          </div>
-          <div class="mb-3">
-            <h6 class="mb-2">Name</h6>
-            <p class="card-text">
-              <%= order.user.firstName %> <%= order.user.lastName %>
-            </p>
-          </div>
-          <div class="mb-3">
-            <h6 class="mb-2">Email</h6>
-            <p class="card-text"><%= order.user.email %></p>
-          </div>
-          <div class="mb-3">
-            <h6 class="mb-2">Mobile</h6>
-            <p class="card-text"><%= order.user.mobile %></p>
-          </div>
-        </div>
+  <div class="admin-order-view-page">
+    <% if (order.cancellationRequested) { %>
+    <div class="alert alert-warning mb-3" role="alert">
+      User has requested cancellation. Please review before proceeding.
+    </div>
+    <% } %>
+
+    <section class="admin-order-section">
+      <h5 class="admin-order-section-title">Overview</h5>
+      <p class="admin-order-section-subtitle">Snapshot of order, customer, and current status.</p>
+
+      <div class="admin-order-overview-grid">
+        <article class="admin-order-info-card">
+          <h6 class="admin-order-card-title">Order</h6>
+          <dl class="admin-order-meta">
+            <div>
+              <dt>Order ID</dt>
+              <dd><span class="admin-order-chip"><%= order._id %></span></dd>
+            </div>
+            <div>
+              <dt>Date Ordered</dt>
+              <dd><%= new Date(order.createdAt).toLocaleDateString() %></dd>
+            </div>
+            <div>
+              <dt>Payment Method</dt>
+              <dd><%= order.paymentMethod || 'N/A' %></dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>
+                <span class="admin-status-badge <%= ['Pending', 'Processed', 'Shipped', 'Delivered'].includes(order.status) ? 'is-positive' : 'is-negative' %>">
+                  <%= order.status %>
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="admin-order-info-card">
+          <h6 class="admin-order-card-title">Customer</h6>
+          <dl class="admin-order-meta">
+            <div>
+              <dt>User ID</dt>
+              <dd><span class="admin-order-chip"><%= order.user._id %></span></dd>
+            </div>
+            <div>
+              <dt>Name</dt>
+              <dd><%= order.user.firstName %> <%= order.user.lastName || '' %></dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd><%= order.user.email %></dd>
+            </div>
+            <div>
+              <dt>Mobile</dt>
+              <dd><%= order.user.mobile || order.mobile || 'N/A' %></dd>
+            </div>
+          </dl>
+        </article>
       </div>
-    </div>
+    </section>
 
-    <!-- Order Info and User Information -->
-    <div class="col-lg-6 mb-4">
-      <div class="card shadow-lg bg-dark text-light">
-        <div
-          class="card-header d-flex justify-content-between align-items-center text-light"
-        >
-          <h6 class="mb-0 text-info">Order Information</h6>
-        </div>
-        <div class="card-body">
-          <div class="mb-3">
-            <h6 class="mb-2">Order ID</h6>
-            <p class="card-text">
-              <span class="badge bg-secondary"><%= order._id %></span>
-            </p>
-          </div>
-          <div class="mb-3">
-            <h6 class="mb-2">Order Date</h6>
-            <p class="card-text">
-              <%= new Date(order.dateOrdered).toLocaleDateString() %>
-            </p>
-          </div>
-
-          <!-- Display cancellation notice if applicable -->
-          <% if (order.isCancelled) { %>
-          <div class="alert alert-warning mt-3" role="alert">
-            User has requested cancellation. Please review.
-          </div>
-          <% } %>
-        </div>
+    <section class="admin-order-section">
+      <h5 class="admin-order-section-title">Shipping Address</h5>
+      <p class="admin-order-section-subtitle">Delivery destination captured during checkout.</p>
+      <div class="admin-order-info-card admin-order-address-card">
+        <p class="mb-1"><strong><%= order.name %></strong></p>
+        <p class="mb-1"><%= order.location %></p>
+        <p class="mb-1"><%= order.city %>, <%= order.state %> - <%= order.zip %></p>
+        <% if (order.landmark) { %><p class="mb-1">Landmark: <%= order.landmark %></p><% } %>
+        <p class="mb-0">Phone: <%= order.mobile %></p>
       </div>
-    </div>
+    </section>
 
-    <!-- Shipping Address -->
-    <div class="col-lg-12 mb-4">
-      <div class="card shadow-lg bg-dark text-light">
-        <div class="card-body">
-          <h6 class="mb-3 text-info">Shipping Address</h6>
-          <p class="card-text">
-            Location: <%= order.location %>,<br />
-            City: <%= order.city %>,<br />
-            State: <%= order.state %>,<br />
-            Country: <%= order.country %>,<br />
-            Zip: <%= order.zip %>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Payment Method -->
-    <div class="col-lg-12 mb-4">
-      <div class="card shadow-lg bg-dark text-light">
-        <div class="card-body">
-          <h6 class="mb-3 text-info">Payment Method</h6>
-          <p class="card-text"><%= order.paymentMethod %></p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Order Items -->
-    <div class="col-lg-12 mb-4">
-      <div class="card shadow-lg bg-dark text-light">
-        <div class="card-body">
-          <h6 class="mb-3 text-info">Order Items</h6>
-          <table class="table table-bordered table-hover table-dark">
-            <thead class="bg-info text-dark">
+    <section class="admin-order-section">
+      <h5 class="admin-order-section-title">Order Items</h5>
+      <p class="admin-order-section-subtitle">Line-item breakdown for purchased products.</p>
+      <div class="admin-table-shell">
+        <div class="table-responsive">
+          <table class="table admin-management-table align-middle mb-0">
+            <thead>
               <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price (Each)</th>
-                <th>Total Price</th>
+                <th scope="col">Product</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Price (Each)</th>
+                <th scope="col">Total Price</th>
               </tr>
             </thead>
             <tbody>
-              <% order.orderItems.forEach(item => { %>
+              <% order.orderItems.forEach((item) => { %>
               <tr>
-                <td><%= item.product.name %></td>
+                <td class="admin-cell-primary"><%= item.product.name %></td>
                 <td><%= item.quantity %></td>
                 <td>₹<%= item.product.price.toFixed(2) %></td>
                 <td>₹<%= (item.product.price * item.quantity).toFixed(2) %></td>
               </tr>
-              <% }); %>
+              <% }) %>
             </tbody>
           </table>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Order Summary -->
-    <div class="col-lg-12 mb-4">
-      <div class="card shadow-lg bg-dark text-light">
-        <div class="card-body">
-          <h5 class="mb-4 text-info">Order Summary</h5>
-
-          <!-- Divider to separate sections -->
-          <hr class="bg-secondary" />
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span><strong>Total Amount</strong></span>
-            <span>₹<%= order.totalAmount.toFixed(2) %></span>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span><strong>Shipping Charge</strong></span>
-            <span>₹<%= order.shippingCharge.toFixed(2) %></span>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span><strong>Discount Applied</strong></span>
-            <span>₹<%= order.discountApplied.toFixed(2) %></span>
-          </div>
-
-          <hr class="bg-secondary" />
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span><strong>Final Total</strong></span>
-            <span class="fw-bold ">₹<%= order.finalTotal.toFixed(2) %></span>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span><strong>Status</strong></span>
-            <span
-              ><span class="badge bg-warning text-dark px-3 py-2"
-                ><%= order.status %></span
-              ></span
-            >
-          </div>
-
-          <!-- Divider to separate buttons -->
-          <hr class="bg-secondary" />
-
-          <div class="text-center mt-4">
-            <a href="/admin/orders" class="btn btn-primary">Back to Orders </a>
-          </div>
+    <section class="admin-order-section">
+      <h5 class="admin-order-section-title">Order Summary</h5>
+      <p class="admin-order-section-subtitle">Final payable totals after shipping and discounts.</p>
+      <div class="admin-order-summary-list">
+        <div class="admin-order-summary-row">
+          <span>Total Amount</span>
+          <strong>₹<%= order.totalAmount.toFixed(2) %></strong>
+        </div>
+        <div class="admin-order-summary-row">
+          <span>Shipping Charge</span>
+          <strong>₹<%= order.shippingCharge.toFixed(2) %></strong>
+        </div>
+        <div class="admin-order-summary-row">
+          <span>Discount Applied</span>
+          <strong>₹<%= order.discountApplied.toFixed(2) %></strong>
+        </div>
+        <div class="admin-order-summary-row is-total">
+          <span>Final Total</span>
+          <strong>₹<%= order.finalTotal.toFixed(2) %></strong>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </div>

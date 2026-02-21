@@ -1,4 +1,7 @@
 const { body, validationResult } = require('express-validator');
+const Product = require('../../models/products');
+const Category = require('../../models/categories');
+const Offer = require('../../models/offer');
 
 /**
  * Validation middleware for user signup
@@ -71,7 +74,7 @@ exports.adminLoginValidation = [
  * For EJS views: renders the same page with errors and old input
  * For API/AJAX: returns JSON with errors
  */
-exports.validate = (req, res, next) => {
+exports.validate = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -86,6 +89,8 @@ exports.validate = (req, res, next) => {
     // For AJAX/API requests, return JSON
     if (
       req.xhr ||
+      req.is('application/json') ||
+      req.get('content-type')?.includes('application/json') ||
       (req.headers.accept && req.headers.accept.indexOf('json') > -1)
     ) {
       return res.status(400).json({
@@ -101,6 +106,125 @@ exports.validate = (req, res, next) => {
         errors: fieldErrors,
         formData: { username: req.body.username || '' },
         authError: null,
+      });
+    }
+
+    const isAdminCouponEditRequest =
+      req.method === 'POST' && req.originalUrl.includes('/admin/coupons/edit/');
+    if (isAdminCouponEditRequest) {
+      return res.status(400).render('layout', {
+        title: `Edit Coupon - ${(req.body.code || 'Coupon').toUpperCase()}`,
+        viewName: 'admin/editCoupon',
+        activePage: 'coupon',
+        isAdmin: true,
+        coupon: { _id: req.params.id },
+        errors: fieldErrors,
+        formData: req.body,
+        formError: null,
+      });
+    }
+
+    const isAdminProductEditRequest =
+      req.method === 'POST' &&
+      req.originalUrl.includes('/admin/products/edit/');
+    if (isAdminProductEditRequest) {
+      const productId = req.params.id;
+      const [product, categories] = await Promise.all([
+        Product.findById(productId).populate('categoryId'),
+        Category.find(),
+      ]);
+
+      if (!product) {
+        return res.status(404).render('layout', {
+          title: 'Product not found',
+          viewName: '404',
+          activePage: 'products',
+          isAdmin: true,
+        });
+      }
+
+      const viewProduct = {
+        ...product.toObject(),
+        name: req.body.name ?? product.name,
+        description: req.body.description ?? product.description,
+        price: req.body.price ?? product.price,
+        stock: req.body.stock ?? product.stock,
+        categoryId: req.body.categoryId || product.categoryId,
+      };
+
+      return res.status(400).render('layout', {
+        title: 'Edit Product',
+        viewName: 'admin/editProduct',
+        activePage: 'products',
+        isAdmin: true,
+        product: viewProduct,
+        categories,
+        errors: fieldErrors,
+        formData: req.body,
+        formError: null,
+      });
+    }
+
+    const isAdminOfferEditRequest =
+      req.method === 'POST' && req.originalUrl.includes('/admin/offers/edit/');
+    if (isAdminOfferEditRequest) {
+      const offerId = req.params.id;
+      const [offer, products, categories] = await Promise.all([
+        Offer.findById(offerId)
+          .populate('product', 'name')
+          .populate('category', 'name'),
+        Product.find({}, 'name'),
+        Category.find({}, 'name'),
+      ]);
+
+      if (!offer) {
+        return res.status(404).render('layout', {
+          title: 'Offer not found',
+          viewName: '404',
+          activePage: 'offer',
+          isAdmin: true,
+        });
+      }
+
+      return res.status(400).render('layout', {
+        title: 'Edit Offer',
+        viewName: 'admin/editOffer',
+        activePage: 'offer',
+        isAdmin: true,
+        offer,
+        products,
+        categories,
+        errors: fieldErrors,
+        formData: req.body,
+        formError: null,
+      });
+    }
+
+    const isAdminCategoryEditRequest =
+      req.method === 'POST' &&
+      req.originalUrl.includes('/admin/category/edit/');
+    if (isAdminCategoryEditRequest) {
+      const categoryId = req.params.id;
+      const category = await Category.findById(categoryId);
+
+      if (!category) {
+        return res.status(404).render('layout', {
+          title: 'Category not found',
+          viewName: '404',
+          activePage: 'category',
+          isAdmin: true,
+        });
+      }
+
+      return res.status(400).render('layout', {
+        title: 'Edit Category',
+        viewName: 'admin/editCategory',
+        activePage: 'category',
+        isAdmin: true,
+        category,
+        errors: fieldErrors,
+        formData: req.body,
+        formError: null,
       });
     }
 

@@ -1,151 +1,281 @@
 const asyncHandler = require('express-async-handler');
 const paymentService = require('../services/paymentService');
-const orderService = require('../services/orderService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
 const logger = require('../config/logger');
 
 /**
- * Create Razorpay order
+ * Safely extract a human-readable message from any thrown value.
+ * Razorpay SDK may throw plain objects like { statusCode, error: { description } }
+ * instead of proper Error instances.
+ */
+const getErrorMessage = (error) => {
+  if (!error) return 'Unknown error';
+  if (typeof error === 'string') return error;
+  // Standard Error instance
+  if (error.message) return error.message;
+  // Razorpay SDK error shape: { error: { description } }
+  if (error.error?.description) return error.error.description;
+  // Razorpay error shape: { description }
+  if (error.description) return error.description;
+  return JSON.stringify(error);
+};
+
+/**
+ * Helper: check session shipping details exist
+ */
+const requirePendingShipping = (req, res) => {
+  if (!req.session.pendingShipping) {
+    res.status(StatusCodes.BAD_REQUEST).json({
+      success: false,
+      message:
+        'Your session has expired. Please go back to checkout and re-enter your address.',
+    });
+    return false;
+  }
+  return true;
+};
+
+/**
+ * Create Razorpay order from cart total (no DB order yet).
+ * POST /checkout/razorpay/create
  */
 const createRazorpayOrder = asyncHandler(async (req, res) => {
-  try {
-    const { razorpayOrder, orderData } =
-      await paymentService.createRazorpayOrder(req.params.id, req.body);
+  if (!requirePendingShipping(req, res)) return;
 
-    return res.status(StatusCodes.OK).json({ order: razorpayOrder, orderData });
-  } catch (error) {
-    logger.error('Razorpay error:', error);
-
-    if (error.message === 'Order not found') {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .send(RESPONSE_MESSAGES.ORDER_NOT_FOUND);
-    }
-
-    return res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .send('Error creating order');
-  }
-});
-
-/**
- * Confirm payment method for order
- */
-const confirmPayment = asyncHandler(async (req, res) => {
-  const { orderId, paymentMethod } = req.body;
-
-  try {
-    const order = await paymentService.confirmPayment(orderId, paymentMethod);
-
-    return res.status(StatusCodes.OK).json({
-      success: true,
-      message: RESPONSE_MESSAGES.PAYMENT_CONFIRMED,
-      order,
-    });
-  } catch (error) {
-    if (error.message === 'Order not found') {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ success: false, message: RESPONSE_MESSAGES.ORDER_NOT_FOUND });
-    }
-
-    if (error.message.includes('Cash on Delivery is not available')) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    throw error;
-  }
-});
-
-/**
- * Process wallet payment
- */
-const processWalletPayment = asyncHandler(async (req, res) => {
-  const { orderId } = req.body;
   const userId = req.session.user;
 
   try {
-    const order = await paymentService.processWalletPayment(userId, orderId);
-
-    return res.status(StatusCodes.OK).json({
+    const razorpayOrder =
+      await paymentService.createRazorpayOrderFromCart(userId);
+    res.status(StatusCodes.OK).json({
       success: true,
-      message: 'Payment confirmed using wallet, order updated successfully',
-      order,
+      order: razorpayOrder,
+      shipping: req.session.pendingShipping,
     });
   } catch (error) {
-    if (error.message === 'User not found') {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ success: false, message: RESPONSE_MESSAGES.USER_NOT_FOUND });
+    const msg = getErrorMessage(error);
+    logger.error('Razorpay order creation error:', error);
+
+    if (msg === 'Cart not found' || msg?.includes('empty cart')) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: msg });
+      return;
     }
 
-    if (error.message === 'Order not found') {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ success: false, message: RESPONSE_MESSAGES.ORDER_NOT_FOUND });
-    }
-
-    if (error.message.includes('Insufficient wallet balance')) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: RESPONSE_MESSAGES.INSUFFICIENT_WALLET_BALANCE,
-      });
-    }
-
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: `Error processing wallet payment: ${error.message}`,
-      error: error.message,
+      message: 'Failed to initiate payment. Please try again.',
     });
   }
 });
 
 /**
- * Get payment selection page
+ * Verify Razorpay signature and create DB order.
+ * POST /checkout/razorpay/verify
  */
-const getPaymentPage = asyncHandler(async (req, res) => {
-  const { orderId } = req.params;
+const verifyRazorpayPayment = asyncHandler(async (req, res) => {
+  if (!requirePendingShipping(req, res)) return;
+
+  const userId = req.session.user;
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+    req.body;
+
+  if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+    res.status(StatusCodes.BAD_REQUEST).json({
+      success: false,
+      message: 'Missing payment verification data.',
+    });
+    return;
+  }
 
   try {
-    const { order, walletBalance } = await orderService.getOrderForPayment(
-      orderId,
-      req.session.user
+    const order = await paymentService.verifyAndCreateRazorpayOrder(
+      userId,
+      req.session.pendingShipping,
+      { razorpay_payment_id, razorpay_order_id, razorpay_signature }
     );
 
-    return res.render('layout', {
-      title: 'Checkout',
-      header: req.session.user ? 'partials/login_header' : 'partials/header',
-      viewName: 'users/payment',
-      activePage: 'Shop',
-      isAdmin: false,
-      order,
-      walletBalance,
+    // Clear shipping from session after successful order
+    delete req.session.pendingShipping;
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: 'Payment verified and order placed successfully.',
+      orderId: order._id,
     });
   } catch (error) {
-    if (error.message === 'Order not found') {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .send(RESPONSE_MESSAGES.ORDER_NOT_FOUND);
+    const msg = getErrorMessage(error);
+    logger.error('Razorpay verification error:', error);
+
+    if (msg === 'Invalid payment signature') {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message:
+          'Payment verification failed. If money was deducted, please contact support.',
+      });
+      return;
     }
 
-    if (error.message === 'User not found') {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .send(RESPONSE_MESSAGES.USER_NOT_FOUND);
+    // Order creation failed AFTER payment was captured.
+    // The service layer attempted an auto-refund — surface the result.
+    if (error.paymentId) {
+      if (error.refundInitiated) {
+        // ✅ Refund successfully triggered — tell the user clearly
+        res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          autoRefunded: true,
+          message: `${msg} — Your payment has been automatically refunded. It will reflect in 5–7 business days.`,
+        });
+      } else {
+        // ❌ Refund also failed — manual intervention required
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          autoRefunded: false,
+          paymentId: error.paymentId,
+          message: `${msg} — We could not automatically refund your payment (ID: ${error.paymentId}). Please contact support.`,
+        });
+      }
+      return;
     }
 
-    return res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .send('Error fetching order');
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message:
+        'Order could not be placed after payment. Please contact support.',
+    });
+  }
+});
+
+/**
+ * Confirm Cash on Delivery order and create DB order.
+ * POST /checkout/cod
+ */
+const confirmCODPayment = asyncHandler(async (req, res) => {
+  if (!requirePendingShipping(req, res)) return;
+
+  const userId = req.session.user;
+
+  try {
+    const order = await paymentService.confirmCODOrder(
+      userId,
+      req.session.pendingShipping
+    );
+
+    // Clear shipping from session after successful order
+    delete req.session.pendingShipping;
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: RESPONSE_MESSAGES.ORDER_PLACED,
+      orderId: order._id,
+    });
+  } catch (error) {
+    const msg = getErrorMessage(error);
+    logger.error('COD order error:', error);
+
+    if (msg?.includes('Cash on Delivery is not available')) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: msg });
+      return;
+    }
+
+    if (msg === 'Cart not found' || msg?.includes('empty cart')) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: msg });
+      return;
+    }
+
+    if (
+      msg?.includes('Insufficient stock') ||
+      msg === 'Coupon usage limit reached' ||
+      msg?.includes('not valid at this time')
+    ) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: msg });
+      return;
+    }
+
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: 'Failed to place order. Please try again.',
+    });
+  }
+});
+
+/**
+ * Process Wallet payment and create DB order.
+ * POST /checkout/wallet
+ */
+const processWalletPayment = asyncHandler(async (req, res) => {
+  if (!requirePendingShipping(req, res)) return;
+
+  const userId = req.session.user;
+
+  try {
+    const order = await paymentService.processWalletPayment(
+      userId,
+      req.session.pendingShipping
+    );
+
+    // Clear shipping from session after successful order
+    delete req.session.pendingShipping;
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: 'Payment confirmed using wallet. Order placed successfully.',
+      orderId: order._id,
+    });
+  } catch (error) {
+    const msg = getErrorMessage(error);
+    logger.error('Wallet payment error:', error);
+
+    if (msg === 'User not found') {
+      res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.USER_NOT_FOUND });
+      return;
+    }
+
+    if (msg?.includes('Insufficient wallet balance')) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: RESPONSE_MESSAGES.INSUFFICIENT_WALLET_BALANCE,
+      });
+      return;
+    }
+
+    if (
+      msg?.includes('Insufficient stock') ||
+      msg === 'Coupon usage limit reached' ||
+      msg?.includes('not valid at this time')
+    ) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: msg });
+      return;
+    }
+
+    if (msg === 'Cart not found' || msg?.includes('empty cart')) {
+      res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: msg });
+      return;
+    }
+
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: 'Failed to process wallet payment. Please try again.',
+    });
   }
 });
 
 module.exports = {
   createRazorpayOrder,
-  confirmPayment,
+  verifyRazorpayPayment,
+  confirmCODPayment,
   processWalletPayment,
-  getPaymentPage,
 };

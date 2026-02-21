@@ -1,21 +1,18 @@
-document
-  .querySelector('.payment-form')
-  .addEventListener('submit', async (e) => {
-    e.preventDefault();
+(() => {
+  // ─── Config ────────────────────────────────────────────────────────────────
+  const configEl = document.getElementById('paymentConfig');
+  const RAZORPAY_KEY = configEl ? configEl.dataset.razorpayKey : '';
+  const FINAL_TOTAL = configEl ? parseFloat(configEl.dataset.finaltotal) : 0;
+  const SHIPPING_NAME = configEl ? configEl.dataset.shippingName : '';
+  const SHIPPING_MOBILE = configEl ? configEl.dataset.shippingMobile : '';
 
-    const paymentMethod = document.querySelector(
-      'input[name="paymentMethod"]:checked'
-    ).value;
-    const paymentButton = document.getElementById('confirmBtn');
-    const orderId = paymentButton.dataset.orderid;
-    const finalTotal = paymentButton.dataset.finaltotal;
-    console.log(paymentMethod);
-
-    const Toast = Swal.mixin({
+  // ─── Toast helper ──────────────────────────────────────────────────────────
+  const makeToast = () =>
+    Swal.mixin({
       toast: true,
-      position: 'top', // Adjust position as needed
+      position: 'top',
       showConfirmButton: false,
-      timer: 2500,
+      timer: 3000,
       timerProgressBar: true,
       didOpen: (toast) => {
         toast.onmouseenter = Swal.stopTimer;
@@ -23,148 +20,279 @@ document
       },
     });
 
-    try {
-      if (paymentMethod === 'Razorpay') {
-        const amount = finalTotal;
-        const currency = 'INR';
-        const receiptId = 'qwerty1';
+  // ─── Disable/Enable button ─────────────────────────────────────────────────
+  const setButtonState = (btn, disabled, text) => {
+    btn.disabled = disabled;
+    btn.innerHTML = disabled
+      ? `<span class="spinner-border spinner-border-sm me-2" role="status"></span>${text}`
+      : `<i class="fas fa-check-circle me-2"></i>${text}`;
+  };
 
-        const response = await fetch(`/checkout/order/${orderId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: amount * 100,
-            currency,
-            receipt: receiptId,
-          }), // Convert the object to a JSON string
-        });
-        const { order, orderData } = await response.json();
+  // ─── Redirect to success ───────────────────────────────────────────────────
+  const redirectToSuccess = (orderId) => {
+    window.location.href = `/checkout/order-success/${orderId}`;
+  };
 
-        const options = {
-          key: 'rzp_test_RaOEV8768UB36C', // Enter the Key ID generated from the Dashboard
-          amount,
-          currency,
-          name: 'Audify', // your business name
-          description: 'Test Transaction',
-          order_id: order.id, // This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-          async handler(response) {
-            const razorpayPaymentId = response.razorpay_payment_id;
-            const razorpayOrderId = response.razorpay_order_id;
-            const razorpaySignature = response.razorpay_signature;
+  // ─── Form submit ───────────────────────────────────────────────────────────
+  document
+    .querySelector('.payment-form')
+    .addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-            try {
-              const finalCheckoutResponse = await fetch('/checkout', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ orderId, paymentMethod }),
-              });
+      const Toast = makeToast();
+      const confirmBtn = document.getElementById('confirmBtn');
+      const paymentMethod = document.querySelector(
+        'input[name="paymentMethod"]:checked'
+      ).value;
 
-              const paymentResult = await finalCheckoutResponse.json();
-              console.log(paymentResult);
+      setButtonState(confirmBtn, true, 'Processing…');
 
-              if (paymentResult.success) {
-                await Toast.fire({
-                  icon: 'success',
-                  title: 'Payment completed successful!',
-                });
-                window.location.href = `/checkout/order-success/${orderId}`;
-              } else {
-                Toast.fire({
-                  icon: 'error',
-                  title:
-                    paymentResult.message ||
-                    'An error occurred while finalizing the order',
-                });
-              }
-            } catch (error) {
-              console.error('Error during final checkout:', error);
-              Toast.fire({
-                icon: 'error',
-                title:
-                  'An unexpected error occurred while finalizing the order',
-              });
-            }
-          },
-          prefill: {
-            // We recommend using the prefill parameter to auto-fill customer's contact information, especially their phone number
-            name: orderData.name, // your customer's name
-            contact: orderData.mobile, // Provide the customer's phone number for better conversion rates
-          },
-          notes: {
-            address: 'Razorpay Corporate Office',
-          },
-          theme: {
-            color: '#3399cc',
-          },
-        };
-        const rzp1 = new window.Razorpay(options);
-        rzp1.on('payment.failed', (response) => {
-          alert(response.error.code);
-          alert(response.error.description);
-          alert(response.error.source);
-          alert(response.error.step);
-          alert(response.error.reason);
-          alert(response.error.metadata.order_id);
-          alert(response.error.metadata.payment_id);
-        });
-
-        rzp1.open();
-      } else if (paymentMethod === 'COD') {
-        const response = await fetch('/checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ orderId, paymentMethod }),
-        });
-        const result = await response.json(); // Parse the JS`ON response
-
-        if (result.success) {
-          await Toast.fire({
-            icon: 'success',
-            title: result.message,
-          });
-          window.location.href = `/checkout/order-success/${orderId}`; // Change this URL as needed
-        } else {
-          Toast.fire({
-            icon: 'error',
-            title:
-              result.message || 'An error occurred while placing the order',
-          });
+      try {
+        if (paymentMethod === 'Razorpay') {
+          await handleRazorpay(confirmBtn, Toast);
+        } else if (paymentMethod === 'COD') {
+          await handleCOD(confirmBtn, Toast);
+        } else if (paymentMethod === 'Wallet') {
+          await handleWallet(confirmBtn, Toast);
         }
-      } else if (paymentMethod === 'Wallet') {
-        const response = await fetch('/checkout/wallet', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ orderId, paymentMethod }),
+      } catch (error) {
+        console.error('Unexpected payment error:', error);
+        Toast.fire({
+          icon: 'error',
+          title: 'An unexpected error occurred. Please try again.',
         });
-        const result = await response.json(); // Parse the JS`ON response
-
-        if (result.success) {
-          await Toast.fire({
-            icon: 'success',
-            title: result.message,
-          });
-          window.location.href = `/checkout/order-success/${orderId}`; // Change this URL as needed
-        } else {
-          Toast.fire({
-            icon: 'error',
-            title:
-              result.message || 'An error occurred while placing the order',
-          });
-        }
+        setButtonState(confirmBtn, false, 'Confirm and Pay');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    });
+
+  // ─── COD Handler ───────────────────────────────────────────────────────────
+  async function handleCOD(confirmBtn, Toast) {
+    try {
+      const response = await fetch('/checkout/cod', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        await Toast.fire({ icon: 'success', title: result.message });
+        redirectToSuccess(result.orderId);
+      } else {
+        Toast.fire({
+          icon: 'error',
+          title: result.message || 'Failed to place COD order.',
+        });
+        setButtonState(confirmBtn, false, 'Confirm and Pay');
+      }
+    } catch {
       Toast.fire({
         icon: 'error',
-        title: `An unexpected error occurred ${error}`,
+        title: 'Failed to place COD order. Please try again.',
       });
+      setButtonState(confirmBtn, false, 'Confirm and Pay');
     }
-  });
+  }
+
+  // ─── Wallet Handler ────────────────────────────────────────────────────────
+  async function handleWallet(confirmBtn, Toast) {
+    try {
+      const response = await fetch('/checkout/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        await Toast.fire({ icon: 'success', title: result.message });
+        redirectToSuccess(result.orderId);
+      } else {
+        Toast.fire({
+          icon: 'error',
+          title: result.message || 'Failed to process wallet payment.',
+        });
+        setButtonState(confirmBtn, false, 'Confirm and Pay');
+      }
+    } catch {
+      Toast.fire({
+        icon: 'error',
+        title: 'Failed to process wallet payment. Please try again.',
+      });
+      setButtonState(confirmBtn, false, 'Confirm and Pay');
+    }
+  }
+
+  // ─── Razorpay Handler ──────────────────────────────────────────────────────
+  async function handleRazorpay(confirmBtn, Toast) {
+    // Step 1: Create Razorpay order on server (from cart total, no DB order yet)
+    let razorpayOrder;
+    let shipping;
+
+    try {
+      const response = await fetch('/checkout/razorpay/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        Toast.fire({
+          icon: 'error',
+          title: data.message || 'Failed to initiate payment.',
+        });
+        setButtonState(confirmBtn, false, 'Confirm and Pay');
+        return;
+      }
+
+      razorpayOrder = data.order;
+      shipping = data.shipping;
+    } catch {
+      Toast.fire({
+        icon: 'error',
+        title: 'Failed to connect to payment server. Please try again.',
+      });
+      setButtonState(confirmBtn, false, 'Confirm and Pay');
+      return;
+    }
+
+    // Step 2: Open Razorpay modal
+    const options = {
+      key: RAZORPAY_KEY,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      name: 'Audify',
+      description: 'Order Payment',
+      order_id: razorpayOrder.id,
+
+      // Step 3: On payment success → verify on server → create DB order
+      async handler(response) {
+        const verifyToast = makeToast();
+        try {
+          const verifyResponse = await fetch('/checkout/razorpay/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+
+          const verifyResult = await verifyResponse.json();
+
+          if (verifyResult.success) {
+            await verifyToast.fire({
+              icon: 'success',
+              title: 'Payment successful! Placing your order…',
+            });
+            redirectToSuccess(verifyResult.orderId);
+          } else if (
+            verifyResult.message?.includes('Invalid payment signature')
+          ) {
+            // Signature mismatch — payment likely NOT captured
+            Swal.fire({
+              icon: 'error',
+              title: 'Payment Verification Failed',
+              text: 'We could not verify your payment. If money was deducted, please contact support.',
+              confirmButtonText: 'OK',
+            });
+            setButtonState(confirmBtn, false, 'Confirm and Pay');
+          } else if (verifyResult.autoRefunded === true) {
+            // ✅ Payment captured but order failed — refund was auto-initiated
+            Swal.fire({
+              icon: 'info',
+              title: 'Order Could Not Be Placed',
+              html: `
+                <p>${verifyResult.message}</p>
+              `,
+              confirmButtonText: 'Continue Shopping',
+            }).then(() => {
+              window.location.href = '/shop';
+            });
+          } else if (verifyResult.autoRefunded === false) {
+            // ❌ Payment captured AND refund also failed — manual support required
+            Swal.fire({
+              icon: 'error',
+              title: 'Refund Required',
+              html: `
+                <p>${verifyResult.message || 'Your payment was received but the order and refund both failed.'}</p>
+                <p class="mt-2">Your payment ID:<br><code>${verifyResult.paymentId || response.razorpay_payment_id}</code></p>
+                <p class="text-muted small mt-2">Please contact support with this ID for a manual refund.</p>
+              `,
+              confirmButtonText: 'Contact Support',
+              showCancelButton: true,
+              cancelButtonText: 'Go to My Account',
+            }).then((swalResult) => {
+              if (!swalResult.isConfirmed) {
+                window.location.href = '/account';
+              }
+            });
+            setButtonState(confirmBtn, false, 'Confirm and Pay');
+          } else {
+            // Generic fallback
+            Swal.fire({
+              icon: 'error',
+              title: 'Payment Error',
+              text:
+                verifyResult.message ||
+                'Something went wrong. Please contact support.',
+              confirmButtonText: 'OK',
+            });
+            setButtonState(confirmBtn, false, 'Confirm and Pay');
+          }
+        } catch {
+          Swal.fire({
+            icon: 'error',
+            title: 'Verification Error',
+            text: 'Payment may have been deducted. Please contact support with your payment ID.',
+            confirmButtonText: 'OK',
+          });
+          setButtonState(confirmBtn, false, 'Confirm and Pay');
+        }
+      },
+
+      prefill: {
+        name: shipping ? shipping.name : SHIPPING_NAME,
+        contact: shipping ? shipping.mobile : SHIPPING_MOBILE,
+      },
+
+      theme: { color: '#212529' },
+
+      modal: {
+        ondismiss() {
+          // User closed the modal without paying — re-enable button for retry
+          Toast.fire({
+            icon: 'info',
+            title: 'Payment cancelled. You can try again.',
+          });
+          setButtonState(confirmBtn, false, 'Confirm and Pay');
+        },
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+
+    // Step 4: Handle payment failure with retry option
+    rzp.on('payment.failed', (failResponse) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Payment Failed',
+        html: `
+          <p>${failResponse.error.description || 'Your payment could not be processed.'}</p>
+          <small class="text-muted">Reason: ${failResponse.error.reason || 'Unknown'}</small>
+        `,
+        confirmButtonText: 'Try Again',
+        showCancelButton: true,
+        cancelButtonText: 'Cancel',
+      }).then((swalResult) => {
+        if (swalResult.isConfirmed) {
+          // Re-open the Razorpay modal for retry
+          rzp.open();
+        } else {
+          setButtonState(confirmBtn, false, 'Confirm and Pay');
+        }
+      });
+    });
+
+    rzp.open();
+  }
+})();
