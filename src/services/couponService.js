@@ -63,9 +63,7 @@ exports.getCouponUsageDetailsById = async (couponId) => {
   })
     .populate('user', 'firstName lastName email')
     .sort({ createdAt: -1 })
-    .select(
-      '_id user status dateOrdered totalAmount discountApplied finalTotal'
-    );
+    .select('_id user status createdAt totalAmount discountApplied finalTotal');
 
   const usedCount = orders.length;
   const uniqueCustomerIds = new Set(
@@ -79,7 +77,7 @@ exports.getCouponUsageDetailsById = async (couponId) => {
 
   const usageEntries = orders.map((order) => ({
     orderId: order._id,
-    dateOrdered: order.dateOrdered || order.createdAt,
+    createdAt: order.createdAt,
     status: order.status,
     discountApplied: order.discountApplied,
     totalAmount: order.totalAmount,
@@ -272,7 +270,7 @@ exports.toggleCouponStatusById = async (couponId) => {
  * @param {string} couponCode - Coupon code to validate
  * @returns {Promise<Object>} Validated coupon object
  */
-exports.validateCoupon = async (couponCode) => {
+exports.validateCoupon = async (couponCode, userId = null) => {
   const normalizedCode = normalizeCouponCode(couponCode);
   const coupon = await Coupon.findOne({ code: normalizedCode, isActive: true });
 
@@ -295,6 +293,18 @@ exports.validateCoupon = async (couponCode) => {
       status: { $ne: 'Cancelled' },
     });
     if (totalUsageCount >= coupon.totalUsageLimit) {
+      throw new Error('Coupon usage limit reached');
+    }
+  }
+
+  // Check per-user usage limit if userId provided
+  if (userId && coupon.perUserLimit > 0) {
+    const perUserUsageCount = await Order.countDocuments({
+      user: userId,
+      appliedCoupon: coupon.code,
+      status: { $ne: 'Cancelled' },
+    });
+    if (perUserUsageCount >= coupon.perUserLimit) {
       throw new Error('Coupon usage limit reached');
     }
   }
@@ -353,8 +363,8 @@ exports.applyCouponToCart = async (cartId, couponCode, userId) => {
     throw new Error('A coupon has already been applied to this cart');
   }
 
-  // Validate coupon
-  const coupon = await exports.validateCoupon(couponCode);
+  // Validate coupon (including per-user limit)
+  const coupon = await exports.validateCoupon(couponCode, userId);
 
   const cartSubtotal = cart.items.reduce((sum, item) => sum + item.subtotal, 0);
   if (cartSubtotal < coupon.minCartValue) {
@@ -363,19 +373,8 @@ exports.applyCouponToCart = async (cartId, couponCode, userId) => {
     );
   }
 
-  if (coupon.perUserLimit > 0) {
-    const perUserUsageCount = await Order.countDocuments({
-      user: userId,
-      appliedCoupon: coupon.code,
-      status: { $ne: 'Cancelled' },
-    });
-    if (perUserUsageCount >= coupon.perUserLimit) {
-      throw new Error('Coupon usage limit reached');
-    }
-  }
-
-  // Calculate discount
-  const discount = exports.calculateDiscount(coupon, cart.total);
+  // Calculate discount on subtotal (standard practice)
+  const discount = exports.calculateDiscount(coupon, cartSubtotal);
   const finalTotal = parseFloat((cart.total - discount).toFixed(2));
 
   // Update cart

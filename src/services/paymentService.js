@@ -4,6 +4,7 @@ const User = require('../models/userModel');
 const Cart = require('../models/cart');
 const orderService = require('./orderService');
 const authService = require('./authService');
+const config = require('../config/validateEnv');
 const logger = require('../config/logger');
 
 /**
@@ -11,8 +12,8 @@ const logger = require('../config/logger');
  */
 const getRazorpayInstance = () =>
   new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_SECRET,
+    key_id: config.RAZORPAY_KEY_ID,
+    key_secret: config.RAZORPAY_SECRET,
   });
 
 /**
@@ -152,7 +153,7 @@ exports.verifyAndCreateRazorpayOrder = async (
  * @param {number} orderAmount - Order total amount
  */
 exports.validateCODEligibility = (orderAmount) => {
-  const COD_LIMIT = Number(process.env.COD_LIMIT) || 1000;
+  const { COD_LIMIT } = config;
 
   if (orderAmount > COD_LIMIT) {
     throw new Error(

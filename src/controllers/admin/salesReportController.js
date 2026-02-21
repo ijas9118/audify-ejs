@@ -57,8 +57,8 @@ const getSalesReport = asyncHandler(async (req, res) => {
   try {
     // Fetch orders within the date range, excluding cancelled ones
     const orders = await Order.find({
-      dateOrdered: { $gte: start.toDate(), $lte: end.toDate() },
-      isCancelled: false, // Exclude cancelled orders
+      createdAt: { $gte: start.toDate(), $lte: end.toDate() },
+      status: { $ne: 'Cancelled' }, // Exclude cancelled orders
     }).populate({
       path: 'orderItems',
       populate: {
@@ -71,7 +71,7 @@ const getSalesReport = asyncHandler(async (req, res) => {
     const salesMap = new Map();
 
     orders.forEach((order) => {
-      const dateKey = moment(order.dateOrdered).format('YYYY-MM-DD');
+      const dateKey = moment(order.createdAt).format('YYYY-MM-DD');
 
       if (!salesMap.has(dateKey)) {
         salesMap.set(dateKey, {
@@ -143,14 +143,14 @@ const getSalesData = asyncHandler(async (req, res) => {
         sevenDaysAgo.setDate(today.getDate() - 6);
 
         match = {
-          dateOrdered: {
+          createdAt: {
             $gte: sevenDaysAgo,
             $lte: today,
           },
         };
 
         groupId = {
-          $dateToString: { format: '%Y-%m-%d', date: '$dateOrdered' },
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
         };
         break;
       }
@@ -161,15 +161,15 @@ const getSalesData = asyncHandler(async (req, res) => {
         fourWeeksAgo.setDate(today.getDate() - 28);
 
         match = {
-          dateOrdered: {
+          createdAt: {
             $gte: fourWeeksAgo,
             $lte: today,
           },
         };
 
         groupId = {
-          week: { $isoWeek: '$dateOrdered' },
-          year: { $isoWeekYear: '$dateOrdered' },
+          week: { $isoWeek: '$createdAt' },
+          year: { $isoWeekYear: '$createdAt' },
         };
         break;
       }
@@ -180,14 +180,14 @@ const getSalesData = asyncHandler(async (req, res) => {
         twelveMonthsAgo.setMonth(today.getMonth() - 11);
 
         match = {
-          dateOrdered: {
+          createdAt: {
             $gte: twelveMonthsAgo,
             $lte: today,
           },
         };
 
         groupId = {
-          $dateToString: { format: '%Y-%m', date: '$dateOrdered' },
+          $dateToString: { format: '%Y-%m', date: '$createdAt' },
         };
         break;
       }
@@ -198,14 +198,14 @@ const getSalesData = asyncHandler(async (req, res) => {
         fiveYearsAgo.setFullYear(today.getFullYear() - 4);
 
         match = {
-          dateOrdered: {
+          createdAt: {
             $gte: fiveYearsAgo,
             $lte: today,
           },
         };
 
         groupId = {
-          $dateToString: { format: '%Y', date: '$dateOrdered' },
+          $dateToString: { format: '%Y', date: '$createdAt' },
         };
         break;
       }
@@ -221,14 +221,14 @@ const getSalesData = asyncHandler(async (req, res) => {
         }
 
         match = {
-          dateOrdered: {
+          createdAt: {
             $gte: startDate,
             $lte: endDate,
           },
         };
 
         groupId = {
-          $dateToString: { format: '%Y-%m-%d', date: '$dateOrdered' },
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
         };
         break;
       }
@@ -239,14 +239,14 @@ const getSalesData = asyncHandler(async (req, res) => {
         defaultMonthsAgo.setMonth(today.getMonth() - 11);
 
         match = {
-          dateOrdered: {
+          createdAt: {
             $gte: defaultMonthsAgo,
             $lte: today,
           },
         };
 
         groupId = {
-          $dateToString: { format: '%Y-%m', date: '$dateOrdered' },
+          $dateToString: { format: '%Y-%m', date: '$createdAt' },
         };
         break;
       }

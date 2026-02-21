@@ -3,6 +3,9 @@ const Order = require('../models/order');
 const OrderItem = require('../models/orderItem');
 const Product = require('../models/products');
 const User = require('../models/userModel');
+const Coupon = require('../models/coupon');
+// eslint-disable-next-line import/no-cycle
+const couponService = require('./couponService');
 
 /**
  * Order Creation
@@ -35,19 +38,27 @@ exports.createOrderItems = async (cartItems) => {
  * @returns {Promise<Object>} Updated product
  */
 exports.updateProductStock = async (productId, quantity) => {
-  const product = await Product.findById(productId);
+  // Use atomic findOneAndUpdate with stock condition to prevent race conditions
+  const product = await Product.findOneAndUpdate(
+    { _id: productId, stock: { $gte: quantity } },
+    { $inc: { stock: -quantity, popularity: 1 } },
+    { new: true }
+  );
 
   if (!product) {
-    throw new Error('Product not found');
+    const existing = await Product.findById(productId);
+    if (!existing) throw new Error('Product not found');
+    throw new Error(
+      `Insufficient stock for "${existing.name}". Available: ${existing.stock}, Requested: ${quantity}`
+    );
   }
 
-  const updatedStock = product.stock - quantity;
-  const isOutOfStock = updatedStock <= 0;
-
-  await Product.findByIdAndUpdate(productId, {
-    $inc: { stock: -quantity, popularity: 1 },
-    $set: { isOutOfStock },
-  });
+  // Sync isOutOfStock flag if it reached zero
+  if (product.stock === 0 && !product.isOutOfStock) {
+    await Product.findByIdAndUpdate(productId, {
+      $set: { isOutOfStock: true },
+    });
+  }
 
   return product;
 };
@@ -111,6 +122,11 @@ exports.createOrderFromCart = async (
   // ✅ Validate stock for every item BEFORE writing anything
   await exports.validateCartStock(cart.items);
 
+  // ✅ Re-validate coupon if one is applied to prevent race conditions on usage limits
+  if (cart.appliedCoupon) {
+    await couponService.validateCoupon(cart.appliedCoupon, userId);
+  }
+
   // Create order items
   const orderItems = await exports.createOrderItems(cart.items);
 
@@ -142,14 +158,45 @@ exports.createOrderFromCart = async (
   const placedOrder = await order.save();
 
   // ✅ Deduct stock AFTER order is saved successfully
-  await Promise.all(
-    cart.items.map((item) =>
-      exports.updateProductStock(item.productId, item.quantity)
-    )
-  );
+  const succeededStockUpdates = [];
+  try {
+    await Promise.all(
+      cart.items.map(async (item) => {
+        await exports.updateProductStock(item.productId, item.quantity);
+        succeededStockUpdates.push(item);
+      })
+    );
+  } catch (error) {
+    // ⚠️ Rollback: Restore stock for items that were already decremented
+    if (succeededStockUpdates.length > 0) {
+      await exports.restoreStockForCancelledOrder(
+        succeededStockUpdates.map((item) => ({
+          product: { _id: item.productId },
+          quantity: item.quantity,
+        }))
+      );
+    }
+
+    // ⚠️ Rollback: Remove the order and its items since fulfillment failed
+    await Order.findByIdAndDelete(placedOrder._id);
+    await OrderItem.deleteMany({ _id: { $in: orderItems.map((i) => i._id) } });
+
+    throw error;
+  }
 
   // ✅ Clear cart only after everything succeeded
   await Cart.deleteOne({ user: userId });
+
+  // ✅ Increment coupon usage counter if applied
+  if (placedOrder.appliedCoupon) {
+    await Coupon.findOneAndUpdate(
+      { code: placedOrder.appliedCoupon },
+      {
+        $inc: { totalUsed: 1 },
+        $addToSet: { appliedUsers: userId },
+      }
+    );
+  }
 
   return placedOrder;
 };
@@ -165,7 +212,7 @@ exports.createOrderFromCart = async (
  * @returns {Promise<Array>} Array of orders
  */
 exports.getUserOrders = async (userId, options = {}) => {
-  const { sort = { dateOrdered: -1 }, populate = true } = options;
+  const { sort = { createdAt: -1 }, populate = true } = options;
 
   let query = Order.find({ user: userId });
 
@@ -278,7 +325,7 @@ exports.cancelOrder = async (orderId, userId) => {
 
   if (order.status === 'Shipped' || order.status === 'Delivered') {
     // For shipped/delivered orders, just mark as cancelled request
-    await Order.findByIdAndUpdate(orderId, { isCancelled: true });
+    await Order.findByIdAndUpdate(orderId, { cancellationRequested: true });
 
     return {
       success: true,
@@ -301,7 +348,6 @@ exports.cancelOrder = async (orderId, userId) => {
 
     await Order.findByIdAndUpdate(orderId, {
       status: 'Cancelled',
-      isCancelled: true,
     });
 
     return {

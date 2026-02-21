@@ -259,7 +259,7 @@ exports.generateInvoicePDF = async (orderId) => {
   doc
     .fillColor('#333')
     .fontSize(12)
-    .text(`Order Date: ${moment(order.dateOrdered).format('MMMM Do, YYYY')}`);
+    .text(`Order Date: ${moment(order.createdAt).format('MMMM Do, YYYY')}`);
   doc.text(`Payment Method: ${order.paymentMethod}`);
   doc.text(`Total Amount: ${order.totalAmount}`);
   doc.text(`Discount Applied: ${order.discountApplied}`);

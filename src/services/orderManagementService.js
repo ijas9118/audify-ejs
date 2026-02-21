@@ -16,7 +16,7 @@ exports.getPaginatedOrders = async ({ page, limit }) => {
 
   const orders = await Order.find()
     .populate('user', 'firstName lastName email')
-    .sort({ dateOrdered: -1 })
+    .sort({ createdAt: -1 })
     .skip(pagination.skip)
     .limit(pagination.limit);
 

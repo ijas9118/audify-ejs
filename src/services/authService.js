@@ -163,7 +163,13 @@ exports.sendOrderConfirmationEmail = async (orderDetails) => {
         </div>
         <div class="content">
           <h2>Thank you for your order!</h2>
-          <p>Your order has been successfully placed and confirmed.</p>
+          <p>
+            ${
+              paymentMethod === 'COD'
+                ? 'Your order has been successfully placed and will be processed soon. Please have the amount ready at the time of delivery.'
+                : 'Your order has been successfully placed and your payment has been confirmed.'
+            }
+          </p>
           
           <div class="order-details">
             <h3>Order Details</h3>

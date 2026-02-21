@@ -147,7 +147,7 @@
                     #<%= String(entry.orderId).slice(-8) %>
                   </span>
                 </td>
-                <td><%= formatDateInput(entry.dateOrdered) %></td>
+                <td><%= formatDateInput(entry.createdAt) %></td>
                 <td>₹<%= Number(entry.discountApplied || 0).toFixed(2) %></td>
               </tr>
               <% }) %>

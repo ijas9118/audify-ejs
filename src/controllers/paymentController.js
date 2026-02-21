@@ -117,7 +117,11 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
       return;
     }
 
-    if (msg?.includes('Insufficient stock')) {
+    if (
+      msg?.includes('Insufficient stock') ||
+      msg === 'Coupon usage limit reached' ||
+      msg?.includes('not valid at this time')
+    ) {
       res
         .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, message: msg });
@@ -173,7 +177,11 @@ const confirmCODPayment = asyncHandler(async (req, res) => {
       return;
     }
 
-    if (msg?.includes('Insufficient stock')) {
+    if (
+      msg?.includes('Insufficient stock') ||
+      msg === 'Coupon usage limit reached' ||
+      msg?.includes('not valid at this time')
+    ) {
       res
         .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, message: msg });
@@ -229,7 +237,11 @@ const processWalletPayment = asyncHandler(async (req, res) => {
       return;
     }
 
-    if (msg?.includes('Insufficient stock')) {
+    if (
+      msg?.includes('Insufficient stock') ||
+      msg === 'Coupon usage limit reached' ||
+      msg?.includes('not valid at this time')
+    ) {
       res
         .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, message: msg });

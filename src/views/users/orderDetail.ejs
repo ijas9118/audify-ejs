@@ -28,7 +28,7 @@
             <strong>Order ID:</strong> <%= order._id %>
           </p>
           <p class="mb-2">
-            <strong>Order Date:</strong> <%= new Date(order.dateOrdered).toDateString() %>
+            <strong>Order Date:</strong> <%= new Date(order.createdAt).toDateString() %>
           </p>
           <p class="mb-2">
             <strong>Payment Method:</strong> <%= order.paymentMethod %>

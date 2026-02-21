@@ -14,7 +14,7 @@
   </div>
 
   <div class="admin-order-view-page">
-    <% if (order.isCancelled) { %>
+    <% if (order.cancellationRequested) { %>
     <div class="alert alert-warning mb-3" role="alert">
       User has requested cancellation. Please review before proceeding.
     </div>
@@ -34,7 +34,7 @@
             </div>
             <div>
               <dt>Date Ordered</dt>
-              <dd><%= new Date(order.dateOrdered).toLocaleDateString() %></dd>
+              <dd><%= new Date(order.createdAt).toLocaleDateString() %></dd>
             </div>
             <div>
               <dt>Payment Method</dt>

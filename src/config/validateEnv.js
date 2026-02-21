@@ -46,6 +46,10 @@ const optionalEnvVars = {
     default: 'development',
     description: 'Environment mode (development/production)',
   },
+  COD_LIMIT: {
+    default: 1000,
+    description: 'Maximum order amount eligible for Cash on Delivery',
+  },
 };
 
 /**
@@ -128,7 +132,9 @@ module.exports = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
 
-  // Razorpay
+  // Payments
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
   RAZORPAY_SECRET: process.env.RAZORPAY_SECRET,
+  COD_LIMIT:
+    parseInt(process.env.COD_LIMIT, 10) || optionalEnvVars.COD_LIMIT.default,
 };

@@ -53,7 +53,7 @@
               </select>
             `,
           },
-          { text: new Date(order.dateOrdered).toLocaleDateString() },
+          { text: new Date(order.createdAt).toLocaleDateString() },
           {
             className: 'admin-cell-actions admin-cell-actions-compact',
             html: `
