@@ -185,12 +185,57 @@
               title: 'Payment successful! Placing your order…',
             });
             redirectToSuccess(verifyResult.orderId);
-          } else {
+          } else if (
+            verifyResult.message?.includes('Invalid payment signature')
+          ) {
+            // Signature mismatch — payment likely NOT captured
             Swal.fire({
               icon: 'error',
               title: 'Payment Verification Failed',
-              text: verifyResult.message,
+              text: 'We could not verify your payment. If money was deducted, please contact support.',
+              confirmButtonText: 'OK',
+            });
+            setButtonState(confirmBtn, false, 'Confirm and Pay');
+          } else if (verifyResult.autoRefunded === true) {
+            // ✅ Payment captured but order failed — refund was auto-initiated
+            Swal.fire({
+              icon: 'info',
+              title: 'Order Could Not Be Placed',
+              html: `
+                <p>${verifyResult.message}</p>
+              `,
+              confirmButtonText: 'Continue Shopping',
+            }).then(() => {
+              window.location.href = '/shop';
+            });
+          } else if (verifyResult.autoRefunded === false) {
+            // ❌ Payment captured AND refund also failed — manual support required
+            Swal.fire({
+              icon: 'error',
+              title: 'Refund Required',
+              html: `
+                <p>${verifyResult.message || 'Your payment was received but the order and refund both failed.'}</p>
+                <p class="mt-2">Your payment ID:<br><code>${verifyResult.paymentId || response.razorpay_payment_id}</code></p>
+                <p class="text-muted small mt-2">Please contact support with this ID for a manual refund.</p>
+              `,
               confirmButtonText: 'Contact Support',
+              showCancelButton: true,
+              cancelButtonText: 'Go to My Account',
+            }).then((swalResult) => {
+              if (!swalResult.isConfirmed) {
+                window.location.href = '/account';
+              }
+            });
+            setButtonState(confirmBtn, false, 'Confirm and Pay');
+          } else {
+            // Generic fallback
+            Swal.fire({
+              icon: 'error',
+              title: 'Payment Error',
+              text:
+                verifyResult.message ||
+                'Something went wrong. Please contact support.',
+              confirmButtonText: 'OK',
             });
             setButtonState(confirmBtn, false, 'Confirm and Pay');
           }

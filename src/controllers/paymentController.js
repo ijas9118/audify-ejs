@@ -117,14 +117,25 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
       return;
     }
 
-    if (
-      msg?.includes('Insufficient stock') ||
-      msg === 'Coupon usage limit reached' ||
-      msg?.includes('not valid at this time')
-    ) {
-      res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ success: false, message: msg });
+    // Order creation failed AFTER payment was captured.
+    // The service layer attempted an auto-refund — surface the result.
+    if (error.paymentId) {
+      if (error.refundInitiated) {
+        // ✅ Refund successfully triggered — tell the user clearly
+        res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          autoRefunded: true,
+          message: `${msg} — Your payment has been automatically refunded. It will reflect in 5–7 business days.`,
+        });
+      } else {
+        // ❌ Refund also failed — manual intervention required
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          autoRefunded: false,
+          paymentId: error.paymentId,
+          message: `${msg} — We could not automatically refund your payment (ID: ${error.paymentId}). Please contact support.`,
+        });
+      }
       return;
     }
 

@@ -79,7 +79,38 @@ exports.verifyRazorpaySignature = (
 };
 
 /**
+ * Automatically refund a captured Razorpay payment.
+ * Used when order creation fails AFTER payment was captured.
+ * @param {string} paymentId - Razorpay payment ID to refund
+ * @param {number} amount    - Amount in paise (INR × 100)
+ * @returns {Promise<Object>} Razorpay refund object
+ */
+exports.refundRazorpayPayment = async (paymentId, amount) => {
+  const razorpay = getRazorpayInstance();
+  try {
+    const refund = await razorpay.payments.refund(paymentId, {
+      amount, // full refund of the original amount
+      speed: 'normal', // 'normal' (5–7 days) or 'optimum' (instant for eligible banks)
+      notes: { reason: 'Order could not be created after payment' },
+    });
+    logger.info(
+      `Razorpay refund initiated: ${refund.id} for payment ${paymentId}`
+    );
+    return refund;
+  } catch (refundErr) {
+    const desc =
+      refundErr?.error?.description ||
+      refundErr?.description ||
+      refundErr?.message ||
+      JSON.stringify(refundErr);
+    logger.error(`Failed to auto-refund payment ${paymentId}: ${desc}`);
+    throw new Error(`Refund failed: ${desc}`);
+  }
+};
+
+/**
  * Verify Razorpay signature then create the DB order.
+ * If order creation fails AFTER signature verification, automatically refunds the payment.
  * @param {string} userId
  * @param {Object} shippingDetails
  * @param {Object} paymentData - { razorpay_payment_id, razorpay_order_id, razorpay_signature }
@@ -111,11 +142,45 @@ exports.verifyAndCreateRazorpayOrder = async (
     : [];
 
   // ✅ Create DB order only after signature verified
-  const order = await orderService.createOrderFromCart(
-    userId,
-    shippingDetails,
-    'Razorpay'
-  );
+  // If anything fails here, money has already been captured — auto-refund it.
+  let order;
+  try {
+    order = await orderService.createOrderFromCart(
+      userId,
+      shippingDetails,
+      'Razorpay'
+    );
+  } catch (orderErr) {
+    logger.error(
+      `Order creation failed after Razorpay payment ${razorpay_payment_id}:`,
+      orderErr
+    );
+
+    // ⚠️ Payment was captured but order failed — auto-refund the customer
+    let refundInitiated = false;
+    let refundId = null;
+    try {
+      // cart.finalTotal is in ₹, Razorpay needs paise
+      const amountPaise = Math.round(
+        (cart?.finalTotal || cart?.total || 0) * 100
+      );
+      const refund = await exports.refundRazorpayPayment(
+        razorpay_payment_id,
+        amountPaise
+      );
+      refundInitiated = true;
+      refundId = refund.id;
+    } catch (refundErr) {
+      logger.error('Auto-refund also failed:', refundErr);
+    }
+
+    // Surface a meaningful error to the controller
+    const friendlyErr = new Error(orderErr.message);
+    friendlyErr.refundInitiated = refundInitiated;
+    friendlyErr.refundId = refundId;
+    friendlyErr.paymentId = razorpay_payment_id;
+    throw friendlyErr;
+  }
 
   // Send confirmation email (non-blocking)
   try {
