@@ -54,6 +54,56 @@ exports.getCouponById = async (couponId) => {
   return coupon;
 };
 
+exports.getCouponUsageDetailsById = async (couponId) => {
+  const coupon = await exports.getCouponById(couponId);
+
+  const orders = await Order.find({
+    appliedCoupon: coupon.code,
+    status: { $ne: 'Cancelled' },
+  })
+    .populate('user', 'firstName lastName email')
+    .sort({ createdAt: -1 })
+    .select('_id user status dateOrdered totalAmount discountApplied finalTotal');
+
+  const usedCount = orders.length;
+  const uniqueCustomerIds = new Set(
+    orders.map((order) => order.user?._id?.toString()).filter(Boolean)
+  );
+  const uniqueCustomersCount = uniqueCustomerIds.size;
+  const remainingUsage =
+    coupon.totalUsageLimit > 0
+      ? Math.max(coupon.totalUsageLimit - usedCount, 0)
+      : null;
+
+  const usageEntries = orders.map((order) => ({
+    orderId: order._id,
+    dateOrdered: order.dateOrdered || order.createdAt,
+    status: order.status,
+    discountApplied: order.discountApplied,
+    totalAmount: order.totalAmount,
+    finalTotal: order.finalTotal,
+    customer: order.user
+      ? {
+          id: order.user._id,
+          firstName: order.user.firstName,
+          lastName: order.user.lastName,
+          email: order.user.email,
+        }
+      : null,
+  }));
+
+  return {
+    coupon,
+    usage: {
+      usedCount,
+      uniqueCustomersCount,
+      remainingUsage,
+      isUnlimited: coupon.totalUsageLimit === 0,
+      entries: usageEntries,
+    },
+  };
+};
+
 exports.createCoupon = async (couponData) => {
   const {
     code,
@@ -63,7 +113,7 @@ exports.createCoupon = async (couponData) => {
     minCartValue,
     validFrom,
     validUntil,
-    usageLimit,
+    perUserLimit, totalUsageLimit,
     isActive,
   } = couponData;
 
@@ -77,6 +127,10 @@ exports.createCoupon = async (couponData) => {
     !validUntil
   ) {
     throw new Error('Missing required fields');
+  }
+
+  if (discountType === 'percentage' && discountValue > 100) {
+    throw new Error('Percentage discount cannot exceed 100%');
   }
 
   const existingCoupon = await Coupon.findOne({ code: normalizedCode });
@@ -101,7 +155,8 @@ exports.createCoupon = async (couponData) => {
     minCartValue: minCartValue || 0,
     validFrom: startDate,
     validUntil: endDate,
-    usageLimit: usageLimit || 1,
+    perUserLimit: perUserLimit || 1,
+    totalUsageLimit: totalUsageLimit || 0,
     isActive: isActive !== undefined ? isActive : true,
   });
 
@@ -131,7 +186,7 @@ exports.updateCouponById = async (couponId, couponData) => {
     minCartValue,
     validFrom,
     validUntil,
-    usageLimit,
+    perUserLimit, totalUsageLimit,
     isActive,
   } = couponData;
 
@@ -150,13 +205,20 @@ exports.updateCouponById = async (couponId, couponData) => {
     discountType !== undefined ? discountType : coupon.discountType;
   coupon.discountValue =
     discountValue !== undefined ? discountValue : coupon.discountValue;
+
+  if (coupon.discountType === 'percentage' && coupon.discountValue > 100) {
+    throw new Error('Percentage discount cannot exceed 100%');
+  }
   coupon.maxDiscountValue =
     maxDiscountValue !== undefined ? maxDiscountValue : coupon.maxDiscountValue;
   coupon.minCartValue =
     minCartValue !== undefined ? minCartValue : coupon.minCartValue;
   coupon.validFrom = validFrom !== undefined ? validFrom : coupon.validFrom;
   coupon.validUntil = validUntil !== undefined ? validUntil : coupon.validUntil;
-  coupon.usageLimit = usageLimit !== undefined ? usageLimit : coupon.usageLimit;
+  coupon.perUserLimit =
+    perUserLimit !== undefined ? perUserLimit : coupon.perUserLimit;
+  coupon.totalUsageLimit =
+    totalUsageLimit !== undefined ? totalUsageLimit : coupon.totalUsageLimit;
   coupon.isActive = isActive !== undefined ? isActive : coupon.isActive;
 
   if (coupon.validUntil < coupon.validFrom) {
@@ -220,6 +282,17 @@ exports.validateCoupon = async (couponCode) => {
     throw new Error(
       `Coupon ${couponCode} is not valid at this time. Valid from ${coupon.validFrom.toDateString()} to ${coupon.validUntil.toDateString()}`
     );
+  }
+
+  // Check global usage limit
+  if (coupon.totalUsageLimit > 0) {
+    const totalUsageCount = await Order.countDocuments({
+      appliedCoupon: coupon.code,
+      status: { $ne: 'Cancelled' },
+    });
+    if (totalUsageCount >= coupon.totalUsageLimit) {
+      throw new Error('Coupon global usage limit reached');
+    }
   }
 
   return coupon;
@@ -286,14 +359,14 @@ exports.applyCouponToCart = async (cartId, couponCode, userId) => {
     );
   }
 
-  if (coupon.usageLimit > 0) {
+  if (coupon.perUserLimit > 0) {
     const perUserUsageCount = await Order.countDocuments({
       user: userId,
       appliedCoupon: coupon.code,
       status: { $ne: 'Cancelled' },
     });
-    if (perUserUsageCount >= coupon.usageLimit) {
-      throw new Error('Coupon usage limit reached for this user');
+    if (perUserUsageCount >= coupon.perUserLimit) {
+      throw new Error('Coupon usage limit reached');
     }
   }
 

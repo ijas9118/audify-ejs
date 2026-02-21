@@ -501,12 +501,50 @@ body {
   color: #f5f5f5;
 }
 
+.admin-coupon-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-coupon-kpi-value {
+  color: #f4f4f4;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.admin-coupon-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.admin-coupon-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #efe7ff;
+  background: #2b1e3d;
+  border: 1px solid #4a3469;
+}
+
 @media (max-width: 991.98px) {
   .admin-product-image-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .admin-order-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-coupon-kpi-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1007,6 +1045,74 @@ body {
 .admin-confirm-modal .admin-action-btn {
   width: auto;
   min-width: 110px;
+}
+
+/* Shared admin form modal */
+.admin-form-modal .admin-form-modal-content {
+  background: linear-gradient(180deg, #101010, #0c0c0c);
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  color: #ececec;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.45);
+}
+
+.admin-form-modal .admin-form-modal-header {
+  background: #101010;
+  border-bottom: 1px solid #252525;
+  padding: 0.95rem 1.1rem 0.85rem;
+  align-items: flex-start;
+}
+
+.admin-form-modal .admin-form-modal-title {
+  color: #f5f5f5;
+  font-weight: 600;
+  font-size: 1.04rem;
+  margin-bottom: 0.2rem;
+}
+
+.admin-form-modal .admin-form-modal-subtitle {
+  color: #b8b8b8;
+  font-size: 0.84rem;
+}
+
+.admin-form-modal .admin-form-modal-body {
+  padding: 1rem 1.1rem;
+}
+
+.admin-form-modal .form-label {
+  color: #d8d8d8;
+  margin-bottom: 0.35rem;
+}
+
+.admin-form-modal .form-control.is-invalid,
+.admin-form-modal .form-select.is-invalid {
+  border-color: #bb5858;
+}
+
+.admin-form-modal .was-validated .form-control:valid,
+.admin-form-modal .was-validated .form-select:valid,
+.admin-form-modal .form-control.is-valid,
+.admin-form-modal .form-select.is-valid {
+  border-color: #2f2f2f;
+  padding-right: 0.75rem;
+  background-image: none !important;
+  box-shadow: none;
+}
+
+.admin-form-modal .valid-feedback {
+  display: none;
+}
+
+.admin-form-modal .admin-form-helptext {
+  color: #9b9b9b;
+  font-size: 0.78rem;
+  margin-top: 0.35rem;
+}
+
+.admin-form-modal .admin-form-modal-footer {
+  background: #0f0f0f;
+  border-top: 1px solid #252525;
+  padding: 0.8rem 1.1rem;
 }
 
 .breadcrumb-item + .breadcrumb-item::before {

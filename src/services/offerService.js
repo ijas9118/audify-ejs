@@ -60,17 +60,19 @@ const buildSearchRegex = (search) => {
 
 exports.getPaginatedOffers = async ({ page, limit, search }) => {
   const regex = buildSearchRegex(search);
-  const matchStage = regex
-    ? {
-        $or: [
-          { type: regex },
-          { discountType: regex },
-          { status: regex },
-          { 'product.name': regex },
-          { 'category.name': regex },
-        ],
-      }
-    : {};
+  const matchStage = {
+    'category.isDeleted': { $ne: true },
+  };
+
+  if (regex) {
+    matchStage.$or = [
+      { type: regex },
+      { discountType: regex },
+      { status: regex },
+      { 'product.name': regex },
+      { 'category.name': regex },
+    ];
+  }
 
   const countPipeline = [
     {
@@ -250,6 +252,10 @@ exports.updateOfferById = async (offerId, offerData) => {
   offer.minCartValue =
     minCartValue !== undefined ? minCartValue : offer.minCartValue;
 
+  const oldProduct = offer.product;
+  const oldCategory = offer.category;
+  const oldType = offer.type;
+
   if (nextType === 'product') {
     const nextProduct = product !== undefined ? product : offer.product;
     if (!nextProduct) {
@@ -274,6 +280,34 @@ exports.updateOfferById = async (offerId, offerData) => {
   }
 
   await offer.save();
+
+  // Handle reference updates in related models
+  if (oldType === 'product' && oldProduct) {
+    // Check if product changed or type changed
+    if (nextType !== 'product' || String(oldProduct) !== String(offer.product)) {
+      await Product.findByIdAndUpdate(oldProduct, { $set: { offerId: null } });
+    }
+  } else if (oldType === 'category' && oldCategory) {
+    // Check if category changed or type changed
+    if (
+      nextType !== 'category' ||
+      String(oldCategory) !== String(offer.category)
+    ) {
+      await Category.findByIdAndUpdate(oldCategory, { $set: { offerId: null } });
+    }
+  }
+
+  // Set new reference
+  if (offer.type === 'product' && offer.product) {
+    await Product.findByIdAndUpdate(offer.product, {
+      $set: { offerId: offer._id },
+    });
+  } else if (offer.type === 'category' && offer.category) {
+    await Category.findByIdAndUpdate(offer.category, {
+      $set: { offerId: offer._id },
+    });
+  }
+
   return offer;
 };
 
@@ -282,6 +316,15 @@ exports.deleteOfferById = async (offerId) => {
 
   if (!offer) {
     throw new Error('Offer not found');
+  }
+
+  // Clear references in Product or Category
+  if (offer.type === 'product' && offer.product) {
+    await Product.findByIdAndUpdate(offer.product, { $set: { offerId: null } });
+  } else if (offer.type === 'category' && offer.category) {
+    await Category.findByIdAndUpdate(offer.category, {
+      $set: { offerId: null },
+    });
   }
 
   await Offer.deleteOne({ _id: offerId });
@@ -301,7 +344,8 @@ exports.toggleOfferStatusById = async (offerId) => {
   return offer;
 };
 
-exports.getOfferCategories = async () => Category.find({});
+exports.getOfferCategories = async () =>
+  Category.find({ isDeleted: { $ne: true } });
 exports.getOfferProducts = async () => Product.find({});
 
 exports.calculateDiscountedPrice = calculateDiscountedPrice;

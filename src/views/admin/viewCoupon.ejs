@@ -1,0 +1,160 @@
+<%
+  const formatDateInput = (value) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString();
+  };
+  const couponCodeLabel = (coupon.code || 'Coupon').toString().toUpperCase();
+  const discountLabel =
+    coupon.discountType === 'percentage'
+      ? `${coupon.discountValue}%`
+      : `₹${coupon.discountValue}`;
+%>
+
+<div class="container-fluid mt-3 admin-management-page">
+  <div class="admin-management-header mb-3">
+    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrap">
+      <ol class="breadcrumb admin-breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+        <li class="breadcrumb-item"><a href="/admin/coupons">Coupon Management</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><%= couponCodeLabel %></li>
+      </ol>
+    </nav>
+    <div class="admin-management-title-row mt-2">
+      <h3 class="admin-management-title mb-0">Coupon Details</h3>
+      <a href="/admin/coupons" class="btn btn-primary admin-create-btn">Back to Coupons</a>
+    </div>
+  </div>
+
+  <div class="admin-order-view-page">
+    <section class="admin-order-section">
+      <h5 class="admin-order-section-title">Overview</h5>
+      <p class="admin-order-section-subtitle">Readonly coupon configuration and current status.</p>
+      <div class="admin-order-overview-grid">
+        <article class="admin-order-info-card">
+          <h6 class="admin-order-card-title">Coupon</h6>
+          <dl class="admin-order-meta">
+            <div>
+              <dt>Code</dt>
+              <dd><span class="admin-order-chip"><%= couponCodeLabel %></span></dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>
+                <span class="admin-status-badge <%= coupon.isActive ? 'is-positive' : 'is-negative' %>">
+                  <%= coupon.isActive ? 'Active' : 'Inactive' %>
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt>Valid From</dt>
+              <dd><%= formatDateInput(coupon.validFrom) %></dd>
+            </div>
+            <div>
+              <dt>Valid Until</dt>
+              <dd><%= formatDateInput(coupon.validUntil) %></dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="admin-order-info-card">
+          <h6 class="admin-order-card-title">Rules</h6>
+          <dl class="admin-order-meta">
+            <div>
+              <dt>Discount</dt>
+              <dd><%= discountLabel %></dd>
+            </div>
+            <div>
+              <dt>Max Discount</dt>
+              <dd><%= coupon.maxDiscountValue ? `₹${coupon.maxDiscountValue}` : 'Not set' %></dd>
+            </div>
+            <div>
+              <dt>Min Cart Subtotal</dt>
+              <dd><%= coupon.minCartValue ? `₹${coupon.minCartValue}` : 'No minimum' %></dd>
+            </div>
+            <div>
+              <dt>Per User Limit</dt>
+              <dd><%= coupon.perUserLimit || 'Unlimited' %></dd>
+            </div>
+            <div>
+              <dt>Total Usage Limit</dt>
+              <dd><%= coupon.totalUsageLimit > 0 ? coupon.totalUsageLimit : 'Unlimited' %></dd>
+            </div>
+          </dl>
+        </article>
+      </div>
+    </section>
+
+    <section class="admin-order-section">
+      <h5 class="admin-order-section-title">Usage Snapshot</h5>
+      <p class="admin-order-section-subtitle">Current usage against configured limits.</p>
+      <div class="admin-coupon-kpi-grid">
+        <article class="admin-order-info-card">
+          <h6 class="admin-order-card-title">Total Uses</h6>
+          <p class="admin-coupon-kpi-value mb-0"><%= usage.usedCount %></p>
+        </article>
+        <article class="admin-order-info-card">
+          <h6 class="admin-order-card-title">Customers Used</h6>
+          <p class="admin-coupon-kpi-value mb-0"><%= usage.uniqueCustomersCount %></p>
+        </article>
+        <article class="admin-order-info-card">
+          <h6 class="admin-order-card-title">Remaining Usage</h6>
+          <p class="admin-coupon-kpi-value mb-0">
+            <%= usage.isUnlimited ? 'Unlimited' : usage.remainingUsage %>
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="admin-order-section">
+      <h5 class="admin-order-section-title">Customer Usage</h5>
+      <p class="admin-order-section-subtitle">Orders where this coupon was successfully applied.</p>
+      <div class="admin-table-shell">
+        <div class="table-responsive">
+          <table class="table admin-management-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Customer</th>
+                <th scope="col">Email</th>
+                <th scope="col">Order ID</th>
+                <th scope="col">Date</th>
+                <th scope="col">Discount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (!usage.entries.length) { %>
+              <tr>
+                <td colspan="5" class="text-center admin-empty-row">No customers have used this coupon yet.</td>
+              </tr>
+              <% } %>
+              <% usage.entries.forEach((entry) => {
+                const customer = entry.customer || {};
+                const firstName = customer.firstName || 'Unknown';
+                const lastName = customer.lastName || '';
+                const initials = `${String(firstName).charAt(0)}${String(lastName).charAt(0)}`.trim().toUpperCase() || 'U';
+              %>
+              <tr>
+                <td class="admin-cell-primary">
+                  <div class="admin-coupon-user">
+                    <span class="admin-coupon-avatar"><%= initials %></span>
+                    <span><%= `${firstName} ${lastName}`.trim() %></span>
+                  </div>
+                </td>
+                <td><%= customer.email || 'Unknown' %></td>
+                <td>
+                  <span class="admin-order-chip" title="<%= String(entry.orderId) %>">
+                    #<%= String(entry.orderId).slice(-8) %>
+                  </span>
+                </td>
+                <td><%= formatDateInput(entry.dateOrdered) %></td>
+                <td>₹<%= Number(entry.discountApplied || 0).toFixed(2) %></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

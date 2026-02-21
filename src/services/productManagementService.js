@@ -47,7 +47,9 @@ exports.getProductManagementData = async ({ page, limit, search }) => {
     { $limit: pagination.limit },
   ]);
 
-  const categories = await Category.find().sort({ name: 1 });
+  const categories = await Category.find({ isDeleted: { $ne: true } }).sort({
+    name: 1,
+  });
 
   return {
     products,

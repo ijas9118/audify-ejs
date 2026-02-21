@@ -122,16 +122,19 @@
 
 <!-- Add Category Modal -->
 <div
-  class="modal fade"
+  class="modal fade admin-confirm-modal"
   id="addCategoryModal"
   tabindex="-1"
   aria-labelledby="addCategoryModalLabel"
   aria-hidden="true"
 >
-  <div class="modal-dialog">
-    <div class="modal-content bg-dark text-light">
-      <div class="modal-header bg-dark">
-        <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
+  <div class="modal-dialog modal-lg modal-dialog-centered admin-form-modal">
+    <div class="modal-content admin-form-modal-content admin-confirm-content">
+      <div class="modal-header admin-form-modal-header admin-confirm-header">
+        <div>
+          <h5 class="modal-title admin-form-modal-title admin-confirm-title" id="addCategoryModalLabel">Add New Category</h5>
+          <p class="admin-form-modal-subtitle mb-0">Create a category with display name and storefront description.</p>
+        </div>
         <button
           type="button"
           class="btn-close btn-close-white"
@@ -139,37 +142,47 @@
           aria-label="Close"
         ></button>
       </div>
-      <form id="addCategoryForm">
-        <div class="modal-body">
-          <div class="mb-3">
+      <form id="addCategoryForm" novalidate>
+        <div class="modal-body admin-form-modal-body">
+          <div class="row g-3">
+            <div class="col-lg-6">
             <label for="categoryName" class="form-label">Category Name</label>
             <input
               type="text"
-              class="form-control custom-search-input"
+              class="form-control custom-search-input admin-coupon-input"
               id="categoryName"
               name="name"
+              maxlength="50"
+              data-msg-required="Category name is required."
+              data-msg-invalid="Category name must be less than 50 characters."
+              required
             />
+            <div class="invalid-feedback">Category name is required.</div>
           </div>
-          <div class="mb-3">
-            <label for="categoryDescription" class="form-label"
-              >Description</label
-            >
+          <div class="col-12">
+            <label for="categoryDescription" class="form-label">Description</label>
             <textarea
-              class="form-control custom-search-input"
+              class="form-control custom-search-input admin-coupon-input"
               id="categoryDescription"
               name="description"
+              rows="4"
+              maxlength="500"
+              data-msg-invalid="Description must be less than 500 characters."
             ></textarea>
+            <div class="invalid-feedback">Description must be less than 500 characters.</div>
+            <div class="form-text admin-form-helptext">Optional. Maximum 500 characters.</div>
+          </div>
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer admin-form-modal-footer admin-confirm-footer">
           <button
             type="button"
-            class="btn btn-secondary"
+            class="btn admin-action-btn admin-action-btn-secondary"
             data-bs-dismiss="modal"
           >
-            Close
+            Cancel
           </button>
-          <button type="submit" class="btn btn-primary">Add Category</button>
+          <button type="submit" class="btn btn-primary admin-create-btn">Add Category</button>
         </div>
       </form>
     </div>

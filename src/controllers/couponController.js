@@ -58,7 +58,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
         .json({ success: false, message: error.message });
     }
 
-    if (error.message === 'Coupon usage limit reached for this user') {
+    if (error.message === 'Coupon usage limit reached') {
       return res
         .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, message: error.message });

@@ -20,7 +20,7 @@
       <ol class="breadcrumb admin-breadcrumb mb-0">
         <li class="breadcrumb-item"><a href="/admin">Home</a></li>
         <li class="breadcrumb-item"><a href="/admin/coupons">Coupon Management</a></li>
-        <li class="breadcrumb-item active" aria-current="page"><%= couponCodeLabel %></li>
+        <li class="breadcrumb-item active" aria-current="page">Edit <%= couponCodeLabel %></li>
       </ol>
     </nav>
     <div class="admin-management-title-row mt-2">
@@ -170,17 +170,31 @@
             </div>
 
             <div class="col-md-6">
-              <label for="usageLimit" class="form-label">Usage Limit Per User</label>
+              <label for="perUserLimit" class="form-label">Usage Limit Per User</label>
               <input
                 type="number"
-                class="form-control custom-search-input admin-coupon-input <%= fieldClass('usageLimit') %>"
-                id="usageLimit"
-                name="usageLimit"
-                value="<%= valueOf('usageLimit', 1) %>"
+                class="form-control custom-search-input admin-coupon-input <%= fieldClass('perUserLimit') %>"
+                id="perUserLimit"
+                name="perUserLimit"
+                value="<%= valueOf('perUserLimit', 1) %>"
                 min="1"
                 step="1"
               />
-              <div class="invalid-feedback"><%= fieldError('usageLimit') || 'Usage limit must be at least 1.' %></div>
+              <div class="invalid-feedback"><%= fieldError('perUserLimit') || 'Usage limit must be at least 1.' %></div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="totalUsageLimit" class="form-label">Total Usage Limit (0 for unlimited)</label>
+              <input
+                type="number"
+                class="form-control custom-search-input admin-coupon-input <%= fieldClass('totalUsageLimit') %>"
+                id="totalUsageLimit"
+                name="totalUsageLimit"
+                value="<%= valueOf('totalUsageLimit', 0) %>"
+                min="0"
+                step="1"
+              />
+              <div class="invalid-feedback"><%= fieldError('totalUsageLimit') || 'Total usage limit must be a non-negative number.' %></div>
             </div>
           </div>
         </section>

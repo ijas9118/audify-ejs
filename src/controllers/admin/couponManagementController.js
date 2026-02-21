@@ -41,7 +41,7 @@ const addCoupon = asyncHandler(async (req, res) => {
     minCartValue,
     validFrom,
     validUntil,
-    usageLimit,
+    perUserLimit, totalUsageLimit,
     isActive,
   } = req.body;
 
@@ -54,7 +54,7 @@ const addCoupon = asyncHandler(async (req, res) => {
       minCartValue,
       validFrom,
       validUntil,
-      usageLimit,
+      perUserLimit, totalUsageLimit,
       isActive,
     });
 
@@ -120,6 +120,50 @@ const getEditCouponPage = asyncHandler(async (req, res) => {
   });
 });
 
+const getViewCouponPage = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  let couponData;
+
+  try {
+    couponData = await couponService.getCouponUsageDetailsById(id);
+  } catch (error) {
+    if (error.message === 'Coupon not found') {
+      return res.status(StatusCodes.NOT_FOUND).render('layout', {
+        title: RESPONSE_MESSAGES.COUPON_NOT_FOUND,
+        viewName: '404',
+        isAdmin: true,
+        activePage: 'coupon',
+      });
+    }
+    throw error;
+  }
+
+  return res.render('layout', {
+    title: `Coupon - ${couponData.coupon.code}`,
+    viewName: 'admin/viewCoupon',
+    activePage: 'coupon',
+    isAdmin: true,
+    coupon: couponData.coupon,
+    usage: couponData.usage,
+  });
+});
+
+const getCouponDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const couponData = await couponService.getCouponUsageDetailsById(id);
+    return res.status(StatusCodes.OK).json({ success: true, ...couponData });
+  } catch (error) {
+    if (error.message === 'Coupon not found') {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ success: false, message: RESPONSE_MESSAGES.COUPON_NOT_FOUND });
+    }
+    throw error;
+  }
+});
+
 const updateCoupon = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const {
@@ -130,7 +174,7 @@ const updateCoupon = asyncHandler(async (req, res) => {
     minCartValue,
     validFrom,
     validUntil,
-    usageLimit,
+    perUserLimit, totalUsageLimit,
     isActive,
   } = req.body;
 
@@ -146,7 +190,7 @@ const updateCoupon = asyncHandler(async (req, res) => {
       minCartValue,
       validFrom,
       validUntil,
-      usageLimit,
+      perUserLimit, totalUsageLimit,
       isActive,
     });
   } catch (error) {
@@ -259,6 +303,8 @@ const toggleCouponStatus = asyncHandler(async (req, res) => {
 module.exports = {
   getCoupons,
   addCoupon,
+  getViewCouponPage,
+  getCouponDetails,
   getEditCouponPage,
   updateCoupon,
   deleteCoupon,

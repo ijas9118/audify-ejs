@@ -1,31 +1,134 @@
-document
-  .querySelector('#addCouponform')
-  .addEventListener('submit', async (event) => {
-    event.preventDefault();
+const addCouponForm = document.getElementById('addCouponForm');
 
-    const couponCode = document.getElementById('couponCode').value;
-    const discountType = document.getElementById('discountType').value;
-    const discountValue = document.getElementById('discountValue').value;
-    const maxDiscountValue = document.getElementById('maxDiscountValue').value;
-    const minCartValue = document.getElementById('minCartValue').value;
-    const validFrom = document.getElementById('validFrom').value;
-    const validUntil = document.getElementById('validUntil').value;
-    const usageLimit = document.getElementById('usageLimit').value;
-    const isActive = document.getElementById('isActive').value === 'true';
+if (addCouponForm) {
+  const couponCodeField = document.getElementById('couponCode');
+  const discountTypeField = document.getElementById('discountType');
+  const discountValueField = document.getElementById('discountValue');
+  const maxDiscountValueField = document.getElementById('maxDiscountValue');
+  const minCartValueField = document.getElementById('minCartValue');
+  const validFromField = document.getElementById('validFrom');
+  const validUntilField = document.getElementById('validUntil');
+  const perUserLimitField = document.getElementById('perUserLimit');
+  const totalUsageLimitField = document.getElementById('totalUsageLimit');
 
-    if (
-      !couponCode ||
-      !discountType ||
-      !discountValue ||
-      !validFrom ||
-      !validUntil
-    ) {
-      await Toast.fire({
-        icon: 'warning',
-        title: 'Please fill in all required fields',
-      });
+  const getFeedback = (field) =>
+    field?.parentElement?.querySelector('.invalid-feedback');
+
+  const updateFieldMessage = (field) => {
+    const feedback = getFeedback(field);
+    if (!feedback || !field) {
       return;
     }
+
+    field.setCustomValidity('');
+
+    if (field.validity.valueMissing) {
+      feedback.textContent =
+        field.dataset.msgRequired || 'This field is required.';
+      return;
+    }
+
+    if (field === couponCodeField) {
+      const code = field.value.trim().toUpperCase();
+      if (code && !/^[A-Z0-9]{3,20}$/.test(code)) {
+        field.setCustomValidity('Coupon code must be 3-20 letters or numbers.');
+        feedback.textContent = 'Coupon code must be 3-20 letters or numbers.';
+        return;
+      }
+    }
+
+    if (field === discountValueField) {
+      const discountType = discountTypeField.value;
+      const discountValue = Number(field.value);
+      if (
+        discountType === 'percentage' &&
+        Number.isFinite(discountValue) &&
+        discountValue > 100
+      ) {
+        field.setCustomValidity('Percentage discount cannot exceed 100.');
+        feedback.textContent = 'Percentage discount cannot exceed 100.';
+        return;
+      }
+    }
+
+    if (field === validUntilField) {
+      const start = validFromField.value ? new Date(validFromField.value) : null;
+      const end = field.value ? new Date(field.value) : null;
+      if (
+        start &&
+        end &&
+        !Number.isNaN(start.getTime()) &&
+        !Number.isNaN(end.getTime()) &&
+        end < start
+      ) {
+        field.setCustomValidity('Valid until date must be after valid from date.');
+        feedback.textContent = 'Valid until date must be after valid from date.';
+        return;
+      }
+    }
+
+    if (!field.validity.valid) {
+      feedback.textContent =
+        field.dataset.msgInvalid || 'Please enter a valid value.';
+    }
+  };
+
+  [
+    couponCodeField,
+    discountTypeField,
+    discountValueField,
+    maxDiscountValueField,
+    minCartValueField,
+    validFromField,
+    validUntilField,
+    perUserLimitField,
+    totalUsageLimitField,
+  ].forEach((field) => {
+    if (!field) {
+      return;
+    }
+    field.addEventListener('input', () => updateFieldMessage(field));
+    field.addEventListener('change', () => updateFieldMessage(field));
+  });
+
+  discountTypeField?.addEventListener('change', () => {
+    updateFieldMessage(discountValueField);
+  });
+
+  validFromField?.addEventListener('change', () => {
+    updateFieldMessage(validUntilField);
+  });
+
+  addCouponForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    [
+      couponCodeField,
+      discountTypeField,
+      discountValueField,
+      maxDiscountValueField,
+      minCartValueField,
+      validFromField,
+      validUntilField,
+      perUserLimitField,
+      totalUsageLimitField,
+    ].forEach((field) => updateFieldMessage(field));
+
+    if (!addCouponForm.checkValidity()) {
+      addCouponForm.classList.add('was-validated');
+      return;
+    }
+
+    const couponCode = couponCodeField.value;
+    const discountType = discountTypeField.value;
+    const discountValue = discountValueField.value;
+    const maxDiscountValue = maxDiscountValueField.value;
+    const minCartValue = minCartValueField.value;
+    const validFrom = validFromField.value;
+    const validUntil = validUntilField.value;
+    const perUserLimit = perUserLimitField.value;
+    const totalUsageLimit = totalUsageLimitField.value;
+    const isActive = document.getElementById('isActive').value === 'true';
 
     const couponData = {
       code: couponCode.trim().toUpperCase(),
@@ -37,7 +140,8 @@ document
       minCartValue: minCartValue ? parseFloat(minCartValue) : 0,
       validFrom, // New field for start date
       validUntil, // Updated field for expiration date
-      usageLimit: usageLimit ? parseInt(usageLimit, 10) : undefined,
+      perUserLimit: perUserLimit ? parseInt(perUserLimit, 10) : 1,
+      totalUsageLimit: totalUsageLimit ? parseInt(totalUsageLimit, 10) : 0,
       isActive,
     };
 
@@ -58,13 +162,22 @@ document
           icon: 'success',
           title: 'Coupon added successfully!',
         });
-        document.getElementById('addCouponform').reset();
+        addCouponForm.reset();
+        addCouponForm.classList.remove('was-validated');
 
         // Hide the modal
-        const addCouponModal = new bootstrap.Modal(
-          document.getElementById('addCouponModal')
-        );
+        const addCouponModalEl = document.getElementById('addCouponModal');
+        const addCouponModal =
+          bootstrap.Modal.getInstance(addCouponModalEl) ||
+          new bootstrap.Modal(addCouponModalEl);
         addCouponModal.hide();
+        addCouponModalEl.addEventListener(
+          'hidden.bs.modal',
+          () => {
+            addCouponForm.classList.remove('was-validated');
+          },
+          { once: true }
+        );
         window.location.reload();
       } else {
         Toast.fire({
@@ -80,12 +193,13 @@ document
       });
     }
   });
+}
 
 async function deleteCoupon(couponId) {
   const confirmDelete = await window.adminConfirm.open({
-    title: 'Delete Coupon',
-    message: 'This coupon will be permanently deleted.',
-    confirmText: 'Delete',
+    title: 'Archive Coupon',
+    message: 'This coupon will be soft deleted and hidden from active listings.',
+    confirmText: 'Archive',
     variant: 'danger',
   });
 
@@ -105,25 +219,24 @@ async function deleteCoupon(couponId) {
     const result = await parseApiResponse(response);
 
     if (response.ok) {
-      // Remove the coupon's row from the table
-      const row = document.querySelector(`tr[data-coupon-id="${couponId}"]`);
-      if (row) row.remove();
-
       Toast.fire({
         icon: 'success',
-        title: 'Coupon deleted successfully!',
+        title: 'Coupon archived successfully!',
       });
+
+      // Refresh to keep pagination and filtered lists aligned with server state.
+      window.location.reload();
     } else {
       Toast.fire({
         icon: 'error',
-        title: `Error deleting coupon: ${getErrorMessage(result)}`,
+        title: `Error archiving coupon: ${getErrorMessage(result)}`,
       });
     }
   } catch (error) {
     console.error('Error:', error);
     Toast.fire({
       icon: 'error',
-      title: 'An error occurred while deleting the coupon.',
+      title: 'An error occurred while archiving the coupon.',
     });
   }
 }

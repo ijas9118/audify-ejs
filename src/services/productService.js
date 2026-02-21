@@ -11,7 +11,11 @@ exports.getFilteredProducts = async ({
   sortBy,
 }) => {
   let sortCriteria = {};
-  const matchCriteria = { 'categoryDetails.isActive': true, isActive: true };
+  const matchCriteria = {
+    'categoryDetails.isActive': true,
+    'categoryDetails.isDeleted': { $ne: true },
+    isActive: true,
+  };
 
   switch (sortBy) {
     case 'popularity':
@@ -120,8 +124,15 @@ exports.getFilteredProducts = async ({
 };
 
 exports.getProductDetails = async (productId) => {
-  const product = await Product.findById(productId).populate('categoryId');
-  if (!product) return null;
+  const product = await Product.findOne({
+    _id: productId,
+    isActive: true,
+  }).populate({
+    path: 'categoryId',
+    match: { isActive: true, isDeleted: { $ne: true } },
+  });
+
+  if (!product || !product.categoryId) return null;
 
   const categoryOffer = product.categoryId.offerId
     ? await Offer.findById(product.categoryId.offerId)
@@ -177,14 +188,39 @@ exports.getStock = async (productId) => {
 };
 
 exports.searchProducts = async (query) => {
-  if (!query) return Product.find();
+  const baseFilter = { isActive: true };
 
-  return Product.find({
-    name: {
-      $regex: escapeRegex(query),
-      $options: 'i',
+  const pipeline = [
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'categoryId',
+        foreignField: '_id',
+        as: 'category',
+      },
     },
-  });
+    { $unwind: '$category' },
+    {
+      $match: {
+        ...baseFilter,
+        'category.isActive': true,
+        'category.isDeleted': { $ne: true },
+      },
+    },
+  ];
+
+  if (query) {
+    pipeline.push({
+      $match: {
+        name: {
+          $regex: escapeRegex(query),
+          $options: 'i',
+        },
+      },
+    });
+  }
+
+  return Product.aggregate(pipeline);
 };
 
 exports.getWishlist = async (userId) =>

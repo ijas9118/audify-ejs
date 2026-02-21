@@ -66,6 +66,16 @@ router.post('/sales-report', adminAuth, salesReportController.getSalesReport);
 // Coupon Management Routes
 // ============================
 router.get('/coupons', adminAuth, couponManagementController.getCoupons);
+router.get(
+  '/coupons/details/:id',
+  adminAuth,
+  couponManagementController.getCouponDetails
+);
+router.get(
+  '/coupons/view/:id',
+  adminAuth,
+  couponManagementController.getViewCouponPage
+);
 router.post(
   '/coupons',
   adminAuth,
