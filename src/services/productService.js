@@ -1,6 +1,7 @@
 const Product = require('../models/products');
 const Offer = require('../models/offer');
 const User = require('../models/userModel');
+const Category = require('../models/categories');
 const { calculateDiscountedPrice } = require('./offerService');
 const { escapeRegex } = require('../utils/regex');
 
@@ -57,7 +58,9 @@ exports.getFilteredProducts = async ({
     ? Infinity
     : parseFloat(maxPrice);
 
-  matchCriteria.price = { $gte: min, $lte: max };
+  // ⚠ MongoDB/BSON cannot serialize Infinity — cap to a safe large number
+  const safeMax = max === Infinity ? 1_000_000_000 : max;
+  matchCriteria.price = { $gte: min, $lte: safeMax };
 
   const pipeline = [
     {
@@ -187,8 +190,63 @@ exports.getStock = async (productId) => {
   return product ? product.stock : null;
 };
 
-exports.searchProducts = async (query) => {
-  const baseFilter = { isActive: true };
+/**
+ * Search products with optional category / price / sort filters applied.
+ * Returns products with discountedPrice resolved so the frontend card is consistent.
+ */
+exports.searchProducts = async ({
+  query = '',
+  category = '',
+  minPrice = 0,
+  maxPrice = 1_000_000_000,
+  sortBy = '',
+} = {}) => {
+  let sortCriteria = null;
+  switch (sortBy) {
+    case 'price-asc':
+      sortCriteria = { price: 1 };
+      break;
+    case 'price-desc':
+      sortCriteria = { price: -1 };
+      break;
+    case 'new':
+      sortCriteria = { createdAt: -1 };
+      break;
+    case 'a-z':
+      sortCriteria = { name: 1 };
+      break;
+    case 'z-a':
+      sortCriteria = { name: -1 };
+      break;
+    case 'popularity':
+      sortCriteria = { popularity: -1 };
+      break;
+    default:
+      break;
+  }
+
+  const min = Number.isNaN(parseFloat(minPrice)) ? 0 : parseFloat(minPrice);
+  const max = Number.isNaN(parseFloat(maxPrice))
+    ? 1_000_000_000
+    : parseFloat(maxPrice);
+
+  const baseMatch = {
+    isActive: true,
+    'category.isActive': true,
+    'category.isDeleted': { $ne: true },
+    price: { $gte: min, $lte: max },
+  };
+
+  if (category) {
+    baseMatch['category.name'] = category;
+  }
+
+  if (query) {
+    baseMatch.$or = [
+      { name: { $regex: escapeRegex(query), $options: 'i' } },
+      { description: { $regex: escapeRegex(query), $options: 'i' } },
+    ];
+  }
 
   const pipeline = [
     {
@@ -200,28 +258,58 @@ exports.searchProducts = async (query) => {
       },
     },
     { $unwind: '$category' },
+    { $match: baseMatch },
     {
-      $match: {
-        ...baseFilter,
-        'category.isActive': true,
-        'category.isDeleted': { $ne: true },
+      $lookup: {
+        from: 'offers',
+        localField: 'offerId',
+        foreignField: '_id',
+        as: 'productOfferDetails',
+      },
+    },
+    {
+      $unwind: {
+        path: '$productOfferDetails',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'offers',
+        localField: 'category.offerId',
+        foreignField: '_id',
+        as: 'categoryOfferDetails',
+      },
+    },
+    {
+      $unwind: {
+        path: '$categoryOfferDetails',
+        preserveNullAndEmptyArrays: true,
       },
     },
   ];
 
-  if (query) {
-    pipeline.push({
-      $match: {
-        name: {
-          $regex: escapeRegex(query),
-          $options: 'i',
-        },
-      },
-    });
-  }
+  if (sortCriteria) pipeline.push({ $sort: sortCriteria });
 
-  return Product.aggregate(pipeline);
+  const products = await Product.aggregate(pipeline);
+
+  return products.map((product) => {
+    const discountedPrice = calculateDiscountedPrice(
+      product.price,
+      product.productOfferDetails || null,
+      product.categoryOfferDetails || null
+    );
+    return { ...product, discountedPrice };
+  });
 };
+
+/**
+ * Return all active, non-deleted category names for the shop filter dropdown.
+ */
+exports.getActiveCategories = async () =>
+  Category.find({ isActive: true, isDeleted: { $ne: true } })
+    .select('name')
+    .sort({ name: 1 });
 
 exports.getWishlist = async (userId) =>
   User.findById(userId).populate({

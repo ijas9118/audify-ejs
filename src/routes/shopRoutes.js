@@ -31,4 +31,7 @@ router.delete('/wishlist/delete/:id', userAuth, shopController.removeWishlist);
 
 router.get('/search', shopController.searchProducts);
 
+// AJAX endpoint: all filter + search in one — used by shop.js
+router.get('/products', shopController.getProductsJson);
+
 module.exports = router;

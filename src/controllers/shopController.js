@@ -6,24 +6,28 @@ const Offer = require('../models/offer');
 
 const getShop = asyncHandler(async (req, res) => {
   const category = '';
-  const minPrice = 200;
-  const maxPrice = 5000;
-  const sortBy = '';
+  const minPrice = 0;
+  const maxPrice = 10000;
+  const sortBy = 'new';
 
-  const products = await productService.getFilteredProducts({
-    category,
-    minPrice,
-    maxPrice,
-    sortBy,
-  });
+  const [products, categories] = await Promise.all([
+    productService.getFilteredProducts({
+      category,
+      minPrice,
+      maxPrice,
+      sortBy,
+    }),
+    productService.getActiveCategories(),
+  ]);
 
   res.render('layout', {
-    title: 'Audify',
+    title: 'Audify Shop',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/shop',
     activePage: 'shop',
     isAdmin: false,
     products,
+    categories, // dynamic list from DB
     category,
     minPrice,
     maxPrice,
@@ -31,26 +35,53 @@ const getShop = asyncHandler(async (req, res) => {
   });
 });
 
-const filterShop = asyncHandler(async (req, res) => {
-  const sortBy = req.body.sort;
-  const { category } = req.body;
-  const minPrice = parseFloat(req.body.minPrice) || 0;
-  const maxPrice = parseFloat(req.body.maxPrice) || Infinity;
+/**
+ * AJAX endpoint — returns filtered/searched products as JSON.
+ * The shop page fetches this instead of doing a full-page form POST.
+ */
+const getProductsJson = asyncHandler(async (req, res) => {
+  const query = (req.query.q || '').trim();
+  const category = req.query.category || '';
+  const minPrice = parseFloat(req.query.minPrice) || 0;
+  const maxPrice = parseFloat(req.query.maxPrice) || 10000;
+  const sortBy = req.query.sortBy || '';
 
-  const products = await productService.getFilteredProducts({
+  const products = await productService.searchProducts({
+    query,
     category,
     minPrice,
     maxPrice,
     sortBy,
   });
 
+  return res.json({ products });
+});
+
+// Legacy POST handler — kept for graceful fallback but now delegates to JSON logic
+const filterShop = asyncHandler(async (req, res) => {
+  const sortBy = req.body.sort || '';
+  const category = req.body.category || '';
+  const minPrice = parseFloat(req.body.minPrice) || 0;
+  const maxPrice = parseFloat(req.body.maxPrice) || 10000;
+
+  const [products, categories] = await Promise.all([
+    productService.getFilteredProducts({
+      category,
+      minPrice,
+      maxPrice,
+      sortBy,
+    }),
+    productService.getActiveCategories(),
+  ]);
+
   res.render('layout', {
-    title: 'Audify',
+    title: 'Audify Shop',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/shop',
     activePage: 'shop',
     isAdmin: false,
     products,
+    categories,
     category,
     minPrice,
     maxPrice,
@@ -207,14 +238,26 @@ const removeWishlist = asyncHandler(async (req, res) => {
 });
 
 const searchProducts = asyncHandler(async (req, res) => {
-  const query = req.query.query || '';
-  const products = await productService.searchProducts(query);
+  const query = (req.query.query || '').trim();
+  const category = req.query.category || '';
+  const minPrice = parseFloat(req.query.minPrice) || 0;
+  const maxPrice = parseFloat(req.query.maxPrice) || 10000;
+  const sortBy = req.query.sortBy || '';
+
+  const products = await productService.searchProducts({
+    query,
+    category,
+    minPrice,
+    maxPrice,
+    sortBy,
+  });
   return res.json(products);
 });
 
 module.exports = {
   getShop,
   filterShop,
+  getProductsJson,
   getProduct,
   getStock,
   getWishList,
