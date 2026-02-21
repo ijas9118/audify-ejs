@@ -27,8 +27,12 @@ exports.getPaginatedOrders = async ({ page, limit }) => {
 };
 
 exports.updateOrderStatus = async (orderId, status) => {
-  const order = await Order.findByIdAndUpdate(
-    orderId,
+  // Support both MongoDB _id and human-readable ORD-XXXXX
+  const isHumanId = typeof orderId === 'string' && orderId.startsWith('ORD-');
+  const filter = isHumanId ? { orderId } : { _id: orderId };
+
+  const order = await Order.findOneAndUpdate(
+    filter,
     { $set: { status } },
     { new: true }
   );
@@ -41,7 +45,11 @@ exports.updateOrderStatus = async (orderId, status) => {
 };
 
 exports.getOrderById = async (orderId) => {
-  const order = await Order.findById(orderId)
+  // Support both MongoDB _id and human-readable ORD-XXXXX
+  const isHumanId = typeof orderId === 'string' && orderId.startsWith('ORD-');
+  const filter = isHumanId ? { orderId } : { _id: orderId };
+
+  const order = await Order.findOne(filter)
     .populate('user', 'firstName lastName email mobile')
     .populate({ path: 'orderItems', populate: 'product' });
 

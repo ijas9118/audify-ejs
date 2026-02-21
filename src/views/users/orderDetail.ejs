@@ -11,7 +11,11 @@
       <li class="breadcrumb-item">
         <a href="/account/order-history" class="text-decoration-none">Order History</a>
       </li>
-      <li class="breadcrumb-item active" aria-current="page"><%= order._id %></li>
+      <%
+        // Prefer human-readable orderId; fall back to MongoDB _id for legacy orders
+        const displayId = order.orderId || order._id;
+      %>
+      <li class="breadcrumb-item active" aria-current="page"><%= displayId %></li>
     </ol>
   </nav>
 
@@ -25,7 +29,7 @@
       <div class="row mb-4">
         <div class="col-md-6">
           <p class="mb-2">
-            <strong>Order ID:</strong> <%= order._id %>
+            <strong>Order ID:</strong> <%= displayId %>
           </p>
           <p class="mb-2">
             <strong>Order Date:</strong> <%= new Date(order.createdAt).toDateString() %>
@@ -60,9 +64,9 @@
         <strong>Mobile:</strong> <%= order.mobile %> <% if(order.alternateMobile){ %> (Alternate: <%= order.alternateMobile %>) <% } %>
       </p>
     </div>
-    <!-- Add this button in your Order Details Card -->
+    <!-- Download Invoice Button -->
     <div class="text-end p-2">
-      <button onclick="downloadInvoice('<%= order._id %>')" class="btn btn-dark">Download Invoice</button>
+      <button onclick="downloadInvoice('<%= displayId %>')" class="btn btn-dark">Download Invoice</button>
     </div>
 
   </div>
@@ -90,12 +94,12 @@
   <!-- Cancel Order Button -->
   <% if (order.status === 'Processed') { %>
   <div class="text-end">
-    <input type="hidden" name="orderId" value="<%= order._id %>" />
+    <input type="hidden" name="orderId" value="<%= displayId %>" />
     <button onclick="cancelOrder('<%= order._id %>')" class="btn btn-danger">Cancel Order</button>
   </div>
   <% } else if (order.status === 'Pending') { %>
     <div class="text-end">
-      <input type="hidden" name="orderId" value="<%= order._id %>" />
+      <input type="hidden" name="orderId" value="<%= displayId %>" />
       <button class="btn btn-success" onclick="redirectToPayment('<%= order._id %>')">Proceed to Payment</button>
     </div>
   <% } %>

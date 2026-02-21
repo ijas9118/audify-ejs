@@ -227,13 +227,21 @@ exports.getUserOrders = async (userId, options = {}) => {
 };
 
 /**
- * Get order by ID
- * @param {string} orderId - Order ID
+ * Get order by MongoDB _id or human-readable orderId (ORD-XXXXX).
+ * @param {string} idOrOrderId - MongoDB ObjectId string OR 'ORD-XXXXX' string
  * @param {boolean} populate - Whether to populate order items and products
  * @returns {Promise<Object>} Order object
  */
-exports.getOrderById = async (orderId, populate = true) => {
-  let query = Order.findById(orderId);
+exports.getOrderById = async (idOrOrderId, populate = true) => {
+  const isHumanId =
+    typeof idOrOrderId === 'string' && idOrOrderId.startsWith('ORD-');
+
+  let query;
+  if (isHumanId) {
+    query = Order.findOne({ orderId: idOrOrderId });
+  } else {
+    query = Order.findById(idOrOrderId);
+  }
 
   if (populate) {
     query = query.populate({
@@ -264,12 +272,18 @@ exports.getOrderById = async (orderId, populate = true) => {
  * @param {number} amount - Refund amount
  * @returns {Promise<Object>} Updated user
  */
-exports.processOrderRefund = async (userId, orderId, amount) => {
+exports.processOrderRefund = async (userId, orderRef, amount) => {
   const user = await User.findById(userId);
 
   if (!user) {
     throw new Error('User not found');
   }
+
+  // orderRef may be the full Order document, a plain orderId string, or a MongoDB _id
+  const label =
+    typeof orderRef === 'object' && orderRef.orderId
+      ? orderRef.orderId
+      : String(orderRef);
 
   await User.findByIdAndUpdate(userId, {
     $inc: { walletBalance: amount },
@@ -277,7 +291,7 @@ exports.processOrderRefund = async (userId, orderId, amount) => {
       walletTransactions: {
         transactionType: 'Credit',
         amount,
-        description: `Refund for cancelled order #${orderId}`,
+        description: `Refund for cancelled order #${label}`,
         date: new Date(),
       },
     },
@@ -343,7 +357,8 @@ exports.cancelOrder = async (orderId, userId) => {
       order.paymentMethod === 'Wallet' || order.paymentMethod === 'Razorpay';
 
     if (shouldRefund) {
-      await exports.processOrderRefund(userId, orderId, order.finalTotal);
+      // Pass the full order so processOrderRefund can use the friendly orderId
+      await exports.processOrderRefund(userId, order, order.finalTotal);
     }
 
     await Order.findByIdAndUpdate(orderId, {

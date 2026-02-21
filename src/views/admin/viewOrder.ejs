@@ -4,7 +4,7 @@
       <ol class="breadcrumb admin-breadcrumb mb-0">
         <li class="breadcrumb-item"><a href="/admin">Home</a></li>
         <li class="breadcrumb-item"><a href="/admin/orders">Order Management</a></li>
-        <li class="breadcrumb-item active" aria-current="page">#<%= order._id.toString().slice(-6) %></li>
+        <li class="breadcrumb-item active" aria-current="page">#<%= order.orderId || order._id.toString().slice(-6) %></li>
       </ol>
     </nav>
     <div class="admin-management-title-row mt-2">
@@ -30,7 +30,7 @@
           <dl class="admin-order-meta">
             <div>
               <dt>Order ID</dt>
-              <dd><span class="admin-order-chip"><%= order._id %></span></dd>
+              <dd><span class="admin-order-chip"><%= order.orderId || order._id %></span></dd>
             </div>
             <div>
               <dt>Date Ordered</dt>

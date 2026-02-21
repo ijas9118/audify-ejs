@@ -12,6 +12,7 @@
   <%
     const orderColumns = [
       { label: '#' },
+      { label: 'Order ID' },
       { label: 'User' },
       { label: 'Total Amount' },
       { label: 'Payment Method' },
@@ -30,10 +31,14 @@
         orderUserLabel = order.user || '';
       }
 
+      // Prefer human-readable orderId; fall back to MongoDB _id for legacy orders
+      const displayId = order.orderId || order._id;
+
       return {
         cells: [
           { tag: 'th', className: 'admin-row-index', text: pagination.skip + index + 1 },
-          { className: 'admin-cell-primary', text: orderUserLabel },
+          { className: 'admin-cell-primary', text: displayId },
+          { text: orderUserLabel },
           { text: `₹${order.finalTotal.toFixed(2)}` },
           { text: order.paymentMethod || '' },
           {

@@ -1,7 +1,19 @@
 const mongoose = require('mongoose');
+const Counter = require('./counter');
 
 const orderSchema = mongoose.Schema(
   {
+    /**
+     * Human-readable sequential order ID: ORD-00001, ORD-00002, …
+     * Generated automatically on first save via pre-save hook.
+     * Unique index enables fast look-ups and guarantees no collisions.
+     */
+    orderId: {
+      type: String,
+      unique: true,
+      sparse: true, // allow null during migration of old documents
+    },
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -75,5 +87,22 @@ const orderSchema = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+/**
+ * Auto-generate orderId before the first save.
+ * Format: ORD-00001  (zero-padded to 5 digits, grows as needed)
+ */
+orderSchema.pre('save', async function preSave(next) {
+  if (this.orderId) return next(); // already set, skip
+
+  try {
+    const seq = await Counter.getNextSequence('order');
+    // Pad to at least 5 digits so early orders sort nicely as strings
+    this.orderId = `ORD-${String(seq).padStart(5, '0')}`;
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+});
 
 module.exports = mongoose.model('Order', orderSchema);

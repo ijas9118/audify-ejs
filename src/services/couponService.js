@@ -63,7 +63,9 @@ exports.getCouponUsageDetailsById = async (couponId) => {
   })
     .populate('user', 'firstName lastName email')
     .sort({ createdAt: -1 })
-    .select('_id user status createdAt totalAmount discountApplied finalTotal');
+    .select(
+      '_id orderId user status createdAt totalAmount discountApplied finalTotal'
+    );
 
   const usedCount = orders.length;
   const uniqueCustomerIds = new Set(
@@ -76,7 +78,7 @@ exports.getCouponUsageDetailsById = async (couponId) => {
       : null;
 
   const usageEntries = orders.map((order) => ({
-    orderId: order._id,
+    orderId: order.orderId || order._id,
     createdAt: order.createdAt,
     status: order.status,
     discountApplied: order.discountApplied,

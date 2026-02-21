@@ -234,7 +234,11 @@ exports.deleteAddress = async (addressId) => {
  * @returns {Promise<Object>} Object containing order and PDF document
  */
 exports.generateInvoicePDF = async (orderId) => {
-  const order = await Order.findById(orderId).populate({
+  // Support both MongoDB _id and human-readable ORD-XXXXX
+  const isHumanId = typeof orderId === 'string' && orderId.startsWith('ORD-');
+  const filter = isHumanId ? { orderId } : { _id: orderId };
+
+  const order = await Order.findOne(filter).populate({
     path: 'orderItems',
     populate: 'product',
   });
@@ -242,6 +246,9 @@ exports.generateInvoicePDF = async (orderId) => {
   if (!order) {
     throw new Error('Order not found');
   }
+
+  // Use the human-readable orderId if available, fall back to MongoDB _id
+  const displayId = order.orderId || order._id.toString();
 
   // Create a PDF document
   const doc = new PDFDocument({ margin: 50 });
@@ -252,7 +259,7 @@ exports.generateInvoicePDF = async (orderId) => {
   doc
     .fillColor('#000')
     .fontSize(14)
-    .text(`Invoice for Order ID: ${orderId}`, { align: 'center' });
+    .text(`Invoice for Order ID: ${displayId}`, { align: 'center' });
   doc.moveDown(2);
 
   // Order details
