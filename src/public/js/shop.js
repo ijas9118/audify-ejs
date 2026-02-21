@@ -181,11 +181,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const globalMin = parseFloat(sliderConfig.dataset.minPrice) || 0;
   const globalMax = parseFloat(sliderConfig.dataset.maxPrice) || 10000;
+  const rangeMin = Math.min(globalMin, globalMax);
+  const rangeMax = Math.max(globalMin, globalMax);
+
+  // Avoid duplicate initialisation errors if another script touched this element.
+  if (sliderEl.noUiSlider) {
+    sliderEl.noUiSlider.destroy();
+  }
 
   noUiSlider.create(sliderEl, {
-    start: [globalMin, globalMax],
+    start: [rangeMin, rangeMax],
     connect: true,
-    range: { min: 0, max: 10000 },
+    range: { min: rangeMin, max: rangeMax },
     step: 50,
     format: {
       to: (v) => Math.round(v),
