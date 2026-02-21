@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const offerSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['product', 'category', 'referral'],
+    enum: ['product', 'category'],
     required: true,
   },
   product: {
@@ -29,6 +29,7 @@ const offerSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  // Cap for percentage discounts — e.g., 30% off but max ₹200 off
   maxDiscountAmount: {
     type: Number,
     default: null,
@@ -40,14 +41,6 @@ const offerSchema = new mongoose.Schema({
   validUntil: {
     type: Date,
     required: true,
-  },
-  minCartValue: {
-    type: Number,
-    default: 0,
-  },
-  referralBonus: {
-    referrer: { type: Number }, // e.g., ₹100 for referrer
-    referee: { type: Number }, // e.g., ₹50 for referee
   },
   status: {
     type: String,

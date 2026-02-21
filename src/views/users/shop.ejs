@@ -80,17 +80,39 @@
           >
             <div class="position-relative">
               <a href="/shop/product/<%= product._id %>" class="card-link">
-                <!-- Discount Badge -->
-                <% if (product.productOfferDetails || product.categoryOfferDetails) { %>
+                <!-- Discount Badge — only show for active, in-date offers -->
+                <%
+                  const now = new Date();
+                  const isOfferValid = (o) =>
+                    o &&
+                    o.status === 'active' &&
+                    new Date(o.validFrom) <= now &&
+                    new Date(o.validUntil) >= now;
+
+                  const pOffer = isOfferValid(product.productOfferDetails) ? product.productOfferDetails : null;
+                  const cOffer = isOfferValid(product.categoryOfferDetails) ? product.categoryOfferDetails : null;
+
+                  // Pick the offer that gives the best (lowest) discounted price — mirrors server logic
+                  let badgeOffer = null;
+                  if (pOffer && cOffer) {
+                    const pPrice = pOffer.discountType === 'percentage'
+                      ? product.price * (1 - pOffer.discountValue / 100)
+                      : product.price - pOffer.discountValue;
+                    const cPrice = cOffer.discountType === 'percentage'
+                      ? product.price * (1 - cOffer.discountValue / 100)
+                      : product.price - cOffer.discountValue;
+                    badgeOffer = pPrice <= cPrice ? pOffer : cOffer;
+                  } else {
+                    badgeOffer = pOffer || cOffer;
+                  }
+                %>
+                <% if (badgeOffer && product.discountedPrice < product.price) { %>
                   <span class="badge bg-danger position-absolute top-0 start-0 m-2">
-                    <% 
-                      // Determine which offer to use (product offer has higher priority)
-                      const offer = product.productOfferDetails || product.categoryOfferDetails;
-                      if (offer.discountType === 'percentage') { %>
-                        -<%= offer.discountValue %>%
-                      <% } else if (offer.discountType === 'fixed') { %>
-                        -₹<%= offer.discountValue.toFixed(2) %>
-                      <% } %>
+                    <% if (badgeOffer.discountType === 'percentage') { %>
+                      -<%= badgeOffer.discountValue %>%
+                    <% } else { %>
+                      -₹<%= badgeOffer.discountValue.toFixed(2) %>
+                    <% } %>
                   </span>
                 <% } %>
 

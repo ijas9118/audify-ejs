@@ -1,5 +1,7 @@
 const Cart = require('../models/cart');
 const Product = require('../models/products');
+const Offer = require('../models/offer');
+const { calculateDiscountedPrice } = require('./offerService');
 
 exports.getCart = async (userId) => Cart.findOne({ user: userId });
 
@@ -7,11 +9,24 @@ exports.getCartWithProductDetails = async (userId) =>
   Cart.findOne({ user: userId }).populate('items.productId');
 
 exports.addToCart = async (userId, productId, quantity) => {
-  const product = await Product.findById(productId);
+  const product = await Product.findById(productId).populate('categoryId');
 
   if (!product) {
     throw new Error('Product not found');
   }
+
+  // ✅ Resolve the effective (offer-discounted) price at the time of adding to cart
+  const productOffer = product.offerId
+    ? await Offer.findById(product.offerId)
+    : null;
+  const categoryOffer = product.categoryId?.offerId
+    ? await Offer.findById(product.categoryId.offerId)
+    : null;
+  const effectivePrice = calculateDiscountedPrice(
+    product.price,
+    productOffer,
+    categoryOffer
+  );
 
   let cart = await Cart.findOne({ user: userId });
   if (!cart) {
@@ -21,6 +36,7 @@ exports.addToCart = async (userId, productId, quantity) => {
   const item = cart.items.find((i) => i.productId.equals(productId));
 
   if (item) {
+    // Update quantity but keep the already-stored discounted price
     item.quantity = quantity;
     item.subtotal = item.quantity * item.price;
   } else {
@@ -28,9 +44,9 @@ exports.addToCart = async (userId, productId, quantity) => {
       productId: product._id,
       name: product.name,
       image: product.images.main,
-      price: product.price,
+      price: effectivePrice, // ✅ discounted price
       quantity,
-      subtotal: product.price * quantity,
+      subtotal: effectivePrice * quantity,
     });
   }
 

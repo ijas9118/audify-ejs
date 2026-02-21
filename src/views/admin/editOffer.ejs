@@ -33,9 +33,7 @@
   const breadcrumbLabel =
     currentOfferType === 'product'
       ? 'Product Offer'
-      : currentOfferType === 'category'
-        ? 'Category Offer'
-        : 'Referral Offer';
+      : 'Category Offer';
 %>
 
 <div class="container-fluid mt-3 admin-management-page">
@@ -83,7 +81,6 @@
               >
                 <option value="product" <%= currentOfferType === 'product' ? 'selected' : '' %>>Product</option>
                 <option value="category" <%= currentOfferType === 'category' ? 'selected' : '' %>>Category</option>
-                <option value="referral" <%= currentOfferType === 'referral' ? 'selected' : '' %>>Referral</option>
               </select>
               <div class="invalid-feedback"><%= fieldError('type') || 'Offer type is required.' %></div>
             </div>
@@ -167,6 +164,13 @@
                 data-msg-invalid="Discount value must be greater than 0."
                 required
               />
+              <div class="form-text admin-coupon-form-subtitle" id="discountValueHint">
+                <% if (valueOf('discountType', offer.discountType) === 'percentage') { %>
+                  Enter a value between 0.01 and 100.
+                <% } else { %>
+                  Enter a fixed discount amount in ₹.
+                <% } %>
+              </div>
               <div class="invalid-feedback"><%= fieldError('discountValue') || 'Discount value is required.' %></div>
             </div>
 
@@ -185,20 +189,7 @@
               <div class="invalid-feedback"><%= fieldError('maxDiscountAmount') || 'Maximum discount amount must be non-negative.' %></div>
             </div>
 
-            <div class="col-md-6">
-              <label for="minCartValue" class="form-label">Minimum Cart Subtotal</label>
-              <input
-                type="number"
-                class="form-control custom-search-input admin-coupon-input <%= fieldClass('minCartValue') %>"
-                id="minCartValue"
-                name="minCartValue"
-                value="<%= valueOf('minCartValue', offer.minCartValue ?? 0) %>"
-                min="0"
-                step="0.01"
-                data-msg-invalid="Minimum cart subtotal must be non-negative."
-              />
-              <div class="invalid-feedback"><%= fieldError('minCartValue') || 'Minimum cart subtotal must be non-negative.' %></div>
-            </div>
+
 
             <div class="col-md-6">
               <label for="validFrom" class="form-label">Valid From</label>
@@ -342,6 +333,16 @@
     });
 
     discountTypeField?.addEventListener('change', () => {
+      const isPercent = discountTypeField.value === 'percentage';
+      if (discountValueField) {
+        discountValueField.max = isPercent ? '100' : '';
+      }
+      const hint = document.getElementById('discountValueHint');
+      if (hint) {
+        hint.textContent = isPercent
+          ? 'Enter a value between 0.01 and 100.'
+          : 'Enter a fixed discount amount in ₹.';
+      }
       updateFieldMessage(discountValueField);
     });
 

@@ -3,19 +3,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const productCategorySection = document.getElementById(
     'productCategorySection'
   );
-  const referralSection = document.getElementById('referralSection');
   const productOrCategorySelect = document.getElementById('productOrCategory');
   const addOfferForm = document.getElementById('addOfferForm');
+  const discountTypeSelect = document.getElementById('discountType');
+  const discountValueInput = document.getElementById('discountValue');
+  const discountHint = document.getElementById('discountValueHintModal');
 
   if (
     !offerTypeSelect ||
     !productCategorySection ||
-    !referralSection ||
     !productOrCategorySelect ||
     !addOfferForm
   ) {
     return;
   }
+
+  // ── Sync max & hint when discount type changes ──────────────────────────────
+  function syncDiscountConstraints() {
+    if (!discountTypeSelect || !discountValueInput) return;
+    const isPercent = discountTypeSelect.value === 'percentage';
+    discountValueInput.max = isPercent ? '100' : '';
+    if (discountHint) {
+      discountHint.textContent = isPercent
+        ? 'Enter a value between 0.01 and 100.'
+        : 'Enter a fixed discount amount in ₹.';
+    }
+  }
+
+  discountTypeSelect?.addEventListener('change', syncDiscountConstraints);
 
   function fetchOptions(offerType) {
     const url =
@@ -50,14 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
   offerTypeSelect.addEventListener('change', () => {
     const offerType = offerTypeSelect.value;
 
-    // Show or hide referral section based on offer type
-    if (offerType === 'referral') {
-      referralSection.classList.remove('d-none');
-    } else {
-      referralSection.classList.add('d-none');
-    }
-
-    // Show product/category section and update options
+    // Show/hide product or category selector
     if (offerType === 'product' || offerType === 'category') {
       productCategorySection.style.display = 'block';
       fetchOptions(offerType);
@@ -78,20 +86,54 @@ function addOffer() {
   const offerType = document.getElementById('offerType').value;
   const productOrCategory = document.getElementById('productOrCategory').value;
   const discountType = document.getElementById('discountType').value;
-  const discountValue = document.getElementById('discountValue').value;
+  const discountValue = parseFloat(
+    document.getElementById('discountValue').value
+  );
   const maxDiscountAmount =
     document.getElementById('maxDiscountAmount').value || null;
-  const minCartValue = document.getElementById('minCartValue').value || null;
   const validFrom = document.getElementById('validFrom').value;
   const validUntil = document.getElementById('validUntil').value;
-  const referrerBonus =
-    offerType === 'referral'
-      ? document.getElementById('referrerBonus').value || null
-      : null;
-  const refereeBonus =
-    offerType === 'referral'
-      ? document.getElementById('refereeBonus').value || null
-      : null;
+
+  // ── Frontend validation guards ──────────────────────────────────────────────
+  if (!offerType) {
+    return Toast.fire({ icon: 'error', title: 'Please select an offer type.' });
+  }
+  if (!productOrCategory) {
+    return Toast.fire({
+      icon: 'error',
+      title: `Please select a ${offerType}.`,
+    });
+  }
+  if (!discountType) {
+    return Toast.fire({
+      icon: 'error',
+      title: 'Please select a discount type.',
+    });
+  }
+  if (!discountValue || discountValue <= 0) {
+    return Toast.fire({
+      icon: 'error',
+      title: 'Discount value must be greater than 0.',
+    });
+  }
+  if (discountType === 'percentage' && discountValue > 100) {
+    return Toast.fire({
+      icon: 'error',
+      title: 'Percentage discount cannot exceed 100%.',
+    });
+  }
+  if (!validFrom || !validUntil) {
+    return Toast.fire({
+      icon: 'error',
+      title: 'Please provide both valid from and valid until dates.',
+    });
+  }
+  if (new Date(validUntil) < new Date(validFrom)) {
+    return Toast.fire({
+      icon: 'error',
+      title: 'Valid until date must be after valid from date.',
+    });
+  }
 
   const offerData = {
     type: offerType,
@@ -100,13 +142,8 @@ function addOffer() {
     discountType,
     discountValue,
     maxDiscountAmount,
-    minCartValue,
     validFrom,
     validUntil,
-    referralBonus:
-      offerType === 'referral'
-        ? { referrer: referrerBonus, referee: refereeBonus }
-        : undefined,
   };
 
   fetch('/admin/offers', {
