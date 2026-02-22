@@ -474,6 +474,31 @@
 
       try {
         const formData = new FormData(form);
+        const croppedFiles = window.__addProductCroppedFiles || {};
+
+        if (croppedFiles.mainImageInput) {
+          formData.set(
+            'mainImage',
+            croppedFiles.mainImageInput,
+            croppedFiles.mainImageInput.name || 'main-image.jpg'
+          );
+        }
+
+        const supportCrops = [
+          croppedFiles.supportImageInput1,
+          croppedFiles.supportImageInput2,
+        ].filter(Boolean);
+
+        if (supportCrops.length === 2) {
+          formData.delete('supportImages');
+          supportCrops.forEach((file, idx) => {
+            formData.append(
+              'supportImages',
+              file,
+              file.name || `support-image-${idx + 1}.jpg`
+            );
+          });
+        }
 
         const response = await fetch('/admin/products/', {
           method: 'POST',
@@ -518,9 +543,18 @@
     modalEl.addEventListener('hidden.bs.modal', () => {
       form.reset();
       clearErrors();
+      if (window.__addProductCroppedFiles) {
+        Object.keys(window.__addProductCroppedFiles).forEach((key) => {
+          delete window.__addProductCroppedFiles[key];
+        });
+      }
       // Hide all previews and crop buttons
       form.querySelectorAll('.preview-img').forEach((img) => { img.style.display = 'none'; img.src = ''; });
-      form.querySelectorAll('.crop-button').forEach((btn) => { btn.style.display = 'none'; });
+      form.querySelectorAll('.crop-button').forEach((btn) => {
+        btn.style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = 'Crop Image';
+      });
     });
   })();
 </script>
