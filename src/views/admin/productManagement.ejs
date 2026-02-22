@@ -131,16 +131,19 @@
 
 <!-- Add Product Modal -->
 <div
-  class="modal fade"
+  class="modal fade admin-confirm-modal admin-product-add-modal"
   id="addProductModel"
   tabindex="-1"
   aria-labelledby="addProductModelLabel"
   aria-hidden="true"
 >
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content bg-dark text-light">
-      <div class="modal-header bg-dark">
-        <h5 class="modal-title" id="addProductModelLabel">Add New Product</h5>
+  <div class="modal-dialog modal-xl modal-dialog-centered admin-form-modal">
+    <div class="modal-content admin-form-modal-content admin-confirm-content">
+      <div class="modal-header admin-form-modal-header admin-confirm-header">
+        <div>
+          <h5 class="modal-title admin-form-modal-title admin-confirm-title" id="addProductModelLabel">Add New Product</h5>
+          <p class="admin-form-modal-subtitle mb-0">Create product details, inventory, category, and required images.</p>
+        </div>
         <button
           type="button"
           class="btn-close btn-close-white"
@@ -148,147 +151,173 @@
           aria-label="Close"
         ></button>
       </div>
-      <form
-        action="/admin/products/"
-        method="POST"
-        enctype="multipart/form-data"
-      >
-        <div class="modal-body">
-          <div class="row">
-            <div class="mb-3">
-              <label for="productName" class="form-label">Product Name</label>
-              <input
-                type="text"
-                class="form-control custom-search-input"
-                id="productName"
-                name="name"
-                required
-              />
+      <!-- NOTE: no action/method — handled via JS fetch -->
+      <form id="addProductForm" novalidate>
+        <div class="modal-body admin-form-modal-body">
+          <section class="admin-product-section pt-0">
+            <h5 class="admin-product-section-title">Product Details</h5>
+            <p class="admin-product-section-subtitle">Enter core product information used on the storefront.</p>
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="productName" class="form-label">Product Name <span class="text-danger">*</span></label>
+                <input
+                  type="text"
+                  class="form-control custom-search-input admin-product-input"
+                  id="productName"
+                  name="name"
+                  required
+                  maxlength="100"
+                />
+                <div class="invalid-feedback" id="err-name" data-default-message="Product name is required.">Product name is required.</div>
+              </div>
+              <div class="col-12">
+                <label for="productDescription" class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea
+                  class="form-control custom-search-input admin-product-input admin-product-textarea"
+                  id="productDescription"
+                  name="description"
+                  rows="4"
+                  maxlength="1000"
+                  required
+                ></textarea>
+                <div class="invalid-feedback" id="err-description" data-default-message="Description is required.">Description is required.</div>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="productDescription" class="form-label"
-                >Description</label
-              >
-              <textarea
-                class="form-control custom-search-input"
-                id="productDescription"
-                name="description"
-              ></textarea>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="productPrice" class="form-label">Product Price</label>
-              <input
-                type="number"
-                class="form-control custom-search-input"
-                id="productPrice"
-                name="price"
-                required
-              />
-            </div>
-            <!-- Stock Input -->
-            <div class="col-md-6 mb-3">
-              <label for="productStock" class="form-label">Stock</label>
-              <input
-                type="number"
-                class="form-control custom-search-input"
-                id="productStock"
-                name="stock"
-                min="0"
-                max="100"
-                required
-              />
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="productCategory" class="form-label">Category</label>
-            <select
-              class="form-select"
-              id="productCategory"
-              name="categoryId"
-              required
-            >
-              <option selected disabled value="">Choose a category</option>
-              <% categories.forEach(category => { %>
-              <option value="<%= category._id %>"><%= category.name %></option>
-              <% }); %>
-            </select>
-          </div>
+          </section>
 
-          <!-- Main Image Upload -->
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <label for="mainImage" class="form-label">Main Image</label>
-              <input
-                type="file"
-                class="form-control custom-search-input image-input"
-                id="mainImageInput"
-                name="mainImage"
-                accept="image/*"
-              />
-              <img
-                id="mainImagePreview"
-                src=""
-                alt="Main Image Preview"
-                class="img-fluid mt-2 preview-img"
-                style="display: none; width: 250px; height: auto"
-              />
-              <button class="btn btn-primary crop-button" style="display: none">
-                Crop Image
-              </button>
+          <section class="admin-product-section">
+            <h5 class="admin-product-section-title">Pricing & Inventory</h5>
+            <p class="admin-product-section-subtitle">Set price, stock quantity, and category assignment.</p>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="productPrice" class="form-label">Product Price (₹) <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  class="form-control custom-search-input admin-product-input"
+                  id="productPrice"
+                  name="price"
+                  min="0.01"
+                  step="0.01"
+                  required
+                />
+                <div class="invalid-feedback" id="err-price" data-default-message="A valid price greater than 0 is required.">A valid price greater than 0 is required.</div>
+              </div>
+              <div class="col-md-4">
+                <label for="productStock" class="form-label">Stock <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  class="form-control custom-search-input admin-product-input"
+                  id="productStock"
+                  name="stock"
+                  min="0"
+                  step="1"
+                  required
+                />
+                <div class="invalid-feedback" id="err-stock" data-default-message="Stock must be a non-negative integer.">Stock must be a non-negative integer.</div>
+              </div>
+              <div class="col-md-4">
+                <label for="productCategory" class="form-label">Category <span class="text-danger">*</span></label>
+                <select
+                  class="form-select admin-product-select"
+                  id="productCategory"
+                  name="categoryId"
+                  required
+                >
+                  <option selected disabled value="">Choose a category</option>
+                  <% categories.forEach(category => { %>
+                  <option value="<%= category._id %>"><%= category.name %></option>
+                  <% }); %>
+                </select>
+                <div class="invalid-feedback" id="err-categoryId" data-default-message="Please choose a category.">Please choose a category.</div>
+              </div>
             </div>
+          </section>
 
-            <!-- Support Images Upload -->
-            <div class="col-md-4 mb-3">
-              <label class="form-label">Support Images 1</label>
-              <input
-                type="file"
-                class="form-control custom-search-input image-input"
-                id="supportImageInput1"
-                name="supportImages"
-                accept="image/*"
-              />
-              <img
-                id="supportImagePreview1"
-                src=""
-                alt="Support Image 1 Preview"
-                class="img-fluid mt-2 preview-img"
-                style="display: none; width: 250px; height: auto"
-              />
-              <button class="btn btn-primary crop-button" style="display: none">
-                Crop Image
-              </button>
+          <section class="admin-product-section">
+            <h5 class="admin-product-section-title">Product Images</h5>
+            <p class="admin-product-section-subtitle">Upload one main image and exactly two support images.</p>
+
+            <div class="admin-product-image-grid admin-product-modal-image-grid">
+              <article class="admin-product-image-card">
+                <h6 class="admin-product-image-title">Main Image <span class="text-danger">*</span></h6>
+                <input
+                  type="file"
+                  class="form-control custom-search-input admin-product-input image-input"
+                  id="mainImageInput"
+                  name="mainImage"
+                  accept="image/*"
+                  required
+                />
+                <div class="invalid-feedback" id="err-mainImage" data-default-message="Main image is required.">Main image is required.</div>
+                <img
+                  id="mainImagePreview"
+                  src=""
+                  alt="Main Image Preview"
+                  class="img-fluid mt-2 preview-img admin-product-modal-preview"
+                  style="display: none;"
+                />
+                <button type="button" class="btn admin-action-btn admin-action-btn-secondary crop-button mt-2" style="display: none">
+                  Crop Image
+                </button>
+              </article>
+
+              <article class="admin-product-image-card">
+                <h6 class="admin-product-image-title">Support Image 1 <span class="text-danger">*</span></h6>
+                <input
+                  type="file"
+                  class="form-control custom-search-input admin-product-input image-input"
+                  id="supportImageInput1"
+                  name="supportImages"
+                  accept="image/*"
+                  required
+                />
+                <div class="invalid-feedback" id="err-supportImages1" data-default-message="Support image 1 is required.">Support image 1 is required.</div>
+                <img
+                  id="supportImagePreview1"
+                  src=""
+                  alt="Support Image 1 Preview"
+                  class="img-fluid mt-2 preview-img admin-product-modal-preview"
+                  style="display: none;"
+                />
+                <button type="button" class="btn admin-action-btn admin-action-btn-secondary crop-button mt-2" style="display: none">
+                  Crop Image
+                </button>
+              </article>
+
+              <article class="admin-product-image-card">
+                <h6 class="admin-product-image-title">Support Image 2 <span class="text-danger">*</span></h6>
+                <input
+                  type="file"
+                  class="form-control custom-search-input admin-product-input image-input"
+                  id="supportImageInput2"
+                  name="supportImages"
+                  accept="image/*"
+                  required
+                />
+                <div class="invalid-feedback" id="err-supportImages2" data-default-message="Support image 2 is required.">Support image 2 is required.</div>
+                <img
+                  id="supportImagePreview2"
+                  src=""
+                  alt="Support Image 2 Preview"
+                  class="img-fluid mt-2 preview-img admin-product-modal-preview"
+                  style="display: none;"
+                />
+                <button type="button" class="btn admin-action-btn admin-action-btn-secondary crop-button mt-2" style="display: none">
+                  Crop Image
+                </button>
+              </article>
             </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label">Support Images 2</label>
-              <input
-                type="file"
-                class="form-control custom-search-input image-input"
-                id="supportImageInput2"
-                name="supportImages"
-                accept="image/*"
-              />
-              <img
-                id="supportImagePreview2"
-                src=""
-                alt="Support Image 2 Preview"
-                class="img-fluid mt-2 preview-img"
-                style="display: none; width: 250px; height: auto"
-              />
-              <button class="btn btn-primary crop-button" style="display: none">
-                Crop Image
-              </button>
-            </div>
-          </div>
+          </section>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer admin-form-modal-footer admin-confirm-footer">
           <button
             type="button"
-            class="btn btn-secondary"
+            class="btn admin-action-btn admin-action-btn-secondary"
             data-bs-dismiss="modal"
           >
-            Close
+            Cancel
           </button>
-          <button type="submit" class="btn btn-primary">Add Product</button>
+          <button type="submit" id="addProductSubmit" class="btn btn-primary admin-create-btn">Add Product</button>
         </div>
       </form>
     </div>
@@ -296,3 +325,202 @@
 </div>
 
 <script src="/js/addProduct.js"></script>
+<script>
+  (() => {
+    const form = document.getElementById('addProductForm');
+    const submitBtn = document.getElementById('addProductSubmit');
+    const modalEl = document.getElementById('addProductModel');
+
+    // Map server field names to error element IDs
+    const fieldErrorIds = {
+      name: 'err-name',
+      description: 'err-description',
+      price: 'err-price',
+      stock: 'err-stock',
+      categoryId: 'err-categoryId',
+      mainImage: 'err-mainImage',
+      supportImages1: 'err-supportImages1',
+      supportImages2: 'err-supportImages2',
+    };
+
+    const fieldSelectors = {
+      name: '[name="name"]',
+      description: '[name="description"]',
+      price: '[name="price"]',
+      stock: '[name="stock"]',
+      categoryId: '[name="categoryId"]',
+      mainImage: '#mainImageInput',
+      supportImages1: '#supportImageInput1',
+      supportImages2: '#supportImageInput2',
+    };
+
+    function clearErrors() {
+      form.querySelectorAll('.is-invalid, .is-valid').forEach((el) => {
+        el.classList.remove('is-invalid');
+        el.classList.remove('is-valid');
+      });
+
+      Object.values(fieldErrorIds).forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = el.dataset.defaultMessage || '';
+        }
+      });
+    }
+
+    function setFieldError(field, message) {
+      const selector = fieldSelectors[field];
+      const errId = fieldErrorIds[field];
+      const inputEl = selector ? form.querySelector(selector) : null;
+      const errEl = errId ? document.getElementById(errId) : null;
+
+      if (inputEl) inputEl.classList.add('is-invalid');
+      if (errEl) errEl.textContent = message || errEl.dataset.defaultMessage || 'Invalid input.';
+    }
+
+    function clearFieldError(field) {
+      const selector = fieldSelectors[field];
+      const errId = fieldErrorIds[field];
+      const inputEl = selector ? form.querySelector(selector) : null;
+      const errEl = errId ? document.getElementById(errId) : null;
+
+      if (inputEl) inputEl.classList.remove('is-invalid');
+      if (errEl) errEl.textContent = errEl.dataset.defaultMessage || '';
+    }
+
+    function validateClientFields() {
+      const errors = {};
+
+      const name = (form.querySelector(fieldSelectors.name)?.value || '').trim();
+      const description = (form.querySelector(fieldSelectors.description)?.value || '').trim();
+      const priceRaw = form.querySelector(fieldSelectors.price)?.value;
+      const stockRaw = form.querySelector(fieldSelectors.stock)?.value;
+      const categoryId = form.querySelector(fieldSelectors.categoryId)?.value || '';
+      const mainImage = form.querySelector(fieldSelectors.mainImage);
+      const supportImage1 = form.querySelector(fieldSelectors.supportImages1);
+      const supportImage2 = form.querySelector(fieldSelectors.supportImages2);
+
+      const price = Number(priceRaw);
+      const stock = Number(stockRaw);
+
+      if (!name) errors.name = 'Product name is required.';
+      else if (name.length > 100) errors.name = 'Product name must be less than 100 characters.';
+
+      if (!description) errors.description = 'Description is required.';
+      else if (description.length > 1000) errors.description = 'Description must be less than 1000 characters.';
+
+      if (!priceRaw || Number.isNaN(price) || price <= 0) {
+        errors.price = 'A valid price greater than 0 is required.';
+      }
+
+      if (
+        stockRaw === '' ||
+        Number.isNaN(stock) ||
+        stock < 0 ||
+        !Number.isInteger(stock)
+      ) {
+        errors.stock = 'Stock must be a non-negative integer.';
+      }
+
+      if (!categoryId) errors.categoryId = 'Please choose a category.';
+      if (!mainImage?.files?.length) errors.mainImage = 'Main image is required.';
+      if (!supportImage1?.files?.length) errors.supportImages1 = 'Support image 1 is required.';
+      if (!supportImage2?.files?.length) errors.supportImages2 = 'Support image 2 is required.';
+
+      return errors;
+    }
+
+    function normalizeServerErrors(rawErrors) {
+      if (!rawErrors) return {};
+      if (Array.isArray(rawErrors)) {
+        return rawErrors.reduce((acc, err) => {
+          if (err && err.path && err.msg && !acc[err.path]) acc[err.path] = err.msg;
+          return acc;
+        }, {});
+      }
+      return rawErrors;
+    }
+
+    function showFieldErrors(errors = {}) {
+      Object.entries(errors).forEach(([field, msg]) => {
+        if (field === 'supportImages') {
+          setFieldError('supportImages1', msg);
+          setFieldError('supportImages2', msg);
+          return;
+        }
+        if (fieldErrorIds[field]) setFieldError(field, msg);
+      });
+    }
+
+    Object.entries(fieldSelectors).forEach(([field, selector]) => {
+      const el = form.querySelector(selector);
+      if (!el) return;
+      const eventName = el.type === 'file' || el.tagName === 'SELECT' ? 'change' : 'input';
+      el.addEventListener(eventName, () => clearFieldError(field));
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErrors();
+
+      const clientErrors = validateClientFields();
+      if (Object.keys(clientErrors).length) {
+        showFieldErrors(clientErrors);
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Adding…';
+
+      try {
+        const formData = new FormData(form);
+
+        const response = await fetch('/admin/products/', {
+          method: 'POST',
+          body: formData,
+          headers: { Accept: 'application/json' },
+        });
+
+        if (response.redirected || response.ok) {
+          // Success — redirect to products page
+          window.location.href = '/admin/products';
+          return;
+        }
+
+        const data = await response.json().catch(() => ({}));
+
+        if (data && data.errors) {
+          const normalizedErrors = normalizeServerErrors(data.errors);
+          showFieldErrors(normalizedErrors);
+        } else if (data && data.message === 'Please provide exactly one main image and two support images.') {
+          showFieldErrors({
+            mainImage: 'Main image is required.',
+            supportImages1: 'Support image 1 is required.',
+            supportImages2: 'Support image 2 is required.',
+          });
+        } else if (data && data.message === 'Product with this name already exists') {
+          showFieldErrors({ name: data.message });
+        } else if (data && data.message === 'Please fill all required fields') {
+          showFieldErrors(validateClientFields());
+        } else {
+          // Keep generic failures visible without a top-level banner.
+          showFieldErrors({ name: 'Unable to add product. Please try again.' });
+        }
+      } catch (err) {
+        showFieldErrors({ name: 'Network error. Please try again.' });
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Product';
+      }
+    });
+
+    // Reset form and errors when modal is closed
+    modalEl.addEventListener('hidden.bs.modal', () => {
+      form.reset();
+      clearErrors();
+      // Hide all previews and crop buttons
+      form.querySelectorAll('.preview-img').forEach((img) => { img.style.display = 'none'; img.src = ''; });
+      form.querySelectorAll('.crop-button').forEach((btn) => { btn.style.display = 'none'; });
+    });
+  })();
+</script>
