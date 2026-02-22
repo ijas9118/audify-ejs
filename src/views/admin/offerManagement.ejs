@@ -42,7 +42,7 @@
     ];
 
     const offerRows = offers.map((offer, index) => {
-      let applicableTo = 'Referral';
+      let applicableTo = '-';
       if (offer.type === 'product') {
         applicableTo = offer.product && offer.product.name ? offer.product.name : '-';
       } else if (offer.type === 'category') {
@@ -118,136 +118,139 @@
 
 <!-- Bootstrap Modal for Adding Offer -->
 <div
-  class="modal fade"
+  class="modal fade admin-confirm-modal"
   id="addOfferModal"
   tabindex="-1"
   aria-labelledby="addOfferModalLabel"
   aria-hidden="true"
 >
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content bg-dark text-light">
-      <div class="modal-header bg-dark text-light">
-        <h5 class="modal-title" id="addOfferModalLabel">Add New Offer</h5>
+  <div class="modal-dialog modal-xl modal-dialog-centered admin-form-modal">
+    <div class="modal-content admin-form-modal-content admin-confirm-content">
+      <div class="modal-header admin-form-modal-header admin-confirm-header">
+        <div>
+          <h5 class="modal-title admin-form-modal-title admin-confirm-title" id="addOfferModalLabel">
+            Add New Offer
+          </h5>
+          <p class="admin-form-modal-subtitle mb-0">
+            Configure offer scope, discount strategy, and validity window.
+          </p>
+        </div>
         <button
           type="button"
-          class="btn-close"
+          class="btn-close btn-close-white"
           data-bs-dismiss="modal"
           aria-label="Close"
         ></button>
       </div>
-      <div class="modal-body">
-        <!-- Add Offer Form -->
-        <form id="addOfferForm" novalidate>
-          <div class="mb-3">
-            <label for="offerType" class="form-label">Offer Type</label>
-            <select class="form-select" id="offerType" required>
-              <option value="" selected>Select Offer Type</option>
-              <option value="product">Product</option>
-              <option value="category">Category</option>
-              <option value="referral">Referral</option>
-            </select>
-          </div>
+      <form id="addOfferForm" novalidate>
+        <div class="modal-body admin-form-modal-body">
+          <div class="admin-coupon-form-grid">
+            <section class="admin-coupon-form-section pt-0">
+              <h5 class="admin-coupon-form-title">Offer Scope</h5>
+              <p class="admin-coupon-form-subtitle">Choose where this offer should be applied.</p>
 
-          <div id="productCategorySection" class="mb-3">
-            <!-- This section will be dynamically updated based on the offer type -->
-            <label for="productOrCategory" class="form-label"
-              >Select Product/Category</label
-            >
-            <select class="form-select" id="productOrCategory" required>
-              <option value="" selected>Select Product or Category</option>
-              <!-- Products or Categories options will go here -->
-            </select>
-          </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="offerType" class="form-label">Offer Type</label>
+                  <select class="form-select admin-coupon-select" id="offerType" required>
+                    <option value="" selected>Select Offer Type</option>
+                    <option value="product">Product</option>
+                    <option value="category">Category</option>
+                  </select>
+                </div>
 
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="discountType" class="form-label">Discount Type</label>
-              <select class="form-select" id="discountType" required>
-                <option value="" selected>Select Discount Type</option>
-                <option value="percentage">Percentage</option>
-                <option value="fixed">Fixed Amount</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label for="discountValue" class="form-label"
-                >Discount Value</label
-              >
-              <input
-                type="number"
-                class="form-control custom-search-input"
-                id="discountValue"
-                placeholder="Enter Discount Value"
-                required
-              />
-            </div>
-          </div>
+                <div id="productCategorySection" class="col-md-6" style="display: none;">
+                  <label for="productOrCategory" class="form-label">Select Product/Category</label>
+                  <select class="form-select admin-coupon-select" id="productOrCategory" required>
+                    <option value="" selected>Select Product or Category</option>
+                  </select>
+                </div>
+              </div>
+            </section>
 
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="maxDiscountAmount" class="form-label"
-                >Max Discount Amount (Optional)</label
-              >
-              <input
-                type="number"
-                class="form-control custom-search-input"
-                id="maxDiscountAmount"
-                placeholder="Enter Max Discount Amount"
-              />
-            </div>
-            <div class="col-md-6">
-              <label for="minCartValue" class="form-label"
-                >Minimum Cart Value (Optional)</label
-              >
-              <input
-                type="number"
-                class="form-control custom-search-input"
-                id="minCartValue"
-                placeholder="Enter Minimum Cart Value"
-              />
-            </div>
-          </div>
+            <section class="admin-coupon-form-section">
+              <h5 class="admin-coupon-form-title">Discount Rules</h5>
+              <p class="admin-coupon-form-subtitle">Define discount type, amount, and caps.</p>
 
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="validFrom" class="form-label">Valid From</label>
-              <input type="date" class="form-control custom-search-input" id="validFrom" required />
-            </div>
-            <div class="col-md-6">
-              <label for="validUntil" class="form-label">Valid Until</label>
-              <input
-                type="date"
-                class="form-control custom-search-input"
-                id="validUntil"
-                required
-              />
-            </div>
-          </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="discountType" class="form-label">Discount Type</label>
+                  <select class="form-select admin-coupon-select" id="discountType" required>
+                    <option value="" selected>Select Discount Type</option>
+                    <option value="percentage">Percentage</option>
+                    <option value="fixed">Fixed Amount</option>
+                  </select>
+                </div>
 
-          <div id="referralSection" class="row mb-3 d-none">
-            <div class="col-md-6">
-              <label for="referrerBonus" class="form-label"
-                >Referrer Bonus</label
-              >
-              <input
-                type="number"
-                class="form-control custom-search-input"
-                id="referrerBonus"
-                placeholder="Enter Referrer Bonus"
-              />
-            </div>
-            <div class="col-md-6">
-              <label for="refereeBonus" class="form-label">Referee Bonus</label>
-              <input
-                type="number"
-                class="form-control custom-search-input"
-                id="refereeBonus"
-                placeholder="Enter Referee Bonus"
-              />
-            </div>
+                <div class="col-md-6">
+                  <label for="discountValue" class="form-label">Discount Value</label>
+                  <input
+                    type="number"
+                    class="form-control custom-search-input admin-coupon-input"
+                    id="discountValue"
+                    placeholder="Enter Discount Value"
+                    min="0.01"
+                    step="0.01"
+                    required
+                  />
+                  <div class="form-text admin-form-helptext" id="discountValueHintModal">
+                    Enter a positive value.
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="maxDiscountAmount" class="form-label">Max Discount Amount</label>
+                  <input
+                    type="number"
+                    class="form-control custom-search-input admin-coupon-input"
+                    id="maxDiscountAmount"
+                    placeholder="Enter Max Discount Amount"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section class="admin-coupon-form-section">
+              <h5 class="admin-coupon-form-title">Validity</h5>
+              <p class="admin-coupon-form-subtitle">Set activation and expiry dates.</p>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="validFrom" class="form-label">Valid From</label>
+                  <input
+                    type="date"
+                    class="form-control custom-search-input admin-coupon-input"
+                    id="validFrom"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="validUntil" class="form-label">Valid Until</label>
+                  <input
+                    type="date"
+                    class="form-control custom-search-input admin-coupon-input"
+                    id="validUntil"
+                    required
+                  />
+                </div>
+              </div>
+            </section>
           </div>
-          <button type="submit" class="btn btn-primary">Add Offer</button>
-        </form>
-      </div>
+        </div>
+
+        <div class="modal-footer admin-form-modal-footer admin-confirm-footer">
+          <button
+            type="button"
+            class="btn admin-action-btn admin-action-btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary admin-create-btn">Add Offer</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

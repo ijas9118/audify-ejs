@@ -1,9 +1,9 @@
-function changeQuantity(productId, change) {
-  const quantityInput = document.getElementById(`quantity-${productId}`);
-  let newQuantity = parseInt(quantityInput.value, 10) + change;
-  const Toast = Swal.mixin({
+// Lazy factory — Swal is loaded by layout.ejs AFTER page scripts, so we
+// must NOT call Swal at the top level. Each function calls getToast() instead.
+function getToast() {
+  return Swal.mixin({
     toast: true,
-    position: 'top', // Adjust position as needed
+    position: 'top',
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
@@ -12,8 +12,13 @@ function changeQuantity(productId, change) {
       toast.onmouseleave = Swal.resumeTimer;
     },
   });
+}
 
-  // Ensure the quantity is valid
+// ── Quantity change ────────────────────────────────────────────────────────────
+function changeQuantity(productId, change) {
+  const quantityInput = document.getElementById(`quantity-${productId}`);
+  let newQuantity = parseInt(quantityInput.value, 10) + change;
+
   if (newQuantity < 1) {
     newQuantity = 1;
   }
@@ -21,65 +26,82 @@ function changeQuantity(productId, change) {
   fetch(`/shop/stock?productId=${productId}`)
     .then((response) => response.json())
     .then((stockData) => {
-      const maxQuantity = stockData.stock;
+      const maxQuantity = Math.min(stockData.stock, 5); // enforce per-item cap
 
       if (newQuantity > maxQuantity) {
         newQuantity = maxQuantity;
-        Toast.fire({
-          icon: 'error',
-          title: `Maximum available quantity for this item is ${maxQuantity}`,
+        getToast().fire({
+          icon: 'warning',
+          title: `Maximum ${maxQuantity} unit(s) available for this item`,
         });
       }
 
       updateQuantityInDatabase(productId, newQuantity);
     })
     .catch(() => {
-      Toast.fire({
+      getToast().fire({
         icon: 'error',
         title: 'Error fetching stock information',
       });
     });
 }
 
+// ── Persist quantity to database ─────────────────────────────────────────────
 function updateQuantityInDatabase(productId, newQuantity) {
   fetch('/shop/cart/update', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      productId,
-      quantity: newQuantity,
-    }),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then((cart) => {
-      updateCartUI(cart);
-    })
-    .catch((error) => {
-      console.error('Error updating cart:', error);
-    });
-}
-
-function addToCart(productId) {
-  fetch(`/shop/cart/add/${productId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ productId, quantity: newQuantity }),
   })
     .then((response) => response.json())
     .then((data) => {
-      if (data.message === 'Item added to cart successfully') {
+      if (data.success) {
+        updateCartUI(data.cart);
+        // If a coupon was cleared, let the user know
+        if (
+          !data.cart.appliedCoupon &&
+          document.getElementById('coupon-display')
+        ) {
+          document.getElementById('coupon-display').textContent = '';
+          getToast().fire({
+            icon: 'info',
+            title: 'Coupon removed — cart updated. Please re-apply if needed.',
+          });
+        }
+      } else {
+        // Server rejected the quantity (stock limit, inactive product, etc.)
+        const quantityInput = document.getElementById(`quantity-${productId}`);
+        if (quantityInput) {
+          // Revert to previous valid value
+          quantityInput.value = parseInt(
+            quantityInput.dataset.lastValid || 1,
+            10
+          );
+        }
+        getToast().fire({
+          icon: 'error',
+          title: data.message || 'Could not update quantity',
+        });
+      }
+    })
+    .catch(() => {
+      getToast().fire({ icon: 'error', title: 'Error updating cart' });
+    });
+}
+
+// ── Add to cart (called from shop/product pages) ─────────────────────────────
+function addToCart(productId) {
+  fetch(`/shop/cart/add/${productId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
         Swal.fire({
           icon: 'success',
-          title: 'Success!',
-          text: 'Item successfully added to your cart!',
+          title: 'Added to Cart!',
+          text: 'Item successfully added to your cart.',
           confirmButtonColor: '#4a2c77',
         });
       } else {
@@ -91,7 +113,7 @@ function addToCart(productId) {
         });
       }
     })
-    .catch((error) => {
+    .catch(() => {
       Swal.fire({
         icon: 'error',
         title: 'Error!',
@@ -101,174 +123,149 @@ function addToCart(productId) {
     });
 }
 
+// ── Update cart summary in the DOM ───────────────────────────────────────────
 function updateCartUI(cart) {
-  // Update quantities and subtotals for each item
+  // Per-item quantity and subtotal
   cart.items.forEach((item) => {
     const quantityInput = document.getElementById(`quantity-${item.productId}`);
     if (quantityInput) {
       quantityInput.value = item.quantity;
+      quantityInput.dataset.lastValid = item.quantity; // store for revert on error
     }
 
-    const subtotalElement = document.querySelector(
-      `.cart-item[data-product-id="${item.productId}"] .subtotal #subtotal-${item.productId}`
+    const subtotalEl = document.querySelector(
+      `.cart-item[data-product-id="${item.productId}"] #subtotal-${item.productId}`
     );
-    if (subtotalElement) {
-      subtotalElement.textContent = `${item.subtotal.toFixed(2)}`;
+    if (subtotalEl) {
+      subtotalEl.textContent = item.subtotal.toFixed(2);
     }
   });
 
-  // Update cart summary
-  const subtotalSummaryElement = document.querySelector(
+  // Summary: items subtotal
+  const subtotalSummaryEl = document.querySelector(
     '.cart-summary .d-flex.justify-content-between span:nth-of-type(2)'
   );
-  if (subtotalSummaryElement) {
-    subtotalSummaryElement.textContent = `${cart.items
-      .reduce((acc, item) => acc + item.subtotal, 0)
-      .toFixed(2)}`;
+  if (subtotalSummaryEl) {
+    const rawSubtotal = cart.items.reduce(
+      (acc, item) => acc + item.subtotal,
+      0
+    );
+    subtotalSummaryEl.textContent = `₹${rawSubtotal.toFixed(2)}`;
   }
 
-  const shippingChargeElement = document.querySelector(
+  // Summary: shipping
+  const shippingEl = document.querySelector(
     '.cart-summary .d-flex.justify-content-between:nth-of-type(2) span:nth-of-type(2)'
   );
-  if (shippingChargeElement) {
-    shippingChargeElement.textContent = `${cart.shippingCharge.toFixed(2)}`;
+  if (shippingEl) {
+    shippingEl.textContent = `₹${cart.shippingCharge.toFixed(2)}`;
   }
 
-  const totalElement = document.querySelector(
+  // Summary: grand total
+  const totalEl = document.querySelector(
     '.cart-summary .total span:nth-of-type(2)'
   );
-  if (totalElement) {
-    totalElement.textContent = `₹${cart.total.toFixed(2)}`;
+  if (totalEl) {
+    totalEl.textContent = `₹${cart.total.toFixed(2)}`;
   }
 }
 
+// ── Delete a single cart item ────────────────────────────────────────────────
 function deleteItem(productId) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
-
   fetch(`/shop/cart/delete/${productId}`, {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      // Include any required authentication tokens or cookies here
-    },
+    headers: { 'Content-Type': 'application/json' },
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log(data.message);
+      if (data.success) {
+        // Remove the row from the DOM
+        const row = document.querySelector(`[data-product-id="${productId}"]`);
+        if (row) row.remove();
 
-      if (data.message === 'Item removed successfully') {
-        // Optionally update the UI or redirect the user
-        document.querySelector(`[data-product-id="${productId}"]`).remove();
-        Toast.fire({
-          icon: 'info',
-          title: 'Item removed from cart',
-        });
-        updateCartUI(data.cart);
+        getToast().fire({ icon: 'info', title: 'Item removed from cart' });
+
+        if (data.cart.items.length === 0) {
+          // Cart now empty — show the empty state instead of stale summary
+          const itemsContainer = document.querySelector('.col-md-8.pe-5');
+          if (itemsContainer) {
+            itemsContainer.innerHTML = '<p>Your cart is empty.</p>';
+          }
+          // Zero out the summary
+          updateCartUI({ items: [], shippingCharge: 0, total: 0 });
+        } else {
+          updateCartUI(data.cart);
+        }
       } else {
-        Toast.fire({
-          icon: 'error',
-          title: 'Failed to remove item',
-        });
+        getToast().fire({ icon: 'error', title: 'Failed to remove item' });
       }
     })
-    .catch((error) => {
-      console.error('Error:', error);
-      alert('An error occurred while removing the item');
+    .catch(() => {
+      getToast().fire({
+        icon: 'error',
+        title: 'An error occurred while removing the item',
+      });
     });
 }
 
+// ── Checkout: verify stock before redirecting ────────────────────────────────
 async function verifyStock() {
   let hasStockIssue = false;
-  const Toast = Swal.mixin({
-    toast: true,
-    position: 'top',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    },
-  });
 
   try {
     const products = await getProductIdsFromCart();
 
-    if (products === null || products.length === 0) {
-      Toast.fire({
-        icon: 'warning',
-        title: 'Your cart is empty',
-      });
-      hasStockIssue = true;
-    } else {
-      /* eslint-disable no-await-in-loop, no-restricted-syntax */
-      for (const product of products) {
-        const { productId, quantity, name } = product;
-        const response = await fetch(`/shop/stock?productId=${productId}`);
+    if (!products || products.length === 0) {
+      getToast().fire({ icon: 'warning', title: 'Your cart is empty' });
+      return;
+    }
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch stock for product ID ${productId}`);
-        }
+    /* eslint-disable no-await-in-loop, no-restricted-syntax */
+    for (const product of products) {
+      const { productId, quantity, name } = product;
+      const response = await fetch(`/shop/stock?productId=${productId}`);
 
-        const stockData = await response.json();
-        const maxQuantity = stockData.stock;
-
-        if (maxQuantity === 0) {
-          Toast.fire({
-            icon: 'warning',
-            title: `${name} is out of stock.`,
-          });
-          hasStockIssue = true;
-        } else if (quantity > maxQuantity) {
-          Toast.fire({
-            icon: 'warning',
-            title: `${name} only has ${maxQuantity} available, but you want ${quantity}.`,
-          });
-          hasStockIssue = true;
-        }
+      if (!response.ok) {
+        throw new Error(`Failed to fetch stock for ${productId}`);
       }
 
-      if (!hasStockIssue) {
-        window.location.href = '/checkout';
+      const { stock } = await response.json();
+
+      if (stock === 0) {
+        getToast().fire({ icon: 'warning', title: `${name} is out of stock.` });
+        hasStockIssue = true;
+      } else if (quantity > stock) {
+        getToast().fire({
+          icon: 'warning',
+          title: `${name}: only ${stock} available, but ${quantity} in cart.`,
+        });
+        hasStockIssue = true;
       }
+    }
+    /* eslint-enable no-await-in-loop, no-restricted-syntax */
+
+    if (!hasStockIssue) {
+      window.location.href = '/checkout';
     }
   } catch (error) {
     console.error('Error:', error);
-    Toast.fire({
+    getToast().fire({
       icon: 'error',
       title: 'An error occurred while verifying stock.',
     });
-    alert('An error occurred while fetching product IDs and quantities.');
   }
 }
 
 async function getProductIdsFromCart() {
-  try {
-    const response = await fetch('/shop/cart/get-cart-item', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const data = await response.json();
+  const response = await fetch('/shop/cart/get-cart-item', {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  const data = await response.json();
 
-    if (!data || !Array.isArray(data.products)) {
-      throw new Error('Invalid response format');
-    }
-
-    return data.products;
-  } catch (error) {
-    console.error('Error fetching product IDs from cart:', error.message);
-    throw error;
+  if (!data || !Array.isArray(data.products)) {
+    throw new Error('Invalid response format');
   }
+
+  return data.products;
 }

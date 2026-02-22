@@ -165,6 +165,17 @@ exports.validate = async (req, res, next) => {
       });
     }
 
+    // Add product POST — return JSON so the modal can display errors inline
+    const isAdminProductAddRequest =
+      req.method === 'POST' &&
+      /^\/admin\/products\/?$/.test(req.originalUrl.split('?')[0]);
+    if (isAdminProductAddRequest) {
+      return res.status(400).json({
+        success: false,
+        errors: fieldErrors,
+      });
+    }
+
     const isAdminOfferEditRequest =
       req.method === 'POST' && req.originalUrl.includes('/admin/offers/edit/');
     if (isAdminOfferEditRequest) {

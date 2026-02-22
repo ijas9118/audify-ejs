@@ -30,14 +30,31 @@
         </thead>
         <tbody>
           <% orders.forEach((order) => { %>
-            <tr onclick="window.location.href='/account/order-history/<%= order._id %>'" style="cursor: pointer;">
-              <td class="align-middle"><%= order._id %></td>
+            <%
+              // Prefer human-readable orderId; fall back to MongoDB _id for legacy orders
+              const displayId = order.orderId || order._id;
+              const statusBadgeClass = order.status === 'Delivered'
+                ? 'order-status-pill is-delivered'
+                : order.status === 'Cancelled'
+                  ? 'order-status-pill is-cancelled'
+                  : order.status === 'Shipped'
+                    ? 'order-status-pill is-shipped'
+                    : order.status === 'Processed'
+                      ? 'order-status-pill is-processed'
+                      : 'order-status-pill is-pending';
+            %>
+            <tr onclick="window.location.href='/account/order-history/<%= displayId %>'" style="cursor: pointer;">
+              <td class="align-middle"><%= displayId %></td>
               <td class="align-middle"><%= new Date(order.createdAt).toLocaleDateString() %></td>
               <td class="align-middle">
-                <span class="badge 
-                  <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Canceled' ? 'bg-danger' : 'bg-primary' %>">
+                <span class="<%= statusBadgeClass %>">
                   <%= order.status %>
                 </span>
+                <% if (order.cancellationRequested && order.status !== 'Cancelled') { %>
+                  <span class="order-status-pill order-status-pill-requested ms-1" title="Cancellation request pending admin review">
+                    <i class="fa-solid fa-clock"></i> Cancel Requested
+                  </span>
+                <% } %>
               </td>
               <td class="align-middle">₹<%= order.finalTotal %></td>
               <td class="align-middle">
@@ -51,7 +68,7 @@
                 </div>
               </td>
               <td class="align-middle">
-                <a href="/account/order-history/<%= order._id %>" class="btn btn-outline-primary btn-sm">View Details</a>
+                <a href="/account/order-history/<%= displayId %>" class="btn btn-outline-primary btn-sm">View Details</a>
               </td>
             </tr>
           <% }); %>

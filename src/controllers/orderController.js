@@ -85,8 +85,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
     return res.status(StatusCodes.OK).json({
       success: true,
       message: result.message,
-      refunded: result.refunded,
-      refundAmount: result.refundAmount,
+      requested: result.requested, // true — tells the UI to show "pending review" state
     });
   } catch (error) {
     if (error.message === 'Order not found') {
@@ -105,6 +104,13 @@ const cancelOrder = asyncHandler(async (req, res) => {
     if (error.message === 'Order is already cancelled') {
       return res
         .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: error.message });
+    }
+
+    if (error.message.includes('already been submitted')) {
+      // 409 Conflict — duplicate cancellation request
+      return res
+        .status(StatusCodes.CONFLICT)
         .json({ success: false, message: error.message });
     }
 

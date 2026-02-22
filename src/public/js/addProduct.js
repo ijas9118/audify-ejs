@@ -1,56 +1,108 @@
 document.addEventListener('DOMContentLoaded', () => {
   const imageInputs = document.querySelectorAll('.image-input');
-  const cropButtons = document.querySelectorAll('.crop-button');
-  let cropper;
-  let currentPreviewId;
-  let currentCropButton;
+  const canCrop = typeof Cropper !== 'undefined';
+
+  // State: one independent cropper per image slot
+  const cropperState = {};
+  const croppedFiles = {};
+  window.__addProductCroppedFiles = croppedFiles;
 
   imageInputs.forEach((input) => {
+    const container =
+      input.closest('.admin-product-image-card') || input.closest('.col-md-4');
+    const previewId = input.id.replace('Input', 'Preview');
+    const previewElement = document.getElementById(previewId);
+    const cropButton = container?.querySelector('.crop-button');
+    // Hidden input that will carry the cropped blob to the server
+    const hiddenInput = container?.querySelector('.cropped-data-input');
+
+    if (!previewElement || !cropButton) return;
+
     input.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      const previewId = e.target.id.replace('Input', 'Preview');
-      const previewElement = document.getElementById(previewId);
-      const cropButton = e.target
-        .closest('.col-md-4')
-        .querySelector('.crop-button');
+      if (!file) return;
 
-      if (file) {
-        const reader = new FileReader();
+      // Destroy any old cropper for this slot
+      if (cropperState[previewId]) {
+        cropperState[previewId].destroy();
+        cropperState[previewId] = null;
+      }
 
-        reader.onload = (event) => {
-          if (cropper) {
-            cropper.destroy();
-          }
+      // Reset cropped hidden input so old value doesn't linger
+      if (hiddenInput) hiddenInput.value = '';
+      delete croppedFiles[input.id];
 
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (!canCrop) {
           previewElement.src = event.target.result;
           previewElement.style.display = 'block';
           cropButton.style.display = 'inline-block';
+          cropButton.textContent = 'Crop unavailable';
+          cropButton.disabled = true;
+          return;
+        }
 
-          currentPreviewId = previewId;
-          currentCropButton = cropButton;
+        previewElement.onload = () => {
+          if (cropperState[previewId]) {
+            cropperState[previewId].destroy();
+          }
 
-          cropper = new Cropper(previewElement, {
+          cropperState[previewId] = new Cropper(previewElement, {
             aspectRatio: 1,
             viewMode: 1,
+            autoCropArea: 1,
+            responsive: true,
+            background: false,
           });
         };
 
-        reader.readAsDataURL(file);
-      }
+        previewElement.src = event.target.result;
+        previewElement.style.display = 'block';
+        cropButton.style.display = 'inline-block';
+        cropButton.textContent = 'Crop Image';
+        cropButton.disabled = false;
+      };
+      reader.readAsDataURL(file);
     });
-  });
 
-  cropButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      if (cropper) {
-        const croppedCanvas = cropper.getCroppedCanvas();
-        const croppedImage = croppedCanvas.toDataURL();
-        const previewElement = document.getElementById(currentPreviewId);
+    // FIX: use 'click' with preventDefault so the button does NOT submit the form
+    cropButton.addEventListener('click', (e) => {
+      e.preventDefault(); // <-- critical: prevents form submission
 
-        previewElement.src = croppedImage;
-        cropper.destroy();
-        button.style.display = 'none';
-      }
+      const activeCropper = cropperState[previewId];
+      if (!activeCropper) return;
+
+      const croppedCanvas = activeCropper.getCroppedCanvas({
+        width: 800,
+        height: 800,
+      });
+      if (!croppedCanvas) return;
+
+      // Update the preview
+      previewElement.src = croppedCanvas.toDataURL('image/jpeg');
+
+      // Convert canvas to Blob and keep it for form submission.
+      croppedCanvas.toBlob(
+        (blob) => {
+          if (!blob) return;
+
+          const fileName = input.files[0]?.name || 'cropped.jpg';
+          const croppedFile = new File([blob], fileName, {
+            type: 'image/jpeg',
+          });
+
+          // Keep cropped file in memory and append it to FormData on submit.
+          croppedFiles[input.id] = croppedFile;
+
+          activeCropper.destroy();
+          cropperState[previewId] = null;
+          cropButton.textContent = 'Cropped';
+          cropButton.disabled = true;
+        },
+        'image/jpeg',
+        0.92
+      );
     });
   });
 });

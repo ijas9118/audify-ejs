@@ -29,21 +29,40 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
   try {
-    const updatedOrder = await orderManagementService.updateOrderStatus(
-      orderId,
-      status
-    );
+    const { updatedOrder, refunded, refundAmount } =
+      await orderManagementService.updateOrderStatus(orderId, status);
+
+    let message = RESPONSE_MESSAGES.ORDER_STATUS_UPDATED;
+    if (status === 'Cancelled' && refunded) {
+      message = `Order cancelled and ₹${refundAmount.toFixed(2)} refunded to user's wallet.`;
+    } else if (status === 'Cancelled') {
+      message = 'Order cancelled successfully.';
+    }
 
     return res.status(StatusCodes.OK).json({
       success: true,
-      message: RESPONSE_MESSAGES.ORDER_STATUS_UPDATED,
+      message,
       order: updatedOrder,
+      refunded,
+      refundAmount,
     });
   } catch (error) {
     if (error.message === 'Order not found') {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ success: false, message: RESPONSE_MESSAGES.ORDER_NOT_FOUND });
+    }
+
+    // State-machine violations and invalid-value errors — surface them clearly
+    if (
+      error.message.includes('Cannot move order') ||
+      error.message.includes('terminal status') ||
+      error.message.includes('already in') ||
+      error.message.includes('Invalid status value')
+    ) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ success: false, message: error.message });
     }
 
     throw error;
@@ -65,12 +84,18 @@ const viewOrder = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  // Pre-compute allowed next statuses to pass to the view
+  const allowedNextStatuses = orderManagementService.getAllowedNextStatuses(
+    order.status
+  );
+
   res.render('layout', {
     title: 'Order Management',
     viewName: 'admin/viewOrder',
     activePage: 'orders',
     isAdmin: true,
     order,
+    allowedNextStatuses,
   });
 });
 

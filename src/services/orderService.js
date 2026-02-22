@@ -227,13 +227,21 @@ exports.getUserOrders = async (userId, options = {}) => {
 };
 
 /**
- * Get order by ID
- * @param {string} orderId - Order ID
+ * Get order by MongoDB _id or human-readable orderId (ORD-XXXXX).
+ * @param {string} idOrOrderId - MongoDB ObjectId string OR 'ORD-XXXXX' string
  * @param {boolean} populate - Whether to populate order items and products
  * @returns {Promise<Object>} Order object
  */
-exports.getOrderById = async (orderId, populate = true) => {
-  let query = Order.findById(orderId);
+exports.getOrderById = async (idOrOrderId, populate = true) => {
+  const isHumanId =
+    typeof idOrOrderId === 'string' && idOrOrderId.startsWith('ORD-');
+
+  let query;
+  if (isHumanId) {
+    query = Order.findOne({ orderId: idOrOrderId });
+  } else {
+    query = Order.findById(idOrOrderId);
+  }
 
   if (populate) {
     query = query.populate({
@@ -264,12 +272,18 @@ exports.getOrderById = async (orderId, populate = true) => {
  * @param {number} amount - Refund amount
  * @returns {Promise<Object>} Updated user
  */
-exports.processOrderRefund = async (userId, orderId, amount) => {
+exports.processOrderRefund = async (userId, orderRef, amount) => {
   const user = await User.findById(userId);
 
   if (!user) {
     throw new Error('User not found');
   }
+
+  // orderRef may be the full Order document, a plain orderId string, or a MongoDB _id
+  const label =
+    typeof orderRef === 'object' && orderRef.orderId
+      ? orderRef.orderId
+      : String(orderRef);
 
   await User.findByIdAndUpdate(userId, {
     $inc: { walletBalance: amount },
@@ -277,7 +291,7 @@ exports.processOrderRefund = async (userId, orderId, amount) => {
       walletTransactions: {
         transactionType: 'Credit',
         amount,
-        description: `Refund for cancelled order #${orderId}`,
+        description: `Refund for cancelled order #${label}`,
         date: new Date(),
       },
     },
@@ -302,13 +316,17 @@ exports.restoreStockForCancelledOrder = async (orderItems) => {
 };
 
 /**
- * Cancel an order with status validation
- * @param {string} orderId - Order ID
- * @param {string} userId - User ID (for validation)
+ * Request cancellation of an order.
+ * This ONLY marks cancellationRequested = true.
+ * Actual cancellation (status change, stock restore, refund) is performed
+ * by the admin when they approve the request via updateOrderStatus → 'Cancelled'.
+ *
+ * @param {string} orderId - MongoDB _id of the order
+ * @param {string} userId  - ID of the requesting user (for ownership check)
  * @returns {Promise<Object>} Result object
  */
 exports.cancelOrder = async (orderId, userId) => {
-  const order = await Order.findById(orderId).populate('orderItems');
+  const order = await Order.findById(orderId);
 
   if (!order) {
     throw new Error('Order not found');
@@ -323,44 +341,26 @@ exports.cancelOrder = async (orderId, userId) => {
     throw new Error('Order is already cancelled');
   }
 
-  if (order.status === 'Shipped' || order.status === 'Delivered') {
-    // For shipped/delivered orders, just mark as cancelled request
-    await Order.findByIdAndUpdate(orderId, { cancellationRequested: true });
-
-    return {
-      success: true,
-      message: 'Cancellation request submitted for shipped/delivered order',
-      refunded: false,
-    };
+  if (order.cancellationRequested) {
+    throw new Error(
+      'A cancellation request has already been submitted for this order'
+    );
   }
 
-  if (order.status === 'Pending' || order.status === 'Processed') {
-    // Restore product stock
-    await exports.restoreStockForCancelledOrder(order.orderItems);
-
-    // Only refund if payment was actually made online (not COD and not unpaid)
-    const shouldRefund =
-      order.paymentMethod === 'Wallet' || order.paymentMethod === 'Razorpay';
-
-    if (shouldRefund) {
-      await exports.processOrderRefund(userId, orderId, order.finalTotal);
-    }
-
-    await Order.findByIdAndUpdate(orderId, {
-      status: 'Cancelled',
-    });
-
-    return {
-      success: true,
-      message: shouldRefund
-        ? 'Order cancelled and refund processed to wallet'
-        : 'Order cancelled successfully',
-      refunded: shouldRefund,
-      refundAmount: shouldRefund ? order.finalTotal : 0,
-    };
+  // Delivered orders cannot be cancelled by the user
+  if (order.status === 'Delivered') {
+    throw new Error(
+      'Delivered orders cannot be cancelled. Please contact support.'
+    );
   }
 
-  throw new Error(
-    'Order cannot be cancelled at this stage. Please contact support.'
-  );
+  // For all other statuses (Pending, Processed, Shipped) — flag it and wait for admin
+  await Order.findByIdAndUpdate(orderId, { cancellationRequested: true });
+
+  return {
+    success: true,
+    requested: true,
+    message:
+      'Cancellation request submitted. Our team will review it and process it shortly.',
+  };
 };

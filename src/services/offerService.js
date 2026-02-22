@@ -31,7 +31,8 @@ const applyOffer = (price, offer) => {
     discountAmount = offer.maxDiscountAmount;
   }
 
-  return price - discountAmount;
+  // Floor at 0 to prevent negative prices from large fixed discounts
+  return Math.max(0, price - discountAmount);
 };
 
 const calculateDiscountedPrice = (
@@ -148,10 +149,8 @@ exports.createOffer = async (offerData) => {
     discountType,
     discountValue,
     maxDiscountAmount,
-    minCartValue,
     validFrom,
     validUntil,
-    referralBonus,
   } = offerData;
 
   if (!type || !discountType || !discountValue || !validFrom || !validUntil) {
@@ -174,10 +173,8 @@ exports.createOffer = async (offerData) => {
     discountType,
     discountValue,
     maxDiscountAmount,
-    minCartValue,
     validFrom: startDate,
     validUntil: endDate,
-    referralBonus: type === 'referral' ? referralBonus : undefined,
   });
 
   await newOffer.save();
@@ -222,8 +219,12 @@ exports.updateOfferById = async (offerId, offerData) => {
     maxDiscountAmount,
     validFrom,
     validUntil,
-    minCartValue,
   } = offerData;
+
+  // ✅ Capture old state BEFORE any mutations so cleanup logic works correctly
+  const oldProduct = offer.product;
+  const oldCategory = offer.category;
+  const oldType = offer.type;
 
   const nextType = type !== undefined ? type : offer.type;
   offer.type = nextType;
@@ -249,12 +250,6 @@ exports.updateOfferById = async (offerId, offerData) => {
 
   offer.validFrom = nextValidFrom;
   offer.validUntil = nextValidUntil;
-  offer.minCartValue =
-    minCartValue !== undefined ? minCartValue : offer.minCartValue;
-
-  const oldProduct = offer.product;
-  const oldCategory = offer.category;
-  const oldType = offer.type;
 
   if (nextType === 'product') {
     const nextProduct = product !== undefined ? product : offer.product;
@@ -323,14 +318,21 @@ exports.deleteOfferById = async (offerId) => {
     throw new Error('Offer not found');
   }
 
-  // Clear references in Product or Category
+  // Clear offerId on the specific product (product offer)
   if (offer.type === 'product' && offer.product) {
     await Product.findByIdAndUpdate(offer.product, { $set: { offerId: null } });
-  } else if (offer.type === 'category' && offer.category) {
+  }
+
+  // Clear offerId on the category (category offer)
+  if (offer.type === 'category' && offer.category) {
     await Category.findByIdAndUpdate(offer.category, {
       $set: { offerId: null },
     });
   }
+
+  // ✅ Defensive cleanup: clear any Product document that still has
+  // offerId pointing to this deleted offer (handles stale references)
+  await Product.updateMany({ offerId: offer._id }, { $set: { offerId: null } });
 
   await Offer.deleteOne({ _id: offerId });
   return offer;
@@ -351,6 +353,6 @@ exports.toggleOfferStatusById = async (offerId) => {
 
 exports.getOfferCategories = async () =>
   Category.find({ isDeleted: { $ne: true } });
-exports.getOfferProducts = async () => Product.find({});
+exports.getOfferProducts = async () => Product.find({ isActive: true });
 
 exports.calculateDiscountedPrice = calculateDiscountedPrice;

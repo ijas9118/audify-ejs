@@ -163,12 +163,15 @@ const downloadInvoice = asyncHandler(async (req, res) => {
   const orderId = req.params.id;
 
   try {
-    const { pdfDoc } = await accountService.generateInvoicePDF(orderId);
+    const { pdfDoc, order } = await accountService.generateInvoicePDF(orderId);
+
+    // Use friendly orderId for filename when available
+    const fileLabel = order && order.orderId ? order.orderId : orderId;
 
     // Set response headers
     res.setHeader(
       'Content-disposition',
-      `attachment; filename=invoice-${orderId}.pdf`
+      `attachment; filename=invoice-${fileLabel}.pdf`
     );
     res.setHeader('Content-type', 'application/pdf');
 

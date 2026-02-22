@@ -152,7 +152,7 @@ exports.offerValidation = [
     .trim()
     .notEmpty()
     .withMessage('Offer type is required')
-    .isIn(['product', 'category', 'referral'])
+    .isIn(['product', 'category'])
     .withMessage('Invalid offer type'),
 
   body('product')
@@ -198,12 +198,6 @@ exports.offerValidation = [
       }
       return true;
     }),
-
-  body('minCartValue')
-    .optional({ values: 'falsy' })
-    .trim()
-    .isFloat({ min: 0 })
-    .withMessage('Minimum cart value must be a non-negative number'),
 
   body('maxDiscountAmount')
     .optional({ values: 'falsy' })

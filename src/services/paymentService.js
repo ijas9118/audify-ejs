@@ -188,7 +188,7 @@ exports.verifyAndCreateRazorpayOrder = async (
     if (user) {
       await authService.sendOrderConfirmationEmail({
         email: user.email,
-        orderId: order._id,
+        orderId: order.orderId || order._id,
         totalAmount: order.finalTotal,
         items: cartItemsForEmail,
         paymentMethod: 'Razorpay',
@@ -265,7 +265,7 @@ exports.confirmCODOrder = async (userId, shippingDetails) => {
     if (user) {
       await authService.sendOrderConfirmationEmail({
         email: user.email,
-        orderId: order._id,
+        orderId: order.orderId || order._id,
         totalAmount: order.finalTotal,
         items: cartItemsForEmail,
         paymentMethod: 'COD',
@@ -342,7 +342,7 @@ exports.processWalletPayment = async (userId, shippingDetails) => {
         walletTransactions: {
           transactionType: 'Debit',
           amount: order.finalTotal,
-          description: `Payment for Order ID: ${order._id}`,
+          description: `Payment for Order ID: ${order.orderId || order._id}`,
           date: new Date(),
         },
       },
@@ -353,7 +353,7 @@ exports.processWalletPayment = async (userId, shippingDetails) => {
   try {
     await authService.sendOrderConfirmationEmail({
       email: user.email,
-      orderId: order._id,
+      orderId: order.orderId || order._id,
       totalAmount: order.finalTotal,
       items: cartItemsForEmail,
       paymentMethod: 'Wallet',

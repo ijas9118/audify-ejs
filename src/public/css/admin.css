@@ -756,6 +756,30 @@ body {
   border-color: #654154;
 }
 
+.admin-order-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.28rem 0.72rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+
+.admin-order-status-delivered {
+  color: #cde7d8;
+  background: #1a2a23;
+  border-color: #335545;
+}
+
+.admin-order-status-cancelled {
+  color: #e5cfd6;
+  background: #2a1d22;
+  border-color: #4f3941;
+}
+
 /* Admin search */
 .admin-search-bar {
   display: flex;
@@ -1113,6 +1137,64 @@ body {
   background: #0f0f0f;
   border-top: 1px solid #252525;
   padding: 0.8rem 1.1rem;
+}
+
+/* Product add modal */
+.admin-product-add-modal .admin-product-section {
+  padding-block: 1rem 0.9rem;
+}
+
+.admin-product-add-modal .admin-product-section:first-of-type {
+  padding-top: 0;
+}
+
+.admin-product-add-modal .invalid-feedback {
+  display: none;
+  margin-top: 0.35rem;
+}
+
+.admin-product-add-modal .form-control.is-invalid ~ .invalid-feedback,
+.admin-product-add-modal .form-select.is-invalid ~ .invalid-feedback {
+  display: block;
+}
+
+.admin-product-add-modal .was-validated .form-control:valid,
+.admin-product-add-modal .was-validated .form-select:valid,
+.admin-product-add-modal .form-control.is-valid,
+.admin-product-add-modal .form-select.is-valid {
+  border-color: #2f2f2f !important;
+  padding-right: 0.75rem;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.admin-product-add-modal .valid-feedback {
+  display: none !important;
+}
+
+.admin-product-modal-image-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-product-modal-preview {
+  width: 100%;
+  max-height: 220px;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  background: #0c0c0c;
+  object-fit: contain;
+}
+
+@media (max-width: 991.98px) {
+  .admin-product-modal-image-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .admin-product-modal-image-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .breadcrumb-item + .breadcrumb-item::before {

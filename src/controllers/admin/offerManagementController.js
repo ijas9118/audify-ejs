@@ -49,10 +49,8 @@ const addOffer = asyncHandler(async (req, res) => {
     discountType,
     discountValue,
     maxDiscountAmount,
-    minCartValue,
     validFrom,
     validUntil,
-    referralBonus,
   } = req.body;
   const wantsJson = expectsJsonResponse(req);
 
@@ -64,10 +62,8 @@ const addOffer = asyncHandler(async (req, res) => {
       discountType,
       discountValue,
       maxDiscountAmount,
-      minCartValue,
       validFrom,
       validUntil,
-      referralBonus,
     });
 
     return res

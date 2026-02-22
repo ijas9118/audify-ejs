@@ -4,6 +4,7 @@ const Category = require('../models/categories');
 const uploadService = require('../services/uploadService');
 const productManagementService = require('../services/productManagementService');
 const { StatusCodes, RESPONSE_MESSAGES } = require('../constants/constants');
+const { escapeRegex } = require('../utils/regex');
 
 // Render Product Management Page
 const getProducts = asyncHandler(async (req, res) => {
@@ -30,8 +31,15 @@ const getProducts = asyncHandler(async (req, res) => {
 const addProduct = asyncHandler(async (req, res) => {
   const { name, description, price, categoryId, stock } = req.body;
 
-  const mainImageFile = req.files.mainImage ? req.files.mainImage[0] : null;
-  const supportImageFiles = req.files.supportImages
+  // Check required text fields FIRST (before any image upload work)
+  if (!name || !price || !categoryId || !stock) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: RESPONSE_MESSAGES.MISSING_REQUIRED_FIELDS });
+  }
+
+  const mainImageFile = req.files?.mainImage ? req.files.mainImage[0] : null;
+  const supportImageFiles = req.files?.supportImages
     ? req.files.supportImages
     : [];
 
@@ -41,24 +49,19 @@ const addProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  // Upload images using uploadService
-  const { mainImageUrl, supportImageUrls } =
-    await uploadService.uploadProductImages(mainImageFile, supportImageFiles);
-
-  // Check if all required fields are provided
-  if (!name || !price || !categoryId || !stock) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: RESPONSE_MESSAGES.MISSING_REQUIRED_FIELDS });
-  }
-
   // Check if a product with the same name already exists
-  const existingProduct = await Product.findOne({ name });
+  const existingProduct = await Product.findOne({
+    name: { $regex: escapeRegex(name), $options: 'i' },
+  });
   if (existingProduct) {
     return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: RESPONSE_MESSAGES.PRODUCT_EXISTS });
   }
+
+  // Upload images using uploadService
+  const { mainImageUrl, supportImageUrls } =
+    await uploadService.uploadProductImages(mainImageFile, supportImageFiles);
 
   // Create a new product document
   const product = new Product({
@@ -76,8 +79,8 @@ const addProduct = asyncHandler(async (req, res) => {
   // Save the product to the database
   await product.save();
 
-  // Respond with the created product
-  return res.redirect('/admin/products');
+  // Respond with success (AJAX caller will redirect)
+  return res.status(StatusCodes.CREATED).json({ success: true });
 });
 
 // Unlist Product

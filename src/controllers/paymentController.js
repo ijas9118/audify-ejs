@@ -102,7 +102,7 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     res.status(StatusCodes.OK).json({
       success: true,
       message: 'Payment verified and order placed successfully.',
-      orderId: order._id,
+      orderId: order.orderId || order._id,
     });
   } catch (error) {
     const msg = getErrorMessage(error);
@@ -168,7 +168,7 @@ const confirmCODPayment = asyncHandler(async (req, res) => {
     res.status(StatusCodes.OK).json({
       success: true,
       message: RESPONSE_MESSAGES.ORDER_PLACED,
-      orderId: order._id,
+      orderId: order.orderId || order._id,
     });
   } catch (error) {
     const msg = getErrorMessage(error);
@@ -227,7 +227,7 @@ const processWalletPayment = asyncHandler(async (req, res) => {
     res.status(StatusCodes.OK).json({
       success: true,
       message: 'Payment confirmed using wallet. Order placed successfully.',
-      orderId: order._id,
+      orderId: order.orderId || order._id,
     });
   } catch (error) {
     const msg = getErrorMessage(error);
