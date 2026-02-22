@@ -200,6 +200,8 @@ exports.searchProducts = async ({
   minPrice = 0,
   maxPrice = 1_000_000_000,
   sortBy = '',
+  page = 1,
+  limit = 12,
 } = {}) => {
   let sortCriteria = null;
   switch (sortBy) {
@@ -229,6 +231,9 @@ exports.searchProducts = async ({
   const max = Number.isNaN(parseFloat(maxPrice))
     ? 1_000_000_000
     : parseFloat(maxPrice);
+  const safePage = Math.max(parseInt(page, 10) || 1, 1);
+  const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 12, 1), 48);
+  const skip = (safePage - 1) * safeLimit;
 
   const baseMatch = {
     isActive: true,
@@ -248,7 +253,7 @@ exports.searchProducts = async ({
     ];
   }
 
-  const pipeline = [
+  const basePipeline = [
     {
       $lookup: {
         from: 'categories',
@@ -259,6 +264,10 @@ exports.searchProducts = async ({
     },
     { $unwind: '$category' },
     { $match: baseMatch },
+  ];
+
+  const productPipeline = [
+    ...basePipeline,
     {
       $lookup: {
         from: 'offers',
@@ -289,11 +298,19 @@ exports.searchProducts = async ({
     },
   ];
 
-  if (sortCriteria) pipeline.push({ $sort: sortCriteria });
+  if (sortCriteria) {
+    productPipeline.push({ $sort: sortCriteria });
+  }
+  productPipeline.push({ $skip: skip }, { $limit: safeLimit });
 
-  const products = await Product.aggregate(pipeline);
+  const countPipeline = [...basePipeline, { $count: 'total' }];
+  const [products, totalResult] = await Promise.all([
+    Product.aggregate(productPipeline),
+    Product.aggregate(countPipeline),
+  ]);
+  const total = totalResult[0]?.total || 0;
 
-  return products.map((product) => {
+  const pagedProducts = products.map((product) => {
     const discountedPrice = calculateDiscountedPrice(
       product.price,
       product.productOfferDetails || null,
@@ -301,6 +318,14 @@ exports.searchProducts = async ({
     );
     return { ...product, discountedPrice };
   });
+
+  return {
+    products: pagedProducts,
+    total,
+    currentPage: safePage,
+    pageSize: safeLimit,
+    hasMore: skip + pagedProducts.length < total,
+  };
 };
 
 /**

@@ -92,9 +92,19 @@
 
       <!-- Result count + loading indicator -->
       <div class="d-flex align-items-center gap-3 mb-3">
-        <span id="result-count" class="text-muted small"></span>
+        <span id="result-count" class="text-muted small">
+          <%= totalProducts > 0 ? `${totalProducts} product${totalProducts === 1 ? '' : 's'} found` : '' %>
+        </span>
         <span id="search-spinner" class="spinner-border spinner-border-sm text-secondary d-none" role="status"></span>
       </div>
+
+      <div
+        id="shop-pagination-config"
+        data-total-products="<%= totalProducts || 0 %>"
+        data-current-page="<%= currentPage || 1 %>"
+        data-page-size="<%= pageSize || 12 %>"
+        data-has-more="<%= hasMore ? 'true' : 'false' %>"
+      ></div>
 
       <!-- Product grid -->
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="search-results">
@@ -175,6 +185,11 @@
         </div>
         <% }) %>
       </div>
+
+      <div id="infinite-scroll-loader" class="text-center py-4 d-none">
+        <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
+      </div>
+      <div id="infinite-scroll-sentinel" style="height: 1px;"></div>
 
       <!-- Empty state (hidden until needed) -->
       <div id="no-results" class="text-center py-5 d-none">

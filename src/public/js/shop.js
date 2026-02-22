@@ -1,11 +1,19 @@
-// ─── Debounce helper ─────────────────────────────────────────────────────────
+// ─── List state ───────────────────────────────────────────────────────────────
 let _debounceTimer = null;
+let currentPage = 1;
+let pageSize = 12;
+let totalProducts = 0;
+let hasMorePages = false;
+let isLoading = false;
+let requestVersion = 0;
+let sliderResetInProgress = false;
+let infiniteObserver = null;
+
 function debouncedSearch() {
   clearTimeout(_debounceTimer);
-  _debounceTimer = setTimeout(applyFilters, 400); // 400 ms debounce
+  _debounceTimer = setTimeout(applyFilters, 400);
 }
 
-// ─── Read current filter state from sidebar controls ─────────────────────────
 function getFilters() {
   return {
     q: (document.getElementById('search-input')?.value || '').trim(),
@@ -16,68 +24,111 @@ function getFilters() {
   };
 }
 
-// ─── Main: fetch products from server and re-render ──────────────────────────
-async function applyFilters() {
-  const filters = getFilters();
-  const params = new URLSearchParams(filters).toString();
-
+function toggleMainSpinner(show) {
   const spinner = document.getElementById('search-spinner');
+  if (spinner) spinner.classList.toggle('d-none', !show);
+}
+
+function toggleInfiniteLoader(show) {
+  const loader = document.getElementById('infinite-scroll-loader');
+  if (loader) loader.classList.toggle('d-none', !show);
+}
+
+function updateResultCount(total) {
   const countEl = document.getElementById('result-count');
+  if (!countEl) return;
+
+  countEl.textContent =
+    total > 0 ? `${total} product${total === 1 ? '' : 's'} found` : '';
+}
+
+function toggleResultsState(total) {
   const noResults = document.getElementById('no-results');
   const grid = document.getElementById('search-results');
+  const sentinel = document.getElementById('infinite-scroll-sentinel');
 
-  if (spinner) spinner.classList.remove('d-none');
+  if (noResults) noResults.classList.toggle('d-none', total > 0);
+  if (grid) grid.classList.toggle('d-none', total === 0);
+  if (sentinel)
+    sentinel.classList.toggle('d-none', total === 0 || !hasMorePages);
+}
+
+function buildParams(page) {
+  return new URLSearchParams({
+    ...getFilters(),
+    page: String(page),
+    limit: String(pageSize),
+  }).toString();
+}
+
+async function fetchProductsPage(page, { append }) {
+  if (append && isLoading) return;
+
+  const currentRequest = ++requestVersion;
+  isLoading = true;
+
+  if (append) {
+    toggleInfiniteLoader(true);
+  } else {
+    toggleMainSpinner(true);
+  }
 
   try {
-    const response = await fetch(`/shop/products?${params}`);
+    const response = await fetch(`/shop/products?${buildParams(page)}`);
     if (!response.ok) throw new Error('Server error');
 
     const data = await response.json();
+
+    // Ignore stale responses from older filter requests.
+    if (currentRequest !== requestVersion) return;
+
     const products = data.products || [];
+    currentPage = Number(data.currentPage) || page;
+    totalProducts = Number(data.total) || 0;
+    hasMorePages = Boolean(data.hasMore);
 
-    renderProductCards(products);
-
-    // Result count
-    if (countEl) {
-      countEl.textContent =
-        products.length === 0
-          ? ''
-          : `${products.length} product${products.length === 1 ? '' : 's'} found`;
-    }
-
-    // Toggle empty state
-    if (noResults) {
-      noResults.classList.toggle('d-none', products.length > 0);
-    }
-    if (grid) {
-      grid.classList.toggle('d-none', products.length === 0);
-    }
+    renderProductCards(products, { append });
+    updateResultCount(totalProducts);
+    toggleResultsState(totalProducts);
   } catch (err) {
     console.error('Filter error:', err);
+    const countEl = document.getElementById('result-count');
     if (countEl) countEl.textContent = 'Error loading products.';
   } finally {
-    if (spinner) spinner.classList.add('d-none');
+    if (currentRequest === requestVersion) {
+      isLoading = false;
+      toggleMainSpinner(false);
+      toggleInfiniteLoader(false);
+    }
   }
 }
 
-// ─── Render product cards into #search-results ───────────────────────────────
-function renderProductCards(products) {
+async function applyFilters() {
+  currentPage = 1;
+  hasMorePages = false;
+  await fetchProductsPage(1, { append: false });
+}
+
+async function loadNextPage() {
+  if (!hasMorePages || isLoading) return;
+  await fetchProductsPage(currentPage + 1, { append: true });
+}
+
+function renderProductCards(products, { append = false } = {}) {
   const container = document.getElementById('search-results');
   if (!container) return;
 
-  if (products.length === 0) {
+  if (!append && products.length === 0) {
     container.innerHTML = '';
     return;
   }
 
-  // Build all HTML first, then set once (avoids O(n²) innerHTML += pattern)
   const html = products
     .map((p) => {
       const isOos = p.isOutOfStock || p.stock === 0;
       const hasOffer = p.discountedPrice && p.discountedPrice < p.price;
 
-      // Offer badge
-      const offerEmoji = (() => {
+      const offerBadge = (() => {
         const offer = p.productOfferDetails || p.categoryOfferDetails;
         if (!offer || !hasOffer) return '';
         const label =
@@ -87,7 +138,6 @@ function renderProductCards(products) {
         return `<span class="badge bg-danger position-absolute top-0 start-0 m-2">${label}</span>`;
       })();
 
-      // Price display
       const priceHtml = hasOffer
         ? `<h6 class="card-price mb-0">₹${p.discountedPrice.toFixed(2)}</h6>
          <span class="text-muted small ms-1"><del>₹${p.price.toFixed(2)}</del></span>`
@@ -107,7 +157,7 @@ function renderProductCards(products) {
         <div class="${cardClass}">
           <div class="position-relative">
             <a href="/shop/product/${p._id}" class="card-link">
-              ${offerEmoji}
+              ${offerBadge}
               <img
                 src="${p.images?.main || ''}"
                 class="card-img-top img-fluid"
@@ -136,10 +186,13 @@ function renderProductCards(products) {
     })
     .join('');
 
-  container.innerHTML = html;
+  if (append) {
+    container.insertAdjacentHTML('beforeend', html);
+  } else {
+    container.innerHTML = html;
+  }
 }
 
-// ─── Reset all filters ───────────────────────────────────────────────────────
 function clearFilters() {
   const searchInput = document.getElementById('search-input');
   const catSelect = document.getElementById('filter-category');
@@ -149,7 +202,6 @@ function clearFilters() {
   if (catSelect) catSelect.value = '';
   if (sortSelect) sortSelect.value = 'new';
 
-  // Reset price slider to full range
   const sliderConfig = document.getElementById('slider-config');
   if (sliderConfig) {
     const min = parseFloat(sliderConfig.dataset.minPrice) || 0;
@@ -158,23 +210,68 @@ function clearFilters() {
     const maxEl = document.getElementById('filter-maxPrice');
     const minLabel = document.getElementById('minPriceValue');
     const maxLabel = document.getElementById('maxPriceValue');
+
     if (minEl) minEl.value = min;
     if (maxEl) maxEl.value = max;
     if (minLabel) minLabel.textContent = `₹${min}`;
     if (maxLabel) maxLabel.textContent = `₹${max}`;
 
-    // Reset noUiSlider if it is attached
     const slider = document.getElementById('price-slider');
     if (slider && slider.noUiSlider) {
+      sliderResetInProgress = true;
       slider.noUiSlider.set([min, max]);
+      setTimeout(() => {
+        sliderResetInProgress = false;
+      }, 0);
     }
   }
 
   applyFilters();
 }
 
-// ─── noUiSlider initialisation ───────────────────────────────────────────────
+function setupInfiniteScroll() {
+  const sentinel = document.getElementById('infinite-scroll-sentinel');
+  if (!sentinel) return;
+
+  if (infiniteObserver) {
+    infiniteObserver.disconnect();
+  }
+
+  infiniteObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          loadNextPage();
+        }
+      });
+    },
+    {
+      root: null,
+      rootMargin: '220px 0px',
+      threshold: 0,
+    }
+  );
+
+  infiniteObserver.observe(sentinel);
+}
+
+function initFromServerState() {
+  const config = document.getElementById('shop-pagination-config');
+  if (!config) return;
+
+  totalProducts = Number(config.dataset.totalProducts) || 0;
+  currentPage = Number(config.dataset.currentPage) || 1;
+  pageSize = Number(config.dataset.pageSize) || 12;
+  hasMorePages = config.dataset.hasMore === 'true';
+
+  updateResultCount(totalProducts);
+  toggleResultsState(totalProducts);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  initFromServerState();
+  setupInfiniteScroll();
+
   const sliderEl = document.getElementById('price-slider');
   const sliderConfig = document.getElementById('slider-config');
   if (!sliderEl || !sliderConfig || typeof noUiSlider === 'undefined') return;
@@ -184,7 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const rangeMin = Math.min(globalMin, globalMax);
   const rangeMax = Math.max(globalMin, globalMax);
 
-  // Avoid duplicate initialisation errors if another script touched this element.
   if (sliderEl.noUiSlider) {
     sliderEl.noUiSlider.destroy();
   }
@@ -201,12 +297,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   sliderEl.noUiSlider.on('update', ([minVal, maxVal]) => {
-    document.getElementById('minPriceValue').textContent = `₹${minVal}`;
-    document.getElementById('maxPriceValue').textContent = `₹${maxVal}`;
-    document.getElementById('filter-minPrice').value = minVal;
-    document.getElementById('filter-maxPrice').value = maxVal;
+    const minPriceValue = document.getElementById('minPriceValue');
+    const maxPriceValue = document.getElementById('maxPriceValue');
+    const minPriceInput = document.getElementById('filter-minPrice');
+    const maxPriceInput = document.getElementById('filter-maxPrice');
+
+    if (minPriceValue) minPriceValue.textContent = `₹${minVal}`;
+    if (maxPriceValue) maxPriceValue.textContent = `₹${maxVal}`;
+    if (minPriceInput) minPriceInput.value = minVal;
+    if (maxPriceInput) maxPriceInput.value = maxVal;
   });
 
-  // Only fire search when user finishes dragging (not on every pixel move)
-  sliderEl.noUiSlider.on('change', () => applyFilters());
+  sliderEl.noUiSlider.on('change', () => {
+    if (!sliderResetInProgress) {
+      applyFilters();
+    }
+  });
 });

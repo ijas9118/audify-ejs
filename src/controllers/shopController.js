@@ -9,13 +9,18 @@ const getShop = asyncHandler(async (req, res) => {
   const minPrice = 0;
   const maxPrice = 10000;
   const sortBy = 'new';
+  const page = 1;
+  const limit = 12;
 
-  const [products, categories] = await Promise.all([
-    productService.getFilteredProducts({
+  const [productsData, categories] = await Promise.all([
+    productService.searchProducts({
+      query: '',
       category,
       minPrice,
       maxPrice,
       sortBy,
+      page,
+      limit,
     }),
     productService.getActiveCategories(),
   ]);
@@ -26,7 +31,11 @@ const getShop = asyncHandler(async (req, res) => {
     viewName: 'users/shop',
     activePage: 'shop',
     isAdmin: false,
-    products,
+    products: productsData.products,
+    totalProducts: productsData.total,
+    currentPage: productsData.currentPage,
+    pageSize: productsData.pageSize,
+    hasMore: productsData.hasMore,
     categories, // dynamic list from DB
     category,
     minPrice,
@@ -45,16 +54,20 @@ const getProductsJson = asyncHandler(async (req, res) => {
   const minPrice = parseFloat(req.query.minPrice) || 0;
   const maxPrice = parseFloat(req.query.maxPrice) || 10000;
   const sortBy = req.query.sortBy || '';
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 12, 1), 48);
 
-  const products = await productService.searchProducts({
+  const productsData = await productService.searchProducts({
     query,
     category,
     minPrice,
     maxPrice,
     sortBy,
+    page,
+    limit,
   });
 
-  return res.json({ products });
+  return res.json(productsData);
 });
 
 // Legacy POST handler — kept for graceful fallback but now delegates to JSON logic
@@ -63,13 +76,18 @@ const filterShop = asyncHandler(async (req, res) => {
   const category = req.body.category || '';
   const minPrice = parseFloat(req.body.minPrice) || 0;
   const maxPrice = parseFloat(req.body.maxPrice) || 10000;
+  const page = 1;
+  const limit = 12;
 
-  const [products, categories] = await Promise.all([
-    productService.getFilteredProducts({
+  const [productsData, categories] = await Promise.all([
+    productService.searchProducts({
+      query: '',
       category,
       minPrice,
       maxPrice,
       sortBy,
+      page,
+      limit,
     }),
     productService.getActiveCategories(),
   ]);
@@ -80,7 +98,11 @@ const filterShop = asyncHandler(async (req, res) => {
     viewName: 'users/shop',
     activePage: 'shop',
     isAdmin: false,
-    products,
+    products: productsData.products,
+    totalProducts: productsData.total,
+    currentPage: productsData.currentPage,
+    pageSize: productsData.pageSize,
+    hasMore: productsData.hasMore,
     categories,
     category,
     minPrice,
@@ -244,14 +266,16 @@ const searchProducts = asyncHandler(async (req, res) => {
   const maxPrice = parseFloat(req.query.maxPrice) || 10000;
   const sortBy = req.query.sortBy || '';
 
-  const products = await productService.searchProducts({
+  const productsData = await productService.searchProducts({
     query,
     category,
     minPrice,
     maxPrice,
     sortBy,
+    page: 1,
+    limit: 48,
   });
-  return res.json(products);
+  return res.json(productsData.products);
 });
 
 module.exports = {
