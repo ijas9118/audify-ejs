@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "commitlint": "npx commitlint --from=HEAD~1"
   },
   "author": "Ijas Ahammed",
   "license": "ISC",
@@ -51,6 +52,8 @@
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-security": "^3.0.1",
     "nodemon": "^3.1.4",
-    "prettier": "^3.7.4"
+    "prettier": "^3.7.4",
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0"
   }
 }

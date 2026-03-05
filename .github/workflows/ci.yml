@@ -42,3 +42,19 @@ jobs:
         run: npm ci
       - name: Run Format Check
         run: npm run format:check
+
+  commitlint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install commitlint dependencies
+        run: |
+          npm install --save-dev @commitlint/config-conventional @commitlint/cli
+      - name: Run Commitlint
+        uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: .commitlintrc.json
