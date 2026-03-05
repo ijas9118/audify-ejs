@@ -7,26 +7,48 @@ on:
 
 permissions:
   contents: read
+  checks: read
+  statuses: read
 
 jobs:
   check-ci:
     name: Wait for CI
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Lint
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: ${{ github.sha }}
-          check-name: 'Lint'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
-      - name: Wait for Format
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: ${{ github.sha }}
-          check-name: 'Format'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
+      - name: Wait for CI Jobs
+        shell: bash
+        run: |
+          echo "Waiting for CI checks (Lint, Format, Commit Lint) to complete..."
+          # We disable 'set -e' locally so that the script doesn't exit when grep finds no matches
+          set +e
+          while true; do
+            # Fetch statuses for specific CI jobs, matching both direct and prefixed names
+            STATUSES=$(gh api repos/${{ github.repository }}/commits/${{ github.sha }}/check-runs \
+              --jq '.check_runs[] | select(.name | test("^(Lint|Format|Commit Lint|CI Pipeline / (Lint|Format|Commit Lint))$"; "i")) | .conclusion' 2>/dev/null)
+            
+            # Exit if any CI job failed
+            if echo "$STATUSES" | grep -q "failure"; then
+              echo "❌ One or more CI checks failed. Aborting CD Pipeline."
+              exit 1
+            fi
+
+            # Count completed checks safely
+            COMPLETED_COUNT=$(echo "$STATUSES" | grep -E "success|skipped" | wc -l)
+            
+            if [[ $COMPLETED_COUNT -ge 3 ]]; then
+              echo "✅ All CI checks passed ($COMPLETED_COUNT checks found)."
+              exit 0
+            fi
+
+            # Format statuses for display
+            DISPLAY_STATUSES=$(echo "$STATUSES" | tr '\n' ' ' | sed 's/ $//')
+            if [ -z "$DISPLAY_STATUSES" ]; then DISPLAY_STATUSES="pending/queued"; fi
+            
+            echo "🕒 Still waiting... (Current statuses: $DISPLAY_STATUSES)"
+            sleep 20
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-push:
     name: Build & Push Docker Image
