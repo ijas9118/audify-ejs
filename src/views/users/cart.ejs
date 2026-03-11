@@ -51,9 +51,11 @@
             </div>
           <% }); %>
 
-          <div class="mt-4 p-4 rounded-4 bg-light d-flex align-items-center justify-content-between">
+          <div class="mt-4 p-4 rounded-4 bg-light d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 text-center text-sm-start">
             <span class="text-secondary fw-medium">Continue browsing more products?</span>
-            <a href="/shop" class="btn btn-secondary-modern">Back to Shop</a>
+            <a href="/shop" class="btn btn-secondary-modern w-100 w-sm-auto justify-content-center">
+              <i class="fas fa-shopping-bag me-2"></i> Back to Shop
+            </a>
           </div>
         </div>
 
@@ -82,7 +84,6 @@
             </button>
             
             <div class="mt-4 text-center">
-              <img src="/images/svg/security_badge.svg" alt="Secure Payment" height="20" class="me-2 d-none" /> <!-- If you have one -->
               <p class="text-muted small mb-0"><i class="fas fa-shield-alt me-1"></i> Secure and encrypted checkout</p>
             </div>
           </div>
