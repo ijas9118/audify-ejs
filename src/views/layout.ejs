@@ -44,6 +44,9 @@
     <% if (activePage === 'login' || activePage === 'signup') { %>
     <link rel="stylesheet" href="/css/user-ui/auth.css" />
     <% } %>
+    <% if (activePage === 'shop') { %>
+    <link rel="stylesheet" href="/css/user-ui/shop.css" />
+    <% } %>
     <% } else { %>
     <link rel="stylesheet" href="/css/admin.css" />
     <% } %>
@@ -62,7 +65,10 @@
     <%- include('partials/admin_confirm_modal') %>
     <% } else { %> <%- include(header, { activePage: activePage }) %>
     <!-- Dynamic Content -->
-    <%- include(viewName) %> <% } %>
+    <main class="page-content">
+      <%- include(viewName) %>
+    </main>
+    <% } %>
 
     <!-- Include Footer -->
     <% if (!isAdmin) { %> <%- include('partials/footer') %> <% } %>
