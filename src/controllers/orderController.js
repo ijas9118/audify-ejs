@@ -20,7 +20,7 @@ const getOrderSuccessPage = asyncHandler(async (req, res) => {
       title: 'Order Success',
       header: 'partials/login_header',
       viewName: 'users/orderSuccess',
-      activePage: 'Order',
+      activePage: 'checkout',
       isAdmin: false,
       order,
     });

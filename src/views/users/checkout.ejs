@@ -1,273 +1,278 @@
-<div class="container my-5 col-md-10 col-sm-12">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
-      <li class="breadcrumb-item"><a href="/shop/cart">Cart</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Checkout</li>
-    </ol>
-  </nav>
-  <h1 class="mb-4">Checkout</h1>
+<div class="checkout-container">
+  <div class="container px-lg-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="breadcrumb-modern">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
+        <li class="breadcrumb-item"><a href="/shop/cart">Cart</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+      </ol>
+    </nav>
 
-  <div class="row">
-    <!-- Cart Summary -->
-    <div class="col-md-8">
-      <div class="checkout-summary mb-4">
-        <% cart.items.forEach(item => { %>
-        <div class="card mb-3">
-          <div
-            class="card-body d-flex justify-content-between align-items-center"
-          >
-            <div class="d-flex align-items-center">
-              <img
-                src="<%= item.image %>"
-                alt="<%= item.name %>"
-                class="me-3"
-                style="width: 100px; height: 100px; object-fit: contain"
-              />
-              <div>
-                <h5 class="mb-1"><%= item.name %></h5>
-                <p class="mb-1">
-                  ₹<%= item.price.toFixed(2) %> x <%= item.quantity %>
-                </p>
+    <div class="section-header mb-4">
+      <h1 class="checkout-title mb-0">Complete Your Order</h1>
+    </div>
+
+    <div class="row g-4">
+      <!-- Main Checkout Content -->
+      <div class="col-lg-8">
+        
+        <!-- Cart Items Review -->
+        <div class="checkout-section mb-5">
+          <h5 class="fw-bold mb-3">1. Review Items</h5>
+          <div class="checkout-items">
+            <% cart.items.forEach(item => { %>
+            <div class="checkout-item-card">
+              <div class="checkout-item-img">
+                <img src="<%= item.image %>" alt="<%= item.name %>" />
+              </div>
+              <div class="checkout-item-info">
+                <h6 class="mb-1"><%= item.name %></h6>
+                <div class="checkout-item-price">
+                  ₹<%= item.price.toLocaleString('en-IN') %> x <%= item.quantity %>
+                </div>
+              </div>
+              <div class="text-end">
+                <div class="fw-bold text-dark">₹<%= item.subtotal.toLocaleString('en-IN') %></div>
               </div>
             </div>
-            <p class="mb-0">Subtotal: ₹<%= item.subtotal.toFixed(2) %></p>
+            <% }); %>
           </div>
         </div>
-        <% }); %>
-      </div>
-    </div>
-    <!-- Order Summary -->
-    <div class="col-md-4">
-      <div class="order-summary p-4 border rounded bg-light shadow-sm">
-        <h4 class="mb-4 text-center">Order Summary</h4>
-        <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-          <span class="fw-semibold text-muted">Subtotal</span>
-          <span
-            >₹<%= cart.items.reduce((acc, item) => acc + item.subtotal,
-            0).toFixed(2) %></span
-          >
-        </div>
-        <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-          <span class="fw-semibold text-muted">Savings</span>
-          <span>₹<%= cart.savings ? cart.savings.toFixed(2) : '0.00' %></span>
-        </div>
-        <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-          <span class="fw-semibold text-muted">Shipping Charge</span>
-          <span>₹<%= cart.shippingCharge.toFixed(2) %></span>
-        </div>
-        <div class="d-flex justify-content-between mb-4 pb-2 total">
-          <span class="fw-bold text-dark">Grand Total</span>
-          <span class="fs-5 fw-bold text-dark" id="grandTotal"
-            >₹<%= cart.finalTotal.toFixed(2) %></span
-          >
-        </div>
 
-        <!-- Coupon Section -->
-        <div class="mb-4" id="couponSection">
-          <!-- Coupon Input Group -->
-          <div class="<%= cart.appliedCoupon ? 'd-none' : '' %> input-group" id="applyCouponDiv">
-            <input
-              type="text"
-              class="form-control"
-              id="couponCode"
-              placeholder="Enter coupon code"
-              aria-label="Coupon code"
-              data-cartId="<%= cart.id %>"
-            />
-            <button class="btn btn-dark" type="button" id="applyCouponBtn">Apply</button>
+        <!-- Address Selection -->
+        <div class="checkout-section mb-5">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">2. Shipping Address</h5>
           </div>
 
-          <!-- Applied Coupon Section (Hidden by default) -->
-          <div class="<%= cart.appliedCoupon ? '' : 'd-none' %>" id="appliedCouponDiv">
-            <div class="alert alert-primary d-flex justify-content-between align-items-center">
-              <span id="appliedCouponCode">Coupon: <strong><%= cart.appliedCoupon %></strong></span>
-              <button class="btn btn-link text-danger" id="removeCouponBtn">
-                <i class="fas fa-times"></i> Remove
-              </button>
+          <div class="address-grid">
+            <!-- Saved Addresses -->
+            <% addresses.forEach(address => { %>
+            <div 
+              class="address-card-modern <%= address.isDefault ? 'is-default' : '' %>" 
+              data-id="<%= address._id %>"
+            >
+              <div>
+                <div class="address-badge">
+                  <i class="fas fa-<%= address.addressType === 'home' ? 'home' : (address.addressType === 'work' ? 'briefcase' : 'map-marker-alt') %> me-1"></i>
+                  <%= address.customName || address.addressType %>
+                </div>
+                
+                <div class="address-details">
+                  <div class="fw-bold mb-1 text-dark"><%= address.name || 'User' %></div>
+                  <div class="text-secondary small">
+                    <%= address.location %>
+                  </div>
+                  <div class="text-secondary small">
+                    <%= address.city %>, <%= address.state %> <%= address.zip %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% }); %>
+
+            <!-- Add New Address Button -->
+            <div class="add-address-card-modern" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+              <div class="add-icon">
+                <i class="fas fa-plus-circle"></i>
+              </div>
+              <h6 class="fw-bold mb-0">Add New Address</h6>
             </div>
           </div>
         </div>
 
+        <!-- Hidden form for shipping details -->
+        <form id="checkoutForm" data-total-price="<%= cart.finalTotal%>">
+          <input type="hidden" name="selectedAddressId" id="selectedAddressId" />
+          
+          <!-- Shipping Form (Populated when address selected) -->
+          <div class="checkout-section d-none" id="shippingDetailsSection">
+            <h5 class="fw-bold mb-4">Confirm Shipping Details</h5>
+            <div class="card-modern p-4">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Receiver Name</label>
+                  <input type="text" class="form-control form-control-modern" id="name" name="name" required />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Mobile Number</label>
+                  <input type="text" class="form-control form-control-modern" id="mobile" name="mobile" required />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Alternate Mobile</label>
+                  <input type="text" class="form-control form-control-modern" id="alternateMobile" name="alternateMobile" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label small fw-bold">Full Address / Location</label>
+                  <textarea class="form-control form-control-modern" id="location" name="location" rows="2" required></textarea>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">City</label>
+                  <input type="text" class="form-control form-control-modern" id="city" name="city" required />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">State</label>
+                  <input type="text" class="form-control form-control-modern" id="state" name="state" required />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold">ZIP Code</label>
+                  <input type="text" class="form-control form-control-modern" id="zip" name="zip" required />
+                </div>
+                <div class="col-12">
+                  <label class="form-label small fw-bold">Landmark (Optional)</label>
+                  <input type="text" class="form-control form-control-modern" id="landmark" name="landmark" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Checkout Button for desktop (Mobile will have its own) -->
+          <div class="mt-4 d-none d-lg-block">
+            <button id="placeOrder" class="btn btn-primary-modern btn-lg w-100 justify-content-center py-3" type="submit">
+              Proceed to Payment
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Order Summary Column -->
+      <div class="col-lg-4">
+        <div class="order-summary-card">
+          <h4 class="summary-title">Order Summary</h4>
+          
+          <!-- Coupon Section -->
+          <div class="mb-4" id="couponSection">
+            <label class="form-label small fw-bold text-secondary mb-2">Have a coupon?</label>
+            <div class="<%= cart.appliedCoupon ? 'd-none' : '' %> coupon-input-group" id="applyCouponDiv">
+              <input
+                type="text"
+                class="form-control coupon-input"
+                id="couponCode"
+                placeholder="PROMO20"
+                data-cartId="<%= cart.id %>"
+              />
+              <button class="btn btn-primary-modern btn-apply-coupon" type="button" id="applyCouponBtn">Apply</button>
+            </div>
+
+            <!-- Applied Coupon Section -->
+            <div class="<%= cart.appliedCoupon ? '' : 'd-none' %>" id="appliedCouponDiv">
+              <div class="alert alert-primary d-flex justify-content-between align-items-center mb-0 p-2 px-3 border-0 rounded-3">
+                <span id="appliedCouponCode" class="small fw-bold">
+                  <i class="fas fa-tag me-1"></i> <strong><%= cart.appliedCoupon %></strong>
+                </span>
+                <button class="btn btn-link text-danger p-0 text-decoration-none small" id="removeCouponBtn">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-details">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span>₹<%= cart.items.reduce((acc, item) => acc + item.subtotal, 0).toLocaleString('en-IN') %></span>
+            </div>
+            
+            <% if (cart.savings > 0) { %>
+            <div class="summary-row">
+              <span>Savings</span>
+              <span class="savings-text">- ₹<%= cart.savings.toLocaleString('en-IN') %></span>
+            </div>
+            <% } %>
+
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span><%= cart.shippingCharge > 0 ? '₹' + cart.shippingCharge.toLocaleString('en-IN') : 'FREE' %></span>
+            </div>
+
+            <div class="summary-row total">
+              <span>Grand Total</span>
+              <span id="grandTotal">₹<%= cart.finalTotal.toLocaleString('en-IN') %></span>
+            </div>
+          </div>
+
+          <div class="mt-4 d-lg-none">
+            <button id="placeOrderMobile" class="btn btn-primary-modern btn-lg w-100 justify-content-center py-3" onclick="document.getElementById('checkoutForm').requestSubmit()">
+              Proceed to Payment
+            </button>
+          </div>
+          
+          <div class="text-center mt-3 text-secondary x-small">
+            <i class="fas fa-shield-alt me-1"></i> Secure Checkout Guaranteed
+          </div>
+        </div>
       </div>
     </div>
   </div>
-
-  <form id="checkoutForm" data-total-price="<%= cart.finalTotal%>">
-    <!-- Address Selection -->
-    <div class="mb-4">
-      <h4 class="mb-3">Select Address</h4>
-      <div class="row">
-        <% addresses.forEach(address => { %>
-        <div class="col-md-3 mb-3 d-flex">
-          <div class="card flex-fill address-card" data-id="<%= address._id %>">
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title">
-                <% if (address.isDefault) { %> <%= address.customName ||
-                address.addressType.charAt(0).toUpperCase() +
-                address.addressType.slice(1) %> (Default) <% } else { %> <%=
-                address.customName ||
-                address.addressType.charAt(0).toUpperCase() +
-                address.addressType.slice(1) %> <% } %>
-              </h5>
-              <p class="card-text flex-grow-1">
-                <%= address.location %>, <%= address.city %>, <%= address.state
-                %>, <%= address.country %> - <%= address.zip %>
-              </p>
-            </div>
-          </div>
-        </div>
-        <% }); %>
-      </div>
-    </div>
-
-    <div class="mb-4"></div>
-    <h4 class="mb-3">Enter New Address</h4>
-    <div class="container my-5">
-      <div class="row">
-        <!-- Form Fields Container -->
-        <div class="col-md-8">
-          <div class="row">
-            <!-- Name Field -->
-            <div class="mb-3 col-12 col-md-6">
-              <label for="name" class="form-label">Name</label>
-              <input
-                type="text"
-                class="form-control rounded-3 px-3 py-2"
-                id="name"
-                name="name"
-                placeholder="Enter your name"
-              />
-            </div>
-
-            <!-- Mobile Field -->
-            <div class="mb-3 col-12 col-md-6">
-              <label for="mobile" class="form-label">Mobile</label>
-              <input
-                type="text"
-                class="form-control rounded-3 px-3 py-2"
-                id="mobile"
-                name="mobile"
-                pattern="\d{10}"
-                title="Please provide a valid 10-digit mobile number"
-                placeholder="Enter your mobile number"
-              />
-            </div>
-          </div>
-
-          <div class="row">
-            <!-- Alternate Mobile Field -->
-            <div class="mb-3 col-12 col-md-6">
-              <label for="alternateMobile" class="form-label"
-                >Alternate Mobile</label
-              >
-              <input
-                type="text"
-                class="form-control rounded-3 px-3 py-2"
-                id="alternateMobile"
-                name="alternateMobile"
-                pattern="\d{10}"
-                title="Please provide a valid 10-digit mobile number"
-                placeholder="Enter alternate mobile number"
-              />
-            </div>
-
-            <!-- Location Field -->
-            <div class="mb-3 col-12 col-md-6">
-              <label for="location" class="form-label">Location</label>
-              <textarea
-                class="form-control rounded-3 px-3 py-2"
-                id="location"
-                name="location"
-                rows="2"
-                placeholder="Enter your location"
-              ></textarea>
-            </div>
-          </div>
-
-          <div class="row">
-            <!-- City Field -->
-            <div class="mb-3 col-12 col-md-6">
-              <label for="city" class="form-label">City</label>
-              <input
-                type="text"
-                class="form-control rounded-3 px-3 py-2"
-                id="city"
-                name="city"
-                placeholder="Enter your city"
-              />
-            </div>
-
-            <!-- State Field -->
-            <div class="mb-3 col-12 col-md-6">
-              <label for="state" class="form-label">State</label>
-              <input
-                type="text"
-                class="form-control rounded-3 px-3 py-2"
-                id="state"
-                name="state"
-                placeholder="Enter your state"
-              />
-            </div>
-          </div>
-
-          <div class="row">
-            <!-- Landmark Field -->
-            <div class="mb-3 col-12 col-md-6">
-              <label for="landmark" class="form-label">Landmark</label>
-              <input
-                type="text"
-                class="form-control rounded-3 px-3 py-2"
-                id="landmark"
-                name="landmark"
-                placeholder="Enter a landmark (optional)"
-              />
-            </div>
-
-            <!-- ZIP Code Field -->
-            <div class="mb-3 col-12 col-md-6">
-              <label for="zip" class="form-label">ZIP Code</label>
-              <input
-                type="text"
-                class="form-control rounded-3 px-3 py-2"
-                id="zip"
-                name="zip"
-                placeholder="Enter your ZIP code"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <input type="hidden" name="selectedAddressId" id="selectedAddressId" />
-
-
-    <div class="d-flex justify-content-start col-4">
-      <button id="placeOrder" class="btn btn-dark btn-lg w-100" type="submit">
-        Proceed to Payment
-      </button>
-    </div>
-  </form>
 </div>
 
-<style>
-  .address-card {
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    border-radius: 0.375rem;
-  }
+<!-- Modal for Adding New Address -->
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold">Add New Address</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form action="/account/addresses" method="POST" id="addressForm">
+          <input type="hidden" name="redirectTo" value="/checkout" />
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary">Receiver Full Name</label>
+            <input type="text" class="form-control" name="name" placeholder="John Doe" required />
+          </div>
 
-  .address-card.active-address {
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
-    border-color: #007bff;
-  }
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary">Address Line</label>
+            <input type="text" class="form-control" name="location" placeholder="e.g. 123 Street Name, Apartment" required />
+          </div>
+          
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-bold text-secondary">City</label>
+              <input type="text" class="form-control" name="city" required />
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold text-secondary">State</label>
+              <input type="text" class="form-control" name="state" required />
+            </div>
+          </div>
 
-  .address-card:hover {
-    background-color: #f8f9fa;
-  }
-</style>
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <label class="form-label small fw-bold text-secondary">ZIP Code</label>
+              <input type="text" class="form-control" name="zip" required />
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold text-secondary">Country</label>
+              <input type="text" class="form-control" name="country" value="India" required />
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-secondary mb-2 d-block">Address Type</label>
+            <div class="d-flex gap-3">
+              <div class="form-check custom-option">
+                <input class="form-check-input" type="radio" name="addressType" id="typeHome" value="home" checked />
+                <label class="form-check-label" for="typeHome">Home</label>
+              </div>
+              <div class="form-check custom-option">
+                <input class="form-check-input" type="radio" name="addressType" id="typeWork" value="work" />
+                <label class="form-check-label" for="typeWork">Work</label>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary-modern w-100 justify-content-center py-2" id="saveAddressBtn">
+            Save Address
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="/js/checkout.js"></script>
+<script src="/js/addNewAddress.js"></script>

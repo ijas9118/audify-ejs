@@ -1,75 +1,65 @@
-<div class="container my-5 py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-4">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h2 class="text-center my-4"><%= title %></h2>
-          <form action="/verify-otp" method="POST">
-            <div class="form-group mb-3">
-              <input
-                type="text"
-                class="form-control"
-                id="otp"
-                name="otp"
-                placeholder="Enter your OTP"
-                required
-              />
-              <% if (error) { %>
-              <div class="alert alert-danger mt-2"><%= error %></div>
-              <% } %>
-            </div>
-            <div class="d-grid mt-4 mb-3">
-              <button type="submit" class="btn btn-primary btn-block">
-                Verify
-              </button>
-            </div>
-            <!-- Message for OTP Resend -->
-            <div id="otp-message" class="text-center mb-3">
-              <span id="resend-msg"
-                >Didn't get an OTP? Wait <span id="countdown">15</span> seconds
-                to resend.</span
-              >
-            </div>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <a href="/">
+        <img src="/images/svg/logo.svg" alt="Audify" class="auth-logo" />
+      </a>
+      <h1 class="auth-title">Verify Your Email</h1>
+      <p class="auth-subtitle">We've sent a 6-digit code to your email.</p>
+    </div>
 
-            <!-- Resend OTP Button -->
-            <div class="text-center mb-3">
-              <a
-                href="#"
-                id="resend-btn"
-                class="btn-resend"
-                onClick="resendOtp()"
-                style="display: none"
-                >Resend OTP</a
-              >
-            </div>
-          </form>
+    <form action="/verify-otp" method="POST">
+      <div class="otp-input-wrapper">
+        <label for="otp" class="form-label d-block text-center mb-3">Verification Code</label>
+        <input
+          type="text"
+          class="form-control-modern otp-input w-100"
+          id="otp"
+          name="otp"
+          placeholder="000000"
+          maxlength="6"
+          pattern="\d{6}"
+          required
+          autofocus
+        />
+        <% if (error) { %>
+        <div class="alert alert-danger mt-3 py-2 small border-0 text-center">
+          <i class="fas fa-exclamation-circle me-1"></i> <%= error %>
         </div>
+        <% } %>
       </div>
+
+      <button type="submit" class="btn btn-primary-modern w-100 justify-content-center">
+        Verify Account
+      </button>
+
+      <!-- Message for OTP Resend -->
+      <div class="resend-timer" id="otp-message">
+        <span id="resend-msg">
+          Didn't get an OTP? Wait <span id="countdown">15</span>s
+        </span>
+      </div>
+
+      <!-- Resend OTP Button -->
+      <div class="text-center mt-2">
+        <button
+          type="button"
+          id="resend-btn"
+          class="btn-resend-link"
+          onclick="resendOtp()"
+          style="display: none"
+        >
+          <i class="fas fa-redo-alt me-1 x-small"></i> Resend Verification Code
+        </button>
+      </div>
+    </form>
+
+    <div class="auth-footer mt-5 pt-4 border-top">
+      <p class="mb-0 small">
+        Entered the wrong email? <a href="/signup">Change Email</a>
+      </p>
     </div>
   </div>
 </div>
-
-<style>
-  .btn-resend {
-    color: #6f42c1; /* Dark purple */
-    text-decoration: underline;
-    cursor: pointer;
-  }
-
-  #otp-message {
-    font-size: 0.9rem;
-    color: #6c757d; /* Muted color */
-  }
-
-  #countdown {
-    font-weight: bold;
-    color: #e8626f; /* Red for countdown */
-  }
-
-  .btn-resend:disabled {
-    cursor: not-allowed;
-    color: #a1a1a1; /* Muted color for disabled state */
-  }
-</style>
 
 <script src="/js/otp-resend.js"></script>

@@ -1,90 +1,66 @@
-<div class="container mt-5 col-md-8 col-lg-6">
-  <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/">Home</a></li>
-          <li class="breadcrumb-item"><a href="/checkout">Checkout</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Order Success</li>
-      </ol>
-  </nav>
-  <h1 class="mb-4 text-center">Order Confirmation</h1>
-  
-  <div class="alert alert-success" role="alert">
-      <h4 class="alert-heading">Thank You for Your Order!</h4>
-      <p>Your order <strong><%= order.orderId || order._id %></strong> has been successfully placed and will be processed with <%= order.paymentMethod %>.</p>
-      <hr>
-      <p class="mb-0">You will receive a confirmation email shortly with the details of your order.</p>
-  </div>
-  
-  <div class="row">
-      <div class="mb-5 mx-auto">
-          <div class="card">
-              <div class="card-header">
-                  <h5 class="mb-0">Order Summary</h5>
-              </div>
-              <div class="card-body">
-                  <div class="list-group mb-4">
-                      <!-- Address -->
-                      <div class="list-group-item">
-                          <div class="d-flex justify-content-between">
-                              <strong>Address:</strong>
-                              <span><%= order.location %>, <%= order.city %>, <%= order.state %>, <%= order.zip %></span>
-                          </div>
-                      </div>
-
-                      <!-- Payment Method -->
-                      <div class="list-group-item">
-                          <div class="d-flex justify-content-between">
-                              <strong>Payment Method:</strong>
-                              <span><%= order.paymentMethod %></span>
-                          </div>
-                      </div>
-
-                      <!-- Items -->
-                      <div class="list-group-item">
-                          <div class="d-flex justify-content-between mb-2">
-                              <strong>Items:</strong>
-                              <span></span>
-                          </div>
-                          <% order.orderItems.forEach(item => { %>
-                              <div class="d-flex justify-content-between">
-                                  <span><%= item.product.name %> (x<%= item.quantity %>)</span>
-                                  <span>₹<%= item.product.price %></span>
-                              </div>
-                          <% }); %>
-                          <div class="d-flex justify-content-between mt-2">
-                              <span>Shipping Charge:</span>
-                              <span>₹<%= order.shippingCharge %></span>
-                          </div>
-                          <div class="d-flex justify-content-between">
-                            <span>Total Amount:</span>
-                            <span>₹<%= order.totalAmount %></span>
-                        </div>
-                        <% if (order.discountApplied) { %>
-                            <div class="mt-2">
-                                <div class="d-flex justify-content-between text-danger">
-                                    <span>Discount Applied:</span>
-                                    <span>- ₹<%= order.discountApplied %></span>
-                                </div>
-                            </div>
-                        <% } %>
-                      </div>
-
-                      <!-- Total -->
-                      <div class="list-group-item">
-                          <div class="d-flex justify-content-between">
-                              <strong class="fs-5">Total:</strong>
-                              <span class="fs-5">₹<%= order.finalTotal %></span>
-                          </div>
-                      </div>
-                  </div>
-
-                  <div class="text-center mt-4">
-                      <a href="/shop" class="btn btn-dark">Continue Shopping</a>
-                      <a href="/account/order-history" class="btn btn-outline-dark">View Orders</a>
-                  </div>
-              </div>
-          </div>
+<div class="checkout-container">
+  <div class="container">
+    <div class="success-container">
+      
+      <!-- Celebration Icon -->
+      <div class="success-icon-wrap">
+        <div class="success-icon-circle">
+          <i class="fas fa-check"></i>
+        </div>
+        <div class="confetti" id="confetti"></div>
       </div>
-  </div>
 
+      <h1 class="fw-bold mb-2">Order Confirmed!</h1>
+      <p class="text-secondary mb-4">
+        Thank you for your purchase. Your order <span class="fw-bold text-dark">#<%= order.orderId || order._id %></span> is being processed.
+      </p>
+
+      <div class="d-flex flex-column flex-sm-row justify-content-center gap-3 mb-5">
+        <a href="/shop" class="btn btn-primary-modern justify-content-center py-2 px-4 rounded-pill">
+          Continue Shopping
+        </a>
+        <a href="/account/order-history" class="btn btn-secondary-modern justify-content-center py-2 px-4 rounded-pill">
+          Track Your Order
+        </a>
+      </div>
+
+      <!-- Order Recap -->
+      <div class="recap-card">
+        <h5 class="fw-bold mb-4">Order Summary</h5>
+        
+        <div class="info-item">
+          <span class="info-label text-truncate me-3">Ship to</span>
+          <span class="info-value text-end"><%= order.location %>, <%= order.city %>, <%= order.zip %></span>
+        </div>
+
+        <div class="info-item">
+          <span class="info-label">Payment Mode</span>
+          <span class="info-value"><%= order.paymentMethod %></span>
+        </div>
+
+        <div class="info-item">
+          <span class="info-label">Total Items</span>
+          <span class="info-value"><%= order.orderItems.length %></span>
+        </div>
+
+        <div class="info-item mt-2 pt-3 border-top border-dark">
+          <span class="fw-bold text-dark fs-5">Amount Paid</span>
+          <span class="fw-bold text-dark fs-5">₹<%= order.finalTotal.toLocaleString('en-IN') %></span>
+        </div>
+      </div>
+
+      <p class="mt-5 text-secondary small">
+        A confirmation email has been sent to your registered email address.<br>
+        Need help? <a href="#" class="text-primary text-decoration-none">Contact Support</a>
+      </p>
+    </div>
+  </div>
 </div>
+
+<script>
+  // Simple "confetti" effect logic if desired or just decorative placeholders
+  document.addEventListener('DOMContentLoaded', () => {
+    // You could add a real confetti library here if you wanted to be extra "premium"
+    console.log('Order Success - Celebration started');
+  });
+</script>

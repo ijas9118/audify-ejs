@@ -25,7 +25,7 @@
     btn.disabled = disabled;
     btn.innerHTML = disabled
       ? `<span class="spinner-border spinner-border-sm me-2" role="status"></span>${text}`
-      : `<i class="fas fa-check-circle me-2"></i>${text}`;
+      : `<i class="fas fa-lock me-2"></i>${text}`;
   };
 
   // ─── Redirect to success ───────────────────────────────────────────────────
@@ -34,16 +34,26 @@
   };
 
   // ─── Form submit ───────────────────────────────────────────────────────────
-  document
-    .querySelector('.payment-form')
-    .addEventListener('submit', async (e) => {
+  const paymentForm = document.getElementById('paymentForm');
+  if (paymentForm) {
+    paymentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const Toast = makeToast();
       const confirmBtn = document.getElementById('confirmBtn');
-      const paymentMethod = document.querySelector(
+      const checkedInput = document.querySelector(
         'input[name="paymentMethod"]:checked'
-      ).value;
+      );
+
+      if (!checkedInput) {
+        Toast.fire({
+          icon: 'warning',
+          title: 'Please select a payment method.',
+        });
+        return;
+      }
+
+      const paymentMethod = checkedInput.value;
 
       setButtonState(confirmBtn, true, 'Processing…');
 
@@ -61,9 +71,10 @@
           icon: 'error',
           title: 'An unexpected error occurred. Please try again.',
         });
-        setButtonState(confirmBtn, false, 'Confirm and Pay');
+        setButtonState(confirmBtn, false, 'Confirm and Place Order');
       }
     });
+  }
 
   // ─── COD Handler ───────────────────────────────────────────────────────────
   async function handleCOD(confirmBtn, Toast) {
@@ -82,14 +93,14 @@
           icon: 'error',
           title: result.message || 'Failed to place COD order.',
         });
-        setButtonState(confirmBtn, false, 'Confirm and Pay');
+        setButtonState(confirmBtn, false, 'Confirm and Place Order');
       }
     } catch {
       Toast.fire({
         icon: 'error',
         title: 'Failed to place COD order. Please try again.',
       });
-      setButtonState(confirmBtn, false, 'Confirm and Pay');
+      setButtonState(confirmBtn, false, 'Confirm and Place Order');
     }
   }
 
@@ -110,14 +121,14 @@
           icon: 'error',
           title: result.message || 'Failed to process wallet payment.',
         });
-        setButtonState(confirmBtn, false, 'Confirm and Pay');
+        setButtonState(confirmBtn, false, 'Confirm and Place Order');
       }
     } catch {
       Toast.fire({
         icon: 'error',
         title: 'Failed to process wallet payment. Please try again.',
       });
-      setButtonState(confirmBtn, false, 'Confirm and Pay');
+      setButtonState(confirmBtn, false, 'Confirm and Place Order');
     }
   }
 
@@ -139,7 +150,7 @@
           icon: 'error',
           title: data.message || 'Failed to initiate payment.',
         });
-        setButtonState(confirmBtn, false, 'Confirm and Pay');
+        setButtonState(confirmBtn, false, 'Confirm and Place Order');
         return;
       }
 
@@ -150,7 +161,7 @@
         icon: 'error',
         title: 'Failed to connect to payment server. Please try again.',
       });
-      setButtonState(confirmBtn, false, 'Confirm and Pay');
+      setButtonState(confirmBtn, false, 'Confirm and Place Order');
       return;
     }
 
@@ -195,7 +206,7 @@
               text: 'We could not verify your payment. If money was deducted, please contact support.',
               confirmButtonText: 'OK',
             });
-            setButtonState(confirmBtn, false, 'Confirm and Pay');
+            setButtonState(confirmBtn, false, 'Confirm and Place Order');
           } else if (verifyResult.autoRefunded === true) {
             // ✅ Payment captured but order failed — refund was auto-initiated
             Swal.fire({
@@ -226,7 +237,7 @@
                 window.location.href = '/account';
               }
             });
-            setButtonState(confirmBtn, false, 'Confirm and Pay');
+            setButtonState(confirmBtn, false, 'Confirm and Place Order');
           } else {
             // Generic fallback
             Swal.fire({
@@ -237,7 +248,7 @@
                 'Something went wrong. Please contact support.',
               confirmButtonText: 'OK',
             });
-            setButtonState(confirmBtn, false, 'Confirm and Pay');
+            setButtonState(confirmBtn, false, 'Confirm and Place Order');
           }
         } catch {
           Swal.fire({
@@ -246,7 +257,7 @@
             text: 'Payment may have been deducted. Please contact support with your payment ID.',
             confirmButtonText: 'OK',
           });
-          setButtonState(confirmBtn, false, 'Confirm and Pay');
+          setButtonState(confirmBtn, false, 'Confirm and Place Order');
         }
       },
 
@@ -264,7 +275,7 @@
             icon: 'info',
             title: 'Payment cancelled. You can try again.',
           });
-          setButtonState(confirmBtn, false, 'Confirm and Pay');
+          setButtonState(confirmBtn, false, 'Confirm and Place Order');
         },
       },
     };

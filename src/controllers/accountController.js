@@ -71,7 +71,8 @@ const getAddressDetails = asyncHandler(async (req, res) => {
 const addAddress = asyncHandler(async (req, res) => {
   const userId = req.session.user;
   await accountService.createAddress(userId, req.body);
-  res.redirect('/account/addresses');
+  const redirectTo = req.body.redirectTo || '/account/addresses';
+  res.redirect(redirectTo);
 });
 
 const updateDefaultAddress = asyncHandler(async (req, res) => {
