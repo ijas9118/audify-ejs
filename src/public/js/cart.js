@@ -59,7 +59,7 @@ function changeQuantity(productId, change) {
         // Revert to something safe if stock API fails
         getToast().fire({ icon: 'error', title: 'Error checking stock' });
       });
-    
+
     // Cleanup timer reference
     delete quantityUpdateTimers[productId];
   }, 500); // 500ms delay
@@ -165,10 +165,12 @@ function updateCartUI(cart) {
       (acc, item) => acc + item.subtotal,
       0
     );
-    summaryRows[0].querySelector('span:last-child').textContent = `₹${rawSubtotal.toFixed(2)}`;
-    
+    summaryRows[0].querySelector('span:last-child').textContent =
+      `₹${rawSubtotal.toFixed(2)}`;
+
     // Summary: shipping
-    const shippingVal = cart.shippingCharge === 0 ? 'FREE' : `₹${cart.shippingCharge.toFixed(2)}`;
+    const shippingVal =
+      cart.shippingCharge === 0 ? 'FREE' : `₹${cart.shippingCharge.toFixed(2)}`;
     summaryRows[1].querySelector('span:last-child').textContent = shippingVal;
   }
 
@@ -196,7 +198,9 @@ function deleteItem(productId) {
 
         if (data.cart.items.length === 0) {
           // Cart now empty — show the modern empty state
-          const container = document.querySelector('.shopping-container .container');
+          const container = document.querySelector(
+            '.shopping-container .container'
+          );
           if (container) {
             container.innerHTML = `
               <h1 class="shopping-title">Your Cart</h1>

@@ -3,7 +3,8 @@ document.querySelectorAll('input[name="addressType"]').forEach((radio) => {
   radio.addEventListener('change', () => {
     const customContainer = document.getElementById('customNameContainer');
     if (customContainer) {
-      customContainer.style.display = radio.value === 'other' ? 'block' : 'none';
+      customContainer.style.display =
+        radio.value === 'other' ? 'block' : 'none';
     }
   });
 });
@@ -12,7 +13,7 @@ document.querySelectorAll('input[name="addressType"]').forEach((radio) => {
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.btn-address-edit').forEach((btn) => {
     btn.addEventListener('click', (event) => {
-      // If it's a link, it will just follow the href. 
+      // If it's a link, it will just follow the href.
       // This is here as a fallback if needed.
     });
   });

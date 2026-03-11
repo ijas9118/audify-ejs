@@ -146,7 +146,9 @@ function renderProductCards(products, { append = false } = {}) {
       const stockClass = isOos ? 'out-of-stock' : 'in-stock';
       const stockText = isOos ? 'Out of Stock' : `${p.stock} Available`;
 
-      const cardClass = isOos ? 'product-card h-100 is-out-of-stock' : 'product-card h-100';
+      const cardClass = isOos
+        ? 'product-card h-100 is-out-of-stock'
+        : 'product-card h-100';
       const btnDisabled = isOos ? 'disabled' : '';
 
       return `

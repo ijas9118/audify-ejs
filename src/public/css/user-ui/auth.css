@@ -71,7 +71,7 @@
   justify-content: center;
   gap: 10px;
   padding: 11px 16px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: var(--bg-color);
   font-size: 0.9rem;
@@ -83,7 +83,7 @@
 
 .btn-social:hover {
   background: var(--surface-color);
-  border-color: #CBD5E1;
+  border-color: #cbd5e1;
 }
 
 .btn-social img {
@@ -106,10 +106,10 @@
 
 .auth-divider::before,
 .auth-divider::after {
-  content: "";
+  content: '';
   flex: 1;
   height: 1px;
-  background-color: #E2E8F0;
+  background-color: #e2e8f0;
 }
 
 /* Form Fields */
@@ -123,7 +123,7 @@
 .auth-card .form-control-modern {
   border-radius: 12px;
   padding: 11px 16px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #e2e8f0;
   background-color: var(--bg-color);
   font-size: 0.925rem;
   transition: var(--transition);
@@ -136,7 +136,7 @@
 }
 
 .auth-card .form-control-modern::placeholder {
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 /* Submit Button */

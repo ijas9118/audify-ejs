@@ -65,7 +65,8 @@
   object-fit: contain;
 }
 
-.thumb-item:hover, .thumb-item.active {
+.thumb-item:hover,
+.thumb-item.active {
   border-color: var(--primary-color);
 }
 
@@ -141,13 +142,13 @@
 }
 
 .stock-status.in-stock {
-  background-color: #DCFCE7;
+  background-color: #dcfce7;
   color: #166534;
 }
 
 .stock-status.out-of-stock {
-  background-color: #FEE2E2;
-  color: #991B1B;
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 /* ── Actions ── */
@@ -169,7 +170,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: white;
   color: var(--text-secondary);
@@ -177,16 +178,16 @@
 }
 
 .btn-detail-wishlist:hover {
-  border-color: #EF4444;
-  color: #EF4444;
-  background: #FEF2F2;
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
 }
 
 /* ── Assurance Grid ── */
 .assurance-section {
   padding: 40px 0;
-  border-top: 1px solid #F1F5F9;
-  border-bottom: 1px solid #F1F5F9;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
   margin: 60px 0;
 }
 
@@ -200,7 +201,7 @@
 .assurance-icon {
   width: 60px;
   height: 60px;
-  background: #EFF6FF;
+  background: #eff6ff;
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -242,14 +243,14 @@
   .product-gallery {
     flex-direction: column-reverse;
   }
-  
+
   .gallery-thumbs {
     flex-direction: row;
     width: 100%;
     overflow-x: auto;
     padding-bottom: 8px;
   }
-  
+
   .detail-info {
     padding-left: 0;
     margin-top: 40px;
@@ -260,7 +261,7 @@
   .detail-name {
     font-size: 1.5rem;
   }
-  
+
   .detail-price {
     font-size: 1.5rem;
   }

@@ -39,7 +39,7 @@
             </span>
           </div>
 
-          <div class="tracking-stepper">
+          <div class="tracking-stepper <%= order.status === 'Cancelled' ? 'stepper-cancelled' : '' %>">
             <% 
               const statuses = ['Pending', 'Processed', 'Shipped', 'Delivered'];
               const currentIndex = statuses.indexOf(order.status);

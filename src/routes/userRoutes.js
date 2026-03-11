@@ -102,7 +102,7 @@ router.get('/login/forgot-password', (req, res) => {
     title: 'Login',
     header: 'partials/header',
     viewName: 'users/forgotPassword',
-    activePage: 'home',
+    activePage: 'login',
     isAdmin: false,
   });
 });
@@ -120,7 +120,7 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
       title: 'Login',
       header: 'partials/header',
       viewName: 'users/resetPassword',
-      activePage: 'home',
+      activePage: 'login',
       isAdmin: false,
     });
   } catch (err) {
