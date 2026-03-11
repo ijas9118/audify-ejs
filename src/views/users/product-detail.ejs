@@ -1,346 +1,175 @@
-<div class="container my-5">
-  <div class="row">
+<div class="product-detail-layout">
+  <div class="container px-lg-5">
     <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
+    <nav aria-label="breadcrumb" class="breadcrumb-modern">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="/">Home</a></li>
         <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
-        <li class="breadcrumb-item active" aria-current="page">
-          <%= product.name %>
-        </li>
+        <li class="breadcrumb-item active" aria-current="page"><%= product.name %></li>
       </ol>
     </nav>
 
-    <div class="container mt-4">
-      <div class="row">
-        <!-- Left Side: Image Thumbnails -->
-        <div class="col-md-2">
-          <div class="d-flex flex-column gap-2">
+    <div class="row g-5">
+      <!-- Left: Image Gallery -->
+      <div class="col-lg-7">
+        <div class="product-gallery">
+          <div class="gallery-thumbs">
             <!-- Main Image Thumbnail -->
-            <img
-              src="<%= product.images.main %>"
-              class="img-thumbnail"
-              alt="Main Product Image"
-              onclick="updateMainImage('<%= product.images.main %>')"
-            />
+            <div class="thumb-item active" onclick="updateMainImage('<%= product.images.main %>', this)">
+              <img src="<%= product.images.main %>" alt="Main" />
+            </div>
             <!-- Supporting Images -->
-            <% product.images.supports.slice(0, 2).forEach((img, index) => { %>
-            <img
-              src="<%= img %>"
-              class="img-thumbnail"
-              alt="Product Image <%= index + 1 %>"
-              onclick="updateMainImage('<%= img %>')"
-            />
-            <% }); %>
+            <% if (product.images.supports && product.images.supports.length > 0) { %>
+              <% product.images.supports.forEach((img, index) => { %>
+                <div class="thumb-item" onclick="updateMainImage('<%= img %>', this)">
+                  <img src="<%= img %>" alt="View <%= index + 1 %>" />
+                </div>
+              <% }); %>
+            <% } %>
+          </div>
+
+          <div class="gallery-main" id="imageZoomWrapper">
+            <img id="mainImage" src="<%= product.images.main %>" alt="<%= product.name %>" />
+            <div class="zoom-hint">
+              <i class="fas fa-search-plus me-1"></i> Hover to zoom
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Center: Main Image -->
-        <div
-          class="col-md-6 d-flex align-items-center justify-content-center position-relative"
-        >
-          <img
-            id="mainImage"
-            src="<%= product.images.main %>"
-            class="img-fluid border border-light rounded"
-            alt="<%= product.name %>"
-            style="width: 100%; max-height: 500px; object-fit: contain"
-          />
-        </div>
+      <!-- Right: Product Info -->
+      <div class="col-lg-5">
+        <div class="detail-info">
+          <!-- Category Label? Could add if available -->
+          
+          <h1 class="detail-name"><%= product.name %></h1>
 
-        <!-- Magnifier container, positioned fixed to the right -->
-        <div id="magnifier" class="magnifier">
-          <img
-            id="magnifierImage"
-            src="<%= product.images.main %>"
-            class="img-fluid"
-            alt="<%= product.name %>"
-          />
-        </div>
+          <div class="detail-price-row">
+            <% if (product.discountedPrice < product.price) { %>
+              <span class="detail-price">₹<%= product.discountedPrice.toFixed(2) %></span>
+              <span class="detail-price-original">₹<%= product.price.toFixed(2) %></span>
+            <% } else { %>
+              <span class="detail-price">₹<%= product.price.toFixed(2) %></span>
+            <% } %>
+          </div>
 
-        <!-- Right Side: Product Details -->
-        <div class="col-md-3">
-          <h1 class="h3 mb-3"><%= product.name %></h1>
-          <!-- Product Price -->
-          <% if (product.discountedPrice < product.price) { %>
-            <h4 class="text-primary mb-3">
-              ₹<%= product.discountedPrice.toFixed(2) %>
-              <span class="text-muted ms-2">
-                <del>₹<%= product.price.toFixed(2) %></del>
-              </span>
-            </h4>
-          <% } else { %>
-            <h4 class="text-primary mb-3">₹<%= product.price.toFixed(2) %></h4>
-          <% } %>
-          <p class="mb-4"><%= product.description %></p>
+          <div class="detail-desc">
+            <%= product.description %>
+          </div>
+
           <!-- Stock Status -->
           <% if (product.isOutOfStock) { %>
-          <div
-            class="alert alert-danger d-flex align-items-center mb-4"
-            role="alert"
-          >
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <div>
-              <strong>Sold Out</strong><br />
-              This item is currently out of stock.
+            <div class="stock-status out-of-stock">
+              <i class="fas fa-times-circle"></i> Out of Stock
             </div>
-          </div>
           <% } else { %>
-          <p class="text-muted mb-4">
-            Stock left: <strong><%= product.stock %></strong>
-          </p>
+            <div class="stock-status in-stock">
+              <i class="fas fa-check-circle"></i> In Stock (<%= product.stock %> available)
+            </div>
           <% } %>
 
-          <!-- Reviews Section -->
-          <div class="mb-4">
-            <h5 class="mb-2">Reviews</h5>
-            <div class="d-flex align-items-center mb-2">
-              <span class="text-warning">
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="far fa-star"></i>
-              </span>
-              <span class="text-muted ms-2">(4.0)</span>
-            </div>
-            <p class="text-muted">Based on <strong>120</strong> reviews.</p>
-          </div>
+          <!-- Features / Brief list -->
+          <ul class="list-unstyled mb-4">
+            <li class="mb-2 small text-secondary"><i class="fas fa-shield-alt me-2 text-primary"></i> 1 Year Brand Warranty</li>
+            <li class="mb-2 small text-secondary"><i class="fas fa-truck me-2 text-primary"></i> Free Express Delivery</li>
+            <li class="mb-2 small text-secondary"><i class="fas fa-undo me-2 text-primary"></i> 7 Days Replacement Policy</li>
+          </ul>
 
-          
-          <!-- Action Buttons -->
-          <div class="d-flex gap-3">
-            <div
-              class="btn-group w-100"
-              role="group"
-              aria-label="Product Actions"
+          <!-- Actions -->
+          <div class="detail-actions">
+            <button
+              class="btn btn-primary-modern btn-detail-add-cart justify-content-center <%= product.isOutOfStock ? 'disabled' : '' %>"
+              onclick="addToCart('<%= product._id %>')"
             >
-              <!-- Add to Cart Button -->
-              <a
-                class="btn btn-dark-purple rounded-start w-50 <% if (product.isOutOfStock) { %> disabled <% } %>"
-                onclick="addToCart('<%= product._id %>')"
-              >
-                <i class="fas fa-cart-plus me-2"></i> Add to Cart
-              </a>
-              <!-- Wishlist Button -->
-              <a href="#" class="btn btn-outline-dark-purple rounded-end w-50">
-                <i class="fas fa-heart me-2"></i> Wishlist
-              </a>
-            </div>
+              <i class="fas fa-shopping-bag me-2"></i> Add to Cart
+            </button>
+            <button
+              class="btn-detail-wishlist"
+              onclick="addToWishList('<%= product._id %>')"
+              title="Add to wishlist"
+            >
+              <i class="far fa-heart"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Assurance Section -->
-<div class="container my-5">
-  <div class="row text-center justify-content-center">
-    <div class="col-12">
-      <div class="bg-light rounded-3 p-4 shadow-sm">
-        <div class="row text-center">
-          <!-- Assurance Item 1 -->
-          <div class="col-12 col-md-3 mb-4 mb-md-0">
-            <div class="d-flex flex-column align-items-center">
-              <i class="fas fa-cogs fa-3x mb-2 text-primary"></i>
-              <p class="mb-0 text-muted fs-6"><b>1 Year</b><br />Warranty</p>
+  <!-- Related Products Section -->
+  <div class="container px-lg-5 mt-5 pt-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="h4 fw-bold mb-0">Related Products</h2>
+      <a href="/shop" class="text-primary text-decoration-none fw-semibold small">View All <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+      <% relatedProducts.forEach(product => { %>
+      <div class="col">
+        <div class="product-card h-100">
+          <a href="/shop/product/<%= product._id %>" class="text-decoration-none">
+            <div class="product-img-wrap">
+              <% if (product.discountedPrice < product.price) { %>
+                <span class="product-badge">
+                  -<%= Math.round(((product.price - product.discountedPrice) / product.price) * 100) %>%
+                </span>
+              <% } %>
+              <img src="<%= product.images.main %>" alt="<%= product.name %>" />
+            </div>
+          </a>
+          <div class="product-info">
+            <div class="product-name">
+              <a href="/shop/product/<%= product._id %>"><%= product.name %></a>
+            </div>
+            <div class="d-flex align-items-baseline">
+              <% if (product.discountedPrice < product.price) { %>
+                <span class="product-price">₹<%= product.discountedPrice.toFixed(2) %></span>
+                <span class="product-price-original">₹<%= product.price.toFixed(2) %></span>
+              <% } else { %>
+                <span class="product-price">₹<%= product.price.toFixed(2) %></span>
+              <% } %>
             </div>
           </div>
-
-          <!-- Assurance Item 2 -->
-          <div class="col-12 col-md-3 mb-4 mb-md-0">
-            <div class="d-flex flex-column align-items-center">
-              <i class="fas fa-sync-alt fa-3x mb-2 text-primary"></i>
-              <p class="mb-0 text-muted fs-6"><b>7-day</b><br />Replacement</p>
-            </div>
-          </div>
-
-          <!-- Assurance Item 3 -->
-          <div class="col-12 col-md-3 mb-4 mb-md-0">
-            <div class="d-flex flex-column align-items-center">
-              <i class="fas fa-truck fa-3x mb-2 text-primary"></i>
-              <p class="mb-0 text-muted fs-6"><b>Free Express</b><br />Delivery</p>
-            </div>
-          </div>
-
-          <!-- Assurance Item 4 -->
-          <div class="col-12 col-md-3 mb-4 mb-md-0">
-            <div class="d-flex flex-column align-items-center">
-              <i class="fas fa-receipt fa-3x mb-2 text-primary"></i>
-              <p class="mb-0 text-muted fs-6"><b>GST</b><br />Billing</p>
-            </div>
+          <div class="product-actions">
+            <button class="btn-add-cart" onclick="addToCart('<%= product._id %>')">
+              <i class="fas fa-shopping-bag"></i> Add to Cart
+            </button>
+            <button class="btn-wishlist" onclick="addToWishList('<%= product._id %>')">
+              <i class="far fa-heart"></i>
+            </button>
           </div>
         </div>
       </div>
+      <% }); %>
     </div>
   </div>
 </div>
-
-<!-- Related Products Section -->
-<div class="container my-5">
-  <h2 class="mb-4">Related Products</h2>
-  <div class="row">
-    <% relatedProducts.forEach(product => { %>
-    <div class="col-md-4 col-lg-3 mb-4">
-      <div class="card border-light shadow-sm rounded">
-        <img
-          src="<%= product.images.main %>"
-          class="card-img-top img-fluid"
-          alt="<%= product.name %>"
-        />
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title mb-2 text-truncate" title="<%= product.name %>">
-            <%= product.name %>
-          </h5>
-          <p class="card-text mb-3">
-            <% if (product.discountedPrice < product.price) { %>
-              <!-- Discounted Price and Original Price -->
-              <span class="text-primary">
-                ₹<%= product.discountedPrice.toFixed(2) %>
-              </span>
-              <span class="text-muted ms-2">
-                <del>₹<%= product.price.toFixed(2) %></del>
-              </span>
-            <% } else { %>
-              <!-- Original Price -->
-              <span class="text-primary">
-                ₹<%= product.price.toFixed(2) %>
-              </span>
-            <% } %>
-          </p>
-          <div class="mb-2">
-            <span class="text-warning">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="far fa-star"></i>
-            </span>
-            <span class="text-muted">(4.0)</span>
-          </div>
-          <a
-            href="/shop/product/<%= product._id %>"
-            class="btn btn-dark rounded mt-auto"
-            >View Details</a
-          >
-        </div>
-      </div>
-    </div>
-    <% }); %>
-  </div>
-</div>
-
-<style>
-  .img-thumbnail {
-    width: 100%;
-    height: auto;
-    object-fit: fit;
-    cursor: pointer;
-  }
-
-  .border-light {
-    border-color: #f8f9fa !important;
-  }
-
-  .text-primary {
-    color: #5a2b81 !important;
-  }
-
-  .bg-dark-purple {
-    background-color: #5a2b81;
-  }
-
-  .btn-dark-purple {
-    background-color: #5a2b81;
-    border-color: #5a2b81;
-    color: #ffffff;
-  }
-
-  .btn-dark-purple:hover {
-    background-color: #7a479b;
-    border-color: #7a479b;
-  }
-
-  /* Magnifier styles */
-  .magnifier {
-    position: fixed;
-    top: 10%;
-    right: 0;
-    width: 350px; /* Size of the magnifier container */
-    height: 350px; /* Size of the magnifier container */
-    overflow: hidden;
-    border: 1px solid #ccc;
-    background-color: rgba(255, 255, 255, 0.8);
-    display: none;
-    z-index: 1000;
-  }
-
-  .magnifier img {
-    position: absolute;
-    width: 600%; /* Increase based on zoom level */
-    height: auto;
-    transform: scale(6); /* Increase zoom level */
-    transform-origin: top left; /* Ensure zoom starts from the top-left corner */
-  }
-  .card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-
-  .card-img-top {
-    height: 200px;
-    object-fit: contain;
-  }
-  .text-truncate {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-</style>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const mainImage = document.getElementById("mainImage");
-    const magnifier = document.getElementById("magnifier");
-    const magnifierImage = document.getElementById("magnifierImage");
-    const magnifierSize = 300; // Same as magnifier width/height in CSS
+  function updateMainImage(src, thumbEl) {
+    document.getElementById('mainImage').src = src;
+    // Update active thumb
+    document.querySelectorAll('.thumb-item').forEach(el => el.classList.remove('active'));
+    thumbEl.classList.add('active');
+  }
 
-    function updateImages(imgSrc) {
-      mainImage.src = imgSrc;
-      magnifierImage.src = imgSrc;
-    }
+  // Modern Zoom Effect
+  const wrapper = document.getElementById('imageZoomWrapper');
+  const img = document.getElementById('mainImage');
 
-    function showMagnifier(e) {
-      magnifier.style.display = "block";
+  wrapper.addEventListener('mousemove', (e) => {
+    const { left, top, width, height } = wrapper.getBoundingClientRect();
+    const x = ((e.pageX - left - window.scrollX) / width) * 100;
+    const y = ((e.pageY - top - window.scrollY) / height) * 100;
+    img.style.transformOrigin = `${x}% ${y}%`;
+    img.style.transform = 'scale(2)';
+  });
 
-      const { offsetX: x, offsetY: y, target } = e;
-      const { offsetWidth: w, offsetHeight: h } = target;
-
-      // Calculate zoom position
-      const zoomX = (x / w) * 100;
-      const zoomY = (y / h) * 100;
-
-      magnifierImage.style.transform = `translate(-${zoomX}%, -${zoomY}%) scale(2)`;
-      magnifier.style.top = `${e.clientY - magnifierSize / 2}px`;
-      magnifier.style.left = `${e.clientX + 20}px`; // Adjust based on your layout
-    }
-
-    function hideMagnifier() {
-      magnifier.style.display = "none";
-    }
-
-    mainImage.addEventListener("mousemove", showMagnifier);
-    mainImage.addEventListener("mouseleave", hideMagnifier);
-
-    window.updateMainImage = function (imgSrc) {
-      updateImages(imgSrc);
-    };
+  wrapper.addEventListener('mouseleave', () => {
+    img.style.transform = 'scale(1)';
+    img.style.transformOrigin = 'center center';
   });
 </script>
 
 <script src="/js/cart.js"></script>
+<script src="/js/wishlist.js"></script>

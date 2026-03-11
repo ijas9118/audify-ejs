@@ -11,7 +11,7 @@ const getCart = asyncHandler(async (req, res) => {
     title: 'Cart',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/cart',
-    activePage: 'Shop',
+    activePage: 'shop',
     isAdmin: false,
     cart,
   });

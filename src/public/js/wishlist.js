@@ -20,18 +20,20 @@ function removeItemFromDOM(productId) {
     el.remove();
   }
 
-  // If no more items, swap list area with the empty-state message
-  const remaining = document.querySelectorAll('.wishlist-item');
+  // If no more items, swap list area with the modern empty-state message
+  const remaining = document.querySelectorAll('[id^="wishlist-item-"]');
   if (remaining.length === 0) {
-    const container = document.querySelector('.container.my-4');
+    const container = document.querySelector('.container.px-lg-5');
     if (container) {
       container.innerHTML = `
-        <div class="d-flex align-items-center justify-content-between mb-4">
-          <h1 class="mb-0">Your Wishlist</h1>
-        </div>
-        <div class="alert alert-info text-center" role="alert">
-          <i class="fa-solid fa-heart me-2"></i>Your wishlist is empty.
-          <a href="/shop" class="alert-link ms-1">Browse the shop</a> to add items!
+        <h1 class="shopping-title">Your Wishlist</h1>
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <i class="fa-solid fa-heart"></i>
+          </div>
+          <h3 class="fw-bold">Your wishlist is empty</h3>
+          <p class="text-secondary mb-4">Looks like you haven't added anything to your wishlist yet.</p>
+          <a href="/shop" class="btn btn-primary-modern px-5 justify-content-center">Explore Products</a>
         </div>
       `;
     }
@@ -133,7 +135,7 @@ async function moveAllToCart() {
     btn.textContent = 'Moving…';
   }
 
-  const items = [...document.querySelectorAll('.wishlist-item')];
+  const items = [...document.querySelectorAll('[id^="wishlist-item-"]')];
   let movedCount = 0;
   let failedCount = 0;
 
@@ -142,9 +144,9 @@ async function moveAllToCart() {
     const productId = item.id.replace('wishlist-item-', '');
 
     // Skip out-of-stock items (button is hidden, but guard here too)
-    if (item.querySelector('.badge.bg-danger')) {
+    if (item.querySelector('.product-card.is-out-of-stock')) {
       failedCount += 1;
-      continue; // eslint-disable-line no-continue
+      continue;
     }
 
     /* eslint-disable no-await-in-loop */

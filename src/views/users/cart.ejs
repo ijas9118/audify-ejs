@@ -1,89 +1,103 @@
-<div class="container my-5 col-md-10 col-sm-12" style="min-height: 50vh">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Cart</li>
-    </ol>
-  </nav>
+<div class="shopping-container">
+  <div class="container px-lg-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="breadcrumb-modern">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cart</li>
+      </ol>
+    </nav>
 
-  <div class="container my-4">
-    <div class="row">
-      <!-- Cart Items -->
-      <h2 class="mb-4">Your Cart</h2>
-      <div class="col-md-8 pe-5">
-        <% if (cart && cart.items.length > 0) { %>
+    <h1 class="shopping-title">Your Cart</h1>
+
+    <% if (cart && cart.items.length > 0) { %>
+      <div class="row g-4">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
           <% cart.items.forEach(item => { %>
-            <div class="cart-item d-flex justify-content-between align-items-center mb-3 p-3 border rounded bg-light shadow-sm" data-product-id="<%= item.productId %>">
-              <div class="d-flex align-items-center">
-                <img src="<%= item.image %>" alt="Product Image" class="me-3" style="width: 100px; height: 100px; object-fit: contain;" />
-                <div>
-                  <h5 class="mb-1"><%= item.name %></h5>
-                  <p class="mb-1">₹<%= item.price.toFixed(2) %></p>
+            <div class="cart-item-card" data-product-id="<%= item.productId %>">
+              <div class="cart-item-img">
+                <img src="<%= item.image %>" alt="<%= item.name %>" />
+              </div>
+              
+              <div class="cart-item-info">
+                <h5 class="mb-1"><a href="/shop/product/<%= item.productId %>" class="text-decoration-none text-dark"><%= item.name %></a></h5>
+                <p class="cart-item-price mb-3">₹<%= item.price.toFixed(2) %></p>
+                
+                <div class="d-flex align-items-center justify-content-between mt-auto">
+                  <div class="quantity-control">
+                    <button class="qty-btn" type="button" onclick="changeQuantity('<%= item.productId %>', -1)">
+                      <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <input type="number" class="qty-input" id="quantity-<%= item.productId %>" value="<%= item.quantity %>" min="1" max="5" readonly />
+                    <button class="qty-btn" type="button" onclick="changeQuantity('<%= item.productId %>', 1)">
+                      <i class="fa-solid fa-plus"></i>
+                    </button>
+                  </div>
+                  
+                  <div class="text-end">
+                    <span class="text-muted small d-block mb-1">Subtotal</span>
+                    <span class="fw-bold fs-5">₹<span id="subtotal-<%= item.productId %>"><%= item.subtotal.toFixed(2) %></span></span>
+                  </div>
                 </div>
               </div>
-
-              <div class="d-flex align-items-center me-3">
-                <button class="btn btn-outline-dark btn-sm me-2" type="button" onclick="changeQuantity('<%= item.productId %>', -1)">
-                  <i class="fa-solid fa-caret-down"></i>
-                </button>
-                <input type="number" class="form-control form-control-sm text-center" id="quantity-<%= item.productId %>" value="<%= item.quantity %>" min="1" max="5" style="width: 50px;" readonly />
-                <button class="btn btn-outline-dark btn-sm ms-2" type="button" onclick="changeQuantity('<%= item.productId %>', 1)">
-                  <i class="fa-solid fa-caret-up"></i>
-                </button>
-              </div>
-
-              <div class="d-flex align-items-center me-3 subtotal">
-                <p class="mb-1 me-2">Subtotal: ₹<span id="subtotal-<%= item.productId %>"><%= item.subtotal.toFixed(2) %></span></p>
-              </div>
-
-              <div class="d-flex align-items-center">
-                <button class="btn btn-outline-dark btn-sm" type="button" onclick="deleteItem('<%= item.productId %>')">
-                  <i class="fa-solid fa-trash"></i>
+              
+              <div class="ms-lg-3">
+                <button class="btn-wishlist border-0 shadow-none text-secondary" style="background: transparent;" type="button" onclick="deleteItem('<%= item.productId %>')">
+                  <i class="fa-solid fa-trash-can"></i>
                 </button>
               </div>
             </div>
-
           <% }); %>
-        <% } else { %>
-          <p>Your cart is empty.</p>
-        <% } %>
-      </div>
 
-      <!-- Cart Summary -->
-      <div class="col-md-4">
-        <div class="cart-summary p-4 border rounded bg-light shadow-sm">
-          <h4 class="mb-4 text-center text-dark">Cart Summary</h4>
-          <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-            <span class="fw-semibold text-muted">Subtotal</span>
-            <span>₹<%= cart ? cart.items.reduce((acc, item) => acc + item.subtotal, 0).toFixed(2) : '0.00' %></span>
+          <div class="mt-4 p-4 rounded-4 bg-light d-flex align-items-center justify-content-between">
+            <span class="text-secondary fw-medium">Continue browsing more products?</span>
+            <a href="/shop" class="btn btn-secondary-modern">Back to Shop</a>
           </div>
-          <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-            <span class="fw-semibold text-muted">Shipping Charge</span>
-            <span>₹<%= cart ? cart.shippingCharge.toFixed(2) : '0.00' %></span>
+        </div>
+
+        <!-- Cart Summary Sidebar -->
+        <div class="col-lg-4">
+          <div class="summary-card">
+            <h4 class="summary-title">Order Summary</h4>
+            
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span class="fw-bold text-dark">₹<%= cart ? cart.items.reduce((acc, item) => acc + item.subtotal, 0).toFixed(2) : '0.00' %></span>
+            </div>
+            
+            <div class="summary-row">
+              <span>Shipping Charge</span>
+              <span class="text-success fw-bold"><%= cart && cart.shippingCharge === 0 ? 'FREE' : '₹' + cart.shippingCharge.toFixed(2) %></span>
+            </div>
+            
+            <div class="summary-total">
+              <span>Total</span>
+              <span>₹<%= cart ? cart.total.toFixed(2) : '0.00' %></span>
+            </div>
+            
+            <button onclick="verifyStock()" class="btn btn-primary-modern btn-checkout w-100 justify-content-center">
+              Proceed to Checkout <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+            
+            <div class="mt-4 text-center">
+              <img src="/images/svg/security_badge.svg" alt="Secure Payment" height="20" class="me-2 d-none" /> <!-- If you have one -->
+              <p class="text-muted small mb-0"><i class="fas fa-shield-alt me-1"></i> Secure and encrypted checkout</p>
+            </div>
           </div>
-          <div class="d-flex justify-content-between mb-4 border-bottom pb-2 total">
-            <span class="fw-bold text-dark">Grand Total</span>
-            <span class="fs-5 fw-bold text-dark">₹<%= cart ? cart.total.toFixed(2) : '0.00' %></span>
-          </div>
-          <a onclick="verifyStock()" class="btn btn-dark w-100 py-2 rounded-pill text-white fs-5">Checkout</a>
         </div>
       </div>
-    
-    </div>
-  </div>
-</div>
-
-<!-- Continue Shopping Section -->
-<div class="container-fluid mt-5 py-5">
-  <div class="row justify-content-center text-center text-light">
-    <div class="col-md-8 col-lg-9 bg-dark p-4 rounded shadow-sm">
-      <h2 class="mb-3 display-6">Continue Shopping</h2>
-      <p class="lead mb-4">
-        Discover more products that are perfect for gifts, for your entertainment, or a unique addition to your collection.
-      </p>
-      <a href="/shop" class="btn btn-dark btn-lg rounded-pill px-5 py-2 fs-5">Go to Shop</a>
-    </div>
+    <% } else { %>
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fa-solid fa-cart-shopping"></i>
+        </div>
+        <h3 class="fw-bold">Your cart is empty</h3>
+        <p class="text-secondary mb-4">Seems like you haven't added anything to your cart yet.</p>
+        <a href="/shop" class="btn btn-primary-modern px-5 justify-content-center">Shop Now</a>
+      </div>
+    <% } %>
   </div>
 </div>
 

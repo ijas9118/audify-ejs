@@ -312,17 +312,104 @@
   display: none;
 }
 
+/* ── Mobile Filter Toggle Button ── */
+.btn-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-filter-toggle:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-filter-toggle i {
+  font-size: 1rem;
+}
+
+/* ── Close Button (inside drawer) ── */
+.btn-close-filter {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--surface-color);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-close-filter:hover {
+  background: #E2E8F0;
+  color: var(--text-color);
+}
+
+/* ── Backdrop Overlay ── */
+.filter-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1040;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.filter-backdrop.is-visible {
+  display: block;
+  opacity: 1;
+}
+
 /* ── Responsive ── */
+@media (max-width: 991px) {
+  /* Off-canvas drawer */
+  .filter-col {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 320px;
+    max-width: 85vw;
+    z-index: 1050;
+    padding: 0;
+    transform: translateX(-100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    background: white;
+  }
+
+  .filter-col.is-open {
+    transform: translateX(0);
+  }
+
+  .filter-col .filter-panel {
+    border-radius: 0;
+    box-shadow: none;
+    position: static;
+    min-height: 100vh;
+    padding: 24px;
+  }
+}
+
 @media (max-width: 767px) {
   .shop-layout {
     padding: 16px 0;
-  }
-
-  .filter-panel {
-    border-radius: 16px;
-    padding: 20px;
-    position: static;
-    margin-bottom: 16px;
   }
 
   .product-card .product-img-wrap {
@@ -337,4 +424,9 @@
   .product-actions {
     padding: 0 16px 16px;
   }
+}
+
+/* Body scroll lock when drawer is open */
+body.filter-drawer-open {
+  overflow: hidden;
 }

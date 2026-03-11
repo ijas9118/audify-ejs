@@ -221,6 +221,9 @@ function clearFilters() {
   }
 
   applyFilters();
+  if (window.innerWidth < 992) {
+    closeFilterDrawer();
+  }
 }
 
 function setupInfiniteScroll() {
@@ -308,3 +311,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ─── Mobile filter drawer ────────────────────────────────────────────────────
+function openFilterDrawer() {
+  const col = document.getElementById('filterCol');
+  const backdrop = document.getElementById('filterBackdrop');
+  if (col) col.classList.add('is-open');
+  if (backdrop) backdrop.classList.add('is-visible');
+  document.body.classList.add('filter-drawer-open');
+}
+
+function closeFilterDrawer() {
+  const col = document.getElementById('filterCol');
+  const backdrop = document.getElementById('filterBackdrop');
+  if (col) col.classList.remove('is-open');
+  if (backdrop) backdrop.classList.remove('is-visible');
+  document.body.classList.remove('filter-drawer-open');
+}

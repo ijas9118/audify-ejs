@@ -1,19 +1,32 @@
+<!-- Filter backdrop overlay -->
+<div class="filter-backdrop" id="filterBackdrop" onclick="closeFilterDrawer()"></div>
+
 <div class="shop-layout">
   <div class="container-fluid px-lg-5">
     <div class="row g-4">
-      <!-- ── Filter Sidebar ── -->
-      <div class="col-lg-3">
+      <!-- ── Filter Sidebar / Drawer ── -->
+      <div class="col-lg-3 filter-col" id="filterCol">
         <div class="filter-panel">
           <div class="filter-heading">
             <span>Filters</span>
-            <button
-              type="button"
-              class="btn-reset-filter"
-              id="clear-filters-btn"
-              onclick="clearFilters()"
-            >
-              <i class="fa-solid fa-rotate-left me-1"></i>Reset
-            </button>
+            <div class="d-flex align-items-center gap-2">
+              <button
+                type="button"
+                class="btn-reset-filter"
+                id="clear-filters-btn"
+                onclick="clearFilters()"
+              >
+                <i class="fa-solid fa-rotate-left me-1"></i>Reset
+              </button>
+              <button
+                type="button"
+                class="btn-close-filter d-lg-none"
+                onclick="closeFilterDrawer()"
+                aria-label="Close filters"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Category -->
@@ -58,14 +71,32 @@
               <option value="z-a"         <%= sortBy === 'z-a'         ? 'selected' : '' %>>Z – A</option>
             </select>
           </div>
+
+          <!-- Apply button (mobile only) -->
+          <button
+            type="button"
+            class="btn btn-primary-modern w-100 justify-content-center mt-4 d-lg-none"
+            onclick="applyFilters(); closeFilterDrawer();"
+          >
+            Apply Filters
+          </button>
         </div>
       </div>
 
       <!-- ── Products Section ── -->
       <div class="col-lg-9">
 
-        <!-- Search bar -->
-        <div class="shop-search mb-4" style="max-width: 480px;">
+        <!-- Mobile filter toggle + Search -->
+        <div class="d-flex gap-3 mb-4 align-items-stretch">
+          <button
+            type="button"
+            class="btn-filter-toggle d-lg-none"
+            onclick="openFilterDrawer()"
+          >
+            <i class="fas fa-sliders-h"></i>
+            <span>Filters</span>
+          </button>
+          <div class="shop-search flex-fill" style="max-width: 480px;">
           <div class="input-group">
             <span class="input-group-text">
               <i class="fa-solid fa-magnifying-glass text-muted"></i>
@@ -80,7 +111,7 @@
             >
           </div>
         </div>
-
+        </div>
         <!-- Result count -->
         <div class="d-flex align-items-center gap-3 mb-4">
           <span id="result-count" class="result-count">
