@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="/css/error-pages.css" />
   </head>
   <body class="error-page">
@@ -21,15 +22,17 @@
 
         <% if (stack) { %>
         <details class="error-details">
-          <summary>Technical details</summary>
+          <summary><i class="fas fa-bug me-1"></i> Technical details</summary>
           <pre><%= stack %></pre>
         </details>
         <% } %>
 
         <div class="error-actions">
-          <a href="/" class="error-btn error-btn-primary">Go to homepage</a>
+          <a href="/" class="error-btn error-btn-primary">
+            <i class="fas fa-home me-2"></i> Back to Homepage
+          </a>
           <button type="button" class="error-btn error-btn-secondary" onclick="location.reload()">
-            Retry
+            <i class="fas fa-redo me-2"></i> Try Again
           </button>
         </div>
       </section>

@@ -1,111 +1,139 @@
-<div class="container my-5 col-md-10 col-sm-12" style="min-height: 50vh">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
-      <li class="breadcrumb-item"><a href="/shop/cart">Cart</a></li>
-      <li class="breadcrumb-item"><a href="/checkout">Checkout</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Payment</li>
-    </ol>
-    <h3 class="mb-4">Select Payment Method</h3>
-  </nav>
+<div class="checkout-container">
+  <div class="container px-lg-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="breadcrumb-modern">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
+        <li class="breadcrumb-item"><a href="/shop/cart">Cart</a></li>
+        <li class="breadcrumb-item"><a href="/checkout">Checkout</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Payment</li>
+      </ol>
+    </nav>
 
-  <%# ── Hidden config read by payment.js (no hardcoded keys in JS) ─────────── %>
-  <div
-    id="paymentConfig"
-    data-razorpay-key="<%= razorpayKeyId %>"
-    data-finaltotal="<%= cart.finalTotal || cart.total %>"
-    data-shipping-name=""
-    data-shipping-mobile=""
-    style="display:none"
-  ></div>
-
-  <div class="row">
-    <%# ── Payment Form ─────────────────────────────────────────────────────── %>
-    <div class="col-md-6">
-      <form id="paymentForm" class="payment-form p-4 shadow-sm rounded bg-light">
-
-        <div class="form-check mt-3">
-          <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="COD" checked>
-          <label class="form-check-label d-flex align-items-center ms-3" for="cod">
-            <i class="fas fa-truck me-3 text-primary" style="font-size:1.2em"></i>
-            <span>Cash On Delivery</span>
-          </label>
-        </div>
-
-        <div class="form-check mt-4">
-          <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="Wallet">
-          <label class="form-check-label d-flex align-items-center ms-3" for="wallet">
-            <i class="fas fa-wallet me-3 text-success" style="font-size:1.2em"></i>
-            <span>Wallet <small class="text-muted">(Balance: ₹<%= walletBalance.toFixed(2) %>)</small></span>
-          </label>
-        </div>
-
-        <div class="form-check mt-4">
-          <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="Razorpay">
-          <label class="form-check-label d-flex align-items-center ms-3" for="razorpay">
-            <i class="fas fa-credit-card me-3 text-info" style="font-size:1.2em"></i>
-            <span>Online Payment (Razorpay)</span>
-          </label>
-        </div>
-
-        <button
-          type="submit"
-          class="btn btn-dark mt-5 w-100"
-          id="confirmBtn"
-        >
-          <i class="fas fa-check-circle me-2"></i>Confirm and Pay
-        </button>
-
-        <a href="/checkout" class="btn btn-outline-secondary mt-2 w-100">
-          <i class="fas fa-arrow-left me-2"></i>Back to Checkout
-        </a>
-
-      </form>
+    <div class="section-header mb-4">
+      <h1 class="checkout-title mb-0">Secure Payment</h1>
     </div>
 
-    <%# ── Order Summary ────────────────────────────────────────────────────── %>
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Order Summary</h5>
-          <hr>
+    <%# ── Hidden config read by payment.js ─────────── %>
+    <div
+      id="paymentConfig"
+      data-razorpay-key="<%= razorpayKeyId %>"
+      data-finaltotal="<%= cart.finalTotal || cart.total %>"
+      data-shipping-name=""
+      data-shipping-mobile=""
+      style="display:none"
+    ></div>
 
-          <% cart.items.forEach(item => { %>
-          <div class="d-flex justify-content-between mb-2">
-            <span><strong><%= item.name %></strong> (x<%= item.quantity %>)</span>
-            <span>₹<%= item.price.toFixed(2) %></span>
+    <div class="row g-4 mb-5">
+      <!-- Payment Methods Column -->
+      <div class="col-lg-7">
+        <h5 class="fw-bold mb-4">Select Payment Method</h5>
+        <form id="paymentForm" class="payment-methods">
+          
+          <!-- COD -->
+          <label class="payment-method-card active-payment" for="cod">
+            <div class="payment-icon bg-light-blue">
+              <i class="fas fa-truck"></i>
+            </div>
+            <div class="payment-details">
+              <h6>Cash On Delivery</h6>
+              <p>Pay when your order is delivered to your doorstep.</p>
+            </div>
+            <div class="ms-auto">
+              <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="COD" checked>
+            </div>
+          </label>
+
+          <!-- Wallet -->
+          <label class="payment-method-card" for="wallet">
+            <div class="payment-icon bg-light-green">
+              <i class="fas fa-wallet"></i>
+            </div>
+            <div class="payment-details">
+              <h6>Audify Wallet</h6>
+              <p>Quick checkout using your wallet balance: <span class="fw-bold text-dark">₹<%= walletBalance.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></span></p>
+            </div>
+            <div class="ms-auto">
+              <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="Wallet">
+            </div>
+          </label>
+
+          <!-- Razorpay -->
+          <label class="payment-method-card" for="razorpay">
+            <div class="payment-icon bg-light-purple">
+              <i class="fas fa-credit-card"></i>
+            </div>
+            <div class="payment-details">
+              <h6>Online Payment</h6>
+              <p>Securely pay via UPI, Cards, or Netbanking using Razorpay.</p>
+            </div>
+            <div class="ms-auto">
+              <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="Razorpay">
+            </div>
+          </label>
+
+          <div class="mt-5">
+            <button type="submit" class="btn btn-primary-modern btn-lg w-100 justify-content-center py-3" id="confirmBtn">
+              <i class="fas fa-lock me-2"></i> Confirm and Place Order
+            </button>
+            <a href="/checkout" class="btn btn-link w-100 text-center mt-3 text-secondary text-decoration-none small">
+              <i class="fas fa-arrow-left me-1"></i> Back to Shipping Address
+            </a>
           </div>
-          <% }) %>
+        </form>
+      </div>
 
-          <hr>
-
-          <div class="d-flex justify-content-between">
-            <span>Subtotal:</span>
-            <span>₹<%= cart.items.reduce((acc, i) => acc + i.subtotal, 0).toFixed(2) %></span>
+      <!-- Simplified Order Summary -->
+      <div class="col-lg-5">
+        <div class="order-summary-card">
+          <h4 class="summary-title">Order Recap</h4>
+          
+          <div class="checkout-items mb-4" style="max-height: 200px; overflow-y: auto;">
+            <% cart.items.forEach(item => { %>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="small fw-medium text-dark">
+                <span class="text-secondary"><%= item.quantity %>x</span> <%= item.name %>
+              </div>
+              <div class="small fw-bold">₹<%= item.subtotal.toLocaleString('en-IN') %></div>
+            </div>
+            <% }); %>
           </div>
 
-          <div class="d-flex justify-content-between">
-            <span>Shipping Charge:</span>
-            <span>₹<%= cart.shippingCharge.toFixed(2) %></span>
+          <div class="summary-details">
+            <div class="summary-row">
+              <span>Items Total</span>
+              <span>₹<%= cart.items.reduce((acc, i) => acc + i.subtotal, 0).toLocaleString('en-IN') %></span>
+            </div>
+            
+            <% if (cart.discountApplied && cart.discountApplied > 0) { %>
+            <div class="summary-row">
+              <span>Discount <% if (cart.appliedCoupon) { %>(<%= cart.appliedCoupon %>)<% } %></span>
+              <span class="savings-text">- ₹<%= cart.discountApplied.toLocaleString('en-IN') %></span>
+            </div>
+            <% } %>
+
+            <div class="summary-row">
+              <span>Shipping Charge</span>
+              <span><%= cart.shippingCharge > 0 ? '₹' + cart.shippingCharge.toLocaleString('en-IN') : 'FREE' %></span>
+            </div>
+
+            <div class="summary-row total">
+              <span>Tobe Paid</span>
+              <span class="fs-4">₹<%= (cart.finalTotal || cart.total).toLocaleString('en-IN') %></span>
+            </div>
           </div>
 
-          <% if (cart.discountApplied && cart.discountApplied > 0) { %>
-          <div class="d-flex justify-content-between text-success">
-            <span>Discount
-              <% if (cart.appliedCoupon) { %>
-              (<%= cart.appliedCoupon %>)
-              <% } %>:
-            </span>
-            <span>- ₹<%= cart.discountApplied.toFixed(2) %></span>
-          </div>
-          <% } %>
-
-          <hr>
-
-          <div class="d-flex justify-content-between fw-bold fs-5">
-            <span>Grand Total:</span>
-            <span>₹<%= (cart.finalTotal || cart.total).toFixed(2) %></span>
+          <div class="mt-4 p-3 rounded-3 bg-light border-0">
+            <div class="d-flex align-items-center gap-3">
+              <div class="fs-3 text-primary">
+                <i class="fas fa-shield-check"></i>
+              </div>
+              <div>
+                <div class="fw-bold small">Secure Transaction</div>
+                <div class="text-secondary" style="font-size: 0.75rem;">Your personal and payment details are encrypted.</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -113,4 +141,23 @@
   </div>
 </div>
 
+<style>
+  /* Local override for breadcrumb spacing on payment page */
+  .checkout-container .breadcrumb-modern {
+    margin-bottom: 24px;
+  }
+</style>
+
 <script src="/js/payment.js"></script>
+<script>
+  // Interactive UI behavior for payment cards
+  document.querySelectorAll('.payment-method-card').forEach(card => {
+    card.addEventListener('click', () => {
+      // Remove active class from all
+      document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('active-payment'));
+      
+      // Add active class to clicked
+      card.classList.add('active-payment');
+    });
+  });
+</script>

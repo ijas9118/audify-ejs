@@ -135,51 +135,47 @@ function renderProductCards(products, { append = false } = {}) {
           offer.discountType === 'percentage'
             ? `-${offer.discountValue}%`
             : `-₹${Number(offer.discountValue).toFixed(2)}`;
-        return `<span class="badge bg-danger position-absolute top-0 start-0 m-2">${label}</span>`;
+        return `<span class="product-badge">${label}</span>`;
       })();
 
       const priceHtml = hasOffer
-        ? `<h6 class="card-price mb-0">₹${p.discountedPrice.toFixed(2)}</h6>
-         <span class="text-muted small ms-1"><del>₹${p.price.toFixed(2)}</del></span>`
-        : `<h6 class="card-price mb-0">₹${p.price.toFixed(2)}</h6>`;
+        ? `<span class="product-price">₹${p.discountedPrice.toFixed(2)}</span>
+           <span class="product-price-original">₹${p.price.toFixed(2)}</span>`
+        : `<span class="product-price">₹${p.price.toFixed(2)}</span>`;
 
-      const stockHtml = isOos
-        ? '<span class="text-danger small">Out of Stock</span>'
-        : `<span class="text-success small">${p.stock} Available</span>`;
+      const stockClass = isOos ? 'out-of-stock' : 'in-stock';
+      const stockText = isOos ? 'Out of Stock' : `${p.stock} Available`;
 
       const cardClass = isOos
-        ? 'card h-100 shadow-sm border-1 out-of-stock'
-        : 'card h-100 shadow-sm border-1';
+        ? 'product-card h-100 is-out-of-stock'
+        : 'product-card h-100';
       const btnDisabled = isOos ? 'disabled' : '';
 
       return `
       <div class="col">
         <div class="${cardClass}">
-          <div class="position-relative">
-            <a href="/shop/product/${p._id}" class="card-link">
+          <a href="/shop/product/${p._id}" class="text-decoration-none">
+            <div class="product-img-wrap">
               ${offerBadge}
-              <img
-                src="${p.images?.main || ''}"
-                class="card-img-top img-fluid"
-                style="height: 200px; object-fit: contain"
-                alt="${p.name}"
-              />
-            </a>
-          </div>
-          <div class="card-body">
-            <h5 class="card-title text-truncate">${p.name}</h5>
-            <div class="d-flex align-items-center gap-2">${priceHtml}</div>
-            <div class="mt-1">${stockHtml}</div>
-          </div>
-          <div class="card-footer bg-white border-0">
-            <div class="btn-group w-100" role="group">
-              <button class="btn btn-dark-purple w-100 ${btnDisabled}" onclick="addToCart('${p._id}')">
-                Add to Cart
-              </button>
-              <button class="btn btn-outline-dark-purple w-100" onclick="addToWishList('${p._id}')">
-                <i class="fas fa-heart"></i> Wishlist
-              </button>
+              <img src="${p.images?.main || ''}" alt="${p.name}" />
             </div>
+          </a>
+          <div class="product-info">
+            <div class="product-name">
+              <a href="/shop/product/${p._id}">${p.name}</a>
+            </div>
+            <div class="d-flex align-items-baseline">${priceHtml}</div>
+            <div class="mt-auto pt-2">
+              <span class="product-stock ${stockClass}">${stockText}</span>
+            </div>
+          </div>
+          <div class="product-actions">
+            <button class="btn-add-cart ${btnDisabled}" onclick="addToCart('${p._id}')">
+              <i class="fas fa-shopping-bag"></i> Add to Cart
+            </button>
+            <button class="btn-wishlist" onclick="addToWishList('${p._id}')" title="Add to wishlist">
+              <i class="far fa-heart"></i>
+            </button>
           </div>
         </div>
       </div>`;
@@ -227,6 +223,9 @@ function clearFilters() {
   }
 
   applyFilters();
+  if (window.innerWidth < 992) {
+    closeFilterDrawer();
+  }
 }
 
 function setupInfiniteScroll() {
@@ -314,3 +313,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ─── Mobile filter drawer ────────────────────────────────────────────────────
+function openFilterDrawer() {
+  const col = document.getElementById('filterCol');
+  const backdrop = document.getElementById('filterBackdrop');
+  if (col) col.classList.add('is-open');
+  if (backdrop) backdrop.classList.add('is-visible');
+  document.body.classList.add('filter-drawer-open');
+}
+
+function closeFilterDrawer() {
+  const col = document.getElementById('filterCol');
+  const backdrop = document.getElementById('filterBackdrop');
+  if (col) col.classList.remove('is-open');
+  if (backdrop) backdrop.classList.remove('is-visible');
+  document.body.classList.remove('filter-drawer-open');
+}

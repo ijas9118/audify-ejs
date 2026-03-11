@@ -1,248 +1,269 @@
-<link rel="stylesheet" href="/css/user-account.css" />
+<div class="account-container">
+  <div class="container px-lg-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="breadcrumb-modern">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">My Account</li>
+      </ol>
+    </nav>
 
-<div class="container mt-4 col-5">
-  <!-- Breadcrumb -->
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#">Home</a></li>
-      <li class="breadcrumb-item active" aria-current="page">My Account</li>
-    </ol>
-  </nav>
-
-  <div class="d-flex justify-content-between align-items-center mb-4 heading">
-    <h2>User Details</h2>
-  </div>
-
-  <!-- User Details Section -->
-  <div class="user-details">
-    <form id="userForm" data-id="<%= user._id %>">
-      <div class="form-row">
-        <div class="form-group my-3">
-          <label for="firstName">First Name</label>
-          <input
-            type="text"
-            class="form-control"
-            id="firstName"
-            name="firstName"
-            value="<%= user.firstName %>"
-          />
+    <div class="account-grid">
+      <!-- Left: Sidebar (Desktop only for now, can be mobile bottom nav later) -->
+      <aside class="account-sidebar d-none d-lg-block">
+        <div class="user-profile-brief">
+          <div class="avatar-initial">
+            <%= (user.firstName && user.firstName[0]) ? user.firstName[0].toUpperCase() : 'U' %>
+          </div>
+          <h5><%= user.firstName %> <%= user.lastName %></h5>
+          <p><%= user.email %></p>
         </div>
-        <div class="form-group my-3">
-          <label for="lastName">Last Name</label>
-          <input type="text" class="form-control" id="lastName" name="lastName" value="<%= user.lastName %>" />
-        </div>
-      </div>
-      <div class="form-group my-3">
-        <label for="email">Email</label>
-        <input
-          type="email"
-          class="form-control"
-          id="email"
-          name="email"
-          value="<%= user.email %>"
-        />
-      </div>
-      <div class="form-group my-3">
-        <label for="phone">Phone</label>
-        <input
-          type="tel"
-          class="form-control"
-          id="phone"
-          name="mobile"
-          value="<%= user.mobile %>"
-        />
-      </div>
-      <div class="form-group my-3">
-        <label for="gender">Gender</label>
-        <select id="gender" name="gender" class="form-control">
-          <option  value="Male" <%= user.gender === 'Male' ? 'selected' : '' %> >Male</option>
-          <option  value="Female" <%= user.gender === 'Female' ? 'selected' : '' %> >Female</option>
-          <option  value="Other" <%= user.gender === 'Other' ? 'selected' : '' %> >Other</option>
-        </select>
-      </div>
-      <div class="form-group my-3">
-        <label for="dob">Date of Birth</label>
-        <input type="date" class="form-control" id="dob" name="dob"  value="<%= user.dob ? new Date(user.dob).toISOString().split('T')[0] : '' %>"/>
-      </div>
-      <div class="d-flex justify-content-end">
-        <button type="submit" class="btn btn-outline-dark w-25" id="updateButton">Update</button>
-      </div>
-    </form>
-  </div>
+        
+        <ul class="account-nav-list">
+          <li class="account-nav-item active">
+            <a href="/account"><i class="fas fa-user-circle"></i> Profile Overview</a>
+          </li>
+          <li class="account-nav-item">
+            <a href="/account/order-history"><i class="fas fa-shopping-bag"></i> My Orders</a>
+          </li>
+          <li class="account-nav-item">
+            <a href="/account/addresses"><i class="fas fa-map-marker-alt"></i> Saved Addresses</a>
+          </li>
+          <li class="account-nav-item">
+            <a href="/shop/wishlist"><i class="fas fa-heart"></i> Wishlist</a>
+          </li>
+          <li class="account-nav-item">
+            <a href="/account/wallet/transactions"><i class="fas fa-wallet"></i> Wallet History</a>
+          </li>
+        </ul>
 
-  <div class="wallet-balance my-4">
-    <div class="card">
-      <div class="card-body">
-        <h4 class="card-title">Wallet Balance</h4>
-        <div class="d-flex justify-content-between align-items-center py-3">
-          <span class="h2 mb-0">₹<%= user.walletBalance || 0 %></span>
-          <a href="/account/wallet/transactions" class="btn btn-outline-dark">View Transactions</a>
+        <div class="mt-4 pt-4 border-top">
+          <form action="/logout" method="POST">
+            <button type="submit" class="btn btn-logout-modern w-100 py-2">
+              <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      <!-- Right: Main Content -->
+      <div class="account-main-content">
+        
+        <!-- Welcome Header (Mobile only) -->
+        <div class="d-lg-none mb-4">
+          <h1 class="h3 fw-bold mb-1">Hello, <%= user.firstName %>!</h1>
+          <p class="text-secondary small">Welcome back to your dashboard.</p>
+        </div>
+
+        <!-- 1. Wallet Card -->
+        <div class="wallet-card-modern">
+          <div class="wallet-label">Wallet Balance</div>
+          <div class="wallet-amount">₹<%= user.walletBalance || 0 %></div>
+          <div class="wallet-actions">
+            <a href="/account/wallet/transactions" class="btn-wallet-action text-decoration-none">
+              <i class="fas fa-history me-1"></i> View Transactions
+            </a>
+          </div>
+        </div>
+
+        <!-- 2. Quick Actions Grid -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-6">
+            <a href="/account/order-history" class="quick-link-card">
+              <div class="quick-link-icon"><i class="fas fa-box"></i></div>
+              <h6>My Orders</h6>
+              <p>Track or view your orders</p>
+            </a>
+          </div>
+          <div class="col-6 col-md-6">
+            <a href="/account/addresses" class="quick-link-card">
+              <div class="quick-link-icon"><i class="fas fa-map-marked-alt"></i></div>
+              <h6>Addresses</h6>
+              <p>Manage your delivery spots</p>
+            </a>
+          </div>
+        </div>
+
+        <!-- 3. Profile Details Form -->
+        <div class="account-section-card">
+          <div class="section-header">
+            <h4>Profile Information</h4>
+            <p class="text-secondary small mb-0">Update your personal details and contact information.</p>
+          </div>
+          
+          <form id="userForm" data-id="<%= user._id %>">
+            <div class="row g-4">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label small fw-bold text-secondary">First Name</label>
+                  <input type="text" class="form-control form-control-modern" id="firstName" name="firstName" value="<%= user.firstName %>" required placeholder="Enter first name" />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label small fw-bold text-secondary">Last Name</label>
+                  <input type="text" class="form-control form-control-modern" id="lastName" name="lastName" value="<%= user.lastName %>" required placeholder="Enter last name" />
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label class="form-label small fw-bold text-secondary">Email Address</label>
+                  <input type="email" class="form-control form-control-modern" id="email" name="email" value="<%= user.email %>" required placeholder="name@example.com" />
+                </div>
+              </div>
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label class="form-label small fw-bold text-secondary">Phone Number</label>
+                  <input type="tel" class="form-control form-control-modern" id="phone" name="mobile" value="<%= user.mobile %>" required placeholder="10-digit mobile number" />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label small fw-bold text-secondary">Gender</label>
+                  <select id="gender" name="gender" class="form-select form-control-modern">
+                    <option value="" disabled <%= !user.gender ? 'selected' : '' %>>Select Gender</option>
+                    <option value="Male" <%= user.gender === 'Male' ? 'selected' : '' %>>Male</option>
+                    <option value="Female" <%= user.gender === 'Female' ? 'selected' : '' %>>Female</option>
+                    <option value="Other" <%= user.gender === 'Other' ? 'selected' : '' %>>Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label small fw-bold text-secondary">Date of Birth</label>
+                  <input type="date" class="form-control form-control-modern" id="dob" name="dob" value="<%= user.dob ? new Date(user.dob).toISOString().split('T')[0] : '' %>" />
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-5 border-top pt-4">
+              <button type="submit" class="btn btn-primary-modern px-5 justify-content-center" id="updateButton">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 4. Account Settings & More -->
+        <div class="account-section-card">
+          <div class="section-header">
+            <h4>Account Settings</h4>
+          </div>
+          
+          <ul class="account-menu-list">
+            <li class="account-menu-item">
+              <a href="#" data-bs-toggle="modal" data-bs-target="#updatePasswordModal">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-key account-menu-icon"></i>
+                  <span>Change Password</span>
+                </div>
+                <i class="fas fa-chevron-right text-muted small"></i>
+              </a>
+            </li>
+            <li class="account-menu-item">
+              <a href="#">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-headset account-menu-icon"></i>
+                  <span>Help & Support</span>
+                </div>
+                <i class="fas fa-chevron-right text-muted small"></i>
+              </a>
+            </li>
+            <li class="account-menu-item">
+              <a href="#">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-question-circle account-menu-icon"></i>
+                  <span>Frequently Asked Questions</span>
+                </div>
+                <i class="fas fa-chevron-right text-muted small"></i>
+              </a>
+            </li>
+             <li class="account-menu-item">
+                <a href="#">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-shield-alt account-menu-icon"></i>
+                    <span>Terms & Conditions</span>
+                  </div>
+                  <i class="fas fa-chevron-right text-muted small"></i>
+                </a>
+              </li>
+          </ul>
+        </div>
+
+        <!-- Mobile Logout -->
+        <div class="d-lg-none mt-4 mb-5">
+           <form action="/logout" method="POST">
+              <button type="submit" class="btn btn-logout-modern w-100 py-3 rounded-4">
+                <i class="fas fa-sign-out-alt me-2"></i> Logout from Account
+              </button>
+            </form>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Account Buttons Section -->
-  <div class="account-buttons my-5">
-    <div
-      class="btn-group btn-group-lg btn-block w-100"
-      role="group"
-      aria-label="Account Actions"
-    >
-      <a
-        href="/account/addresses"
-        class="btn btn-primary py-4 px-0 d-flex justify-content-center align-items-center gap-3 w-50"
-      >
-        <i class="fas fa-map-marker-alt"></i> Manage Address
-      </a>
-      <a
-        href="/account/order-history"
-        class="btn btn-secondary py-4 px-0 d-flex justify-content-center align-items-center gap-3 w-50"
-      >
-        <i class="fas fa-box"></i>My Orders
-      </a>
-    </div>
-  </div>
-
-  <!-- More Section -->
-  <div class="card mb-4 more">
-    <div class="card-body px-5">
-      <h4 class="card-title my-3">More</h4>
-      <ul class="list-unstyled">
-        <li class="my-4">
-          <a
-            href="#"
-            class="d-flex align-items-center justify-content-between text-dark py-2"
-          >
-            <div class="d-flex align-items-center gap-4">
-              <i class="fas fa-headset fa-lg"></i>
-              <span>Help and Support</span>
-            </div>
-            <span class="ml-auto">
-              <i class="fas fa-chevron-right"></i>
-            </span>
-          </a>
-        </li>
-        <li class="my-4">
-          <a
-            href="#"
-            class="d-flex align-items-center justify-content-between text-dark py-2"
-          >
-            <div class="d-flex align-items-center gap-4">
-              <i class="fas fa-question-circle fa-lg mr-3"></i>
-              <span>FAQs</span>
-            </div>
-            <span class="ml-auto">
-              <i class="fas fa-chevron-right"></i>
-            </span>
-          </a>
-        </li>
-        <li class="my-4">
-          <a
-            href="#"
-            class="d-flex align-items-center justify-content-between text-dark py-2"
-          >
-            <div class="d-flex align-items-center gap-4">
-              <i class="fas fa-file-alt fa-lg mr-3"></i>
-              <span>Terms & Conditions</span>
-            </div>
-            <span class="ml-auto">
-              <i class="fas fa-chevron-right"></i>
-            </span>
-          </a>
-        </li>
-        <li class="my-4">
-          <a
-            href="#"
-            class="d-flex align-items-center justify-content-between text-dark py-2"
-          >
-            <div class="d-flex align-items-center gap-4">
-              <i class="fas fa-envelope fa-lg mr-3"></i>
-              <span>Get in Touch</span>
-            </div>
-            <span class="ml-auto">
-              <i class="fas fa-chevron-right"></i>
-            </span>
-          </a>
-        </li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="change-password my-4">
-    <button type="button" class="btn btn-outline-dark w-100 d-flex justify-content-center align-items-center gap-3 py-3" data-bs-toggle="modal" data-bs-target="#updatePasswordModal">
-      <i class="fas fa-key fa-lg"></i>
-      Change Password
-    </button>
-  </div>
-
-  <!-- Logout Button -->
-  <div class="logout mb-5 my-3">
-    <form action="/logout" method="POST" style="display: inline">
-      <button
-        type="submit"
-        class="btn btn-outline-danger w-100 d-flex justify-content-center align-items-center gap-3 py-3"
-      >
-        <i class="fas fa-sign-out-alt fa-lg"></i>
-        Logout
-      </button>
-    </form>
   </div>
 </div>
 
-<!-- Update Password Modal -->
-<div class="modal fade" id="updatePasswordModal" tabindex="-1" aria-labelledby="updatePasswordModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="updatePasswordModalLabel">Update Password</h5>
+<!-- Update Password Modal (Modernized) -->
+<div class="modal fade" id="updatePasswordModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <!-- Decorative element -->
+      <div class="modal-header border-0 bg-light p-4">
+        <div>
+          <h5 class="fw-bold mb-1">Update Password</h5>
+          <p class="text-secondary small mb-0">Ensure your account stays secure with a strong password.</p>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body p-4">
         <form id="updatePasswordForm">
-          <!-- Current Password -->
           <div class="mb-3">
-            <label for="currentPassword" class="form-label">Current Password</label>
-            <div class="input-group">
-              <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
-              <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#currentPassword">
+            <label class="form-label small fw-bold text-secondary">Current Password</label>
+            <div class="position-relative">
+              <input type="password" class="form-control form-control-modern pe-5" id="currentPassword" name="currentPassword" required placeholder="Enter current password">
+              <button class="btn border-0 position-absolute end-0 top-50 translate-middle-y text-secondary toggle-password" type="button" data-target="#currentPassword">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
             <% if (user.isGoogleUser) { %>
-              <small id="dummyPasswordText" class="form-text text-muted">
-                Your current password is: <strong>123456</strong>
-              </small>
+              <div class="mt-2 p-2 bg-blue-50 text-blue-700 rounded-3 small border border-blue-100">
+                <i class="fas fa-info-circle me-1"></i> Google account placeholder: <strong>123456</strong>
+              </div>
             <% } %>
           </div>
-          <!-- New Password -->
+          
+          <hr class="my-4 opacity-50">
+
           <div class="mb-3">
-            <label for="newPassword" class="form-label">New Password</label>
-            <div class="input-group">
-              <input type="password" class="form-control" id="newPassword" name="newPassword" required>
-              <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#newPassword">
+            <label class="form-label small fw-bold text-secondary">New Password</label>
+            <div class="position-relative">
+              <input type="password" class="form-control form-control-modern pe-5" id="newPassword" name="newPassword" required placeholder="Min. 8 characters">
+              <button class="btn border-0 position-absolute end-0 top-50 translate-middle-y text-secondary toggle-password" type="button" data-target="#newPassword">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
           </div>
-          <!-- Confirm New Password -->
-          <div class="mb-3">
-            <label for="confirmPassword" class="form-label">Confirm New Password</label>
-            <div class="input-group">
-              <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
-              <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#confirmPassword">
+          
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-secondary">Confirm New Password</label>
+            <div class="position-relative">
+              <input type="password" class="form-control form-control-modern pe-5" id="confirmPassword" name="confirmPassword" required placeholder="Repeat new password">
+              <button class="btn border-0 position-absolute end-0 top-50 translate-middle-y text-secondary toggle-password" type="button" data-target="#confirmPassword">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
           </div>
-          <div class="text-end">
-            <button type="submit" class="btn btn-primary">Update Password</button>
+          
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-light w-100 py-2 rounded-3 fw-bold text-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary-modern w-100 justify-content-center py-2">
+              Save Changes
+            </button>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
-
 
 <script src="/js/userAccount.js"></script>

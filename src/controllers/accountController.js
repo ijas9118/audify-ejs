@@ -11,7 +11,7 @@ const getUserAccount = asyncHandler(async (req, res) => {
     title: 'My Audify Account',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/userAccount',
-    activePage: 'Home',
+    activePage: 'account',
     isAdmin: false,
     user,
   });
@@ -51,7 +51,7 @@ const getAddresses = asyncHandler(async (req, res) => {
     title: 'Manage Address',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/manageAddress',
-    activePage: 'Home',
+    activePage: 'account',
     isAdmin: false,
     addresses,
   });
@@ -71,7 +71,8 @@ const getAddressDetails = asyncHandler(async (req, res) => {
 const addAddress = asyncHandler(async (req, res) => {
   const userId = req.session.user;
   await accountService.createAddress(userId, req.body);
-  res.redirect('/account/addresses');
+  const redirectTo = req.body.redirectTo || '/account/addresses';
+  res.redirect(redirectTo);
 });
 
 const updateDefaultAddress = asyncHandler(async (req, res) => {
@@ -105,7 +106,7 @@ const editAddressPage = asyncHandler(async (req, res) => {
     title: 'Edit Address',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/editAddress',
-    activePage: 'Home',
+    activePage: 'account',
     isAdmin: false,
     address,
   });
@@ -144,7 +145,7 @@ const walletTransactions = asyncHandler(async (req, res) => {
       title: 'My Audify Account',
       header: req.session.user ? 'partials/login_header' : 'partials/header',
       viewName: 'users/walletTransaction',
-      activePage: 'Home',
+      activePage: 'account',
       isAdmin: false,
       user,
     });

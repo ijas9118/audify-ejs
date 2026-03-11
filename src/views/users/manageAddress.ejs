@@ -1,208 +1,140 @@
-<link rel="stylesheet" href="/css/addNewAddress.css" />
+<div class="account-container">
+  <div class="container px-lg-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="breadcrumb-modern">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/account">My Account</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Manage Addresses</li>
+      </ol>
+    </nav>
 
-<div
-  class="container my-5 col-lg-6 col-md-10 col-sm-12"
-  style="min-height: 50vh"
->
-  <!-- Breadcrumb -->
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/account">My Account</a></li>
-      <li class="breadcrumb-item active" aria-current="page">
-        Manage Addresses
-      </li>
-    </ol>
-  </nav>
-
-  <!-- Heading -->
-  <div class="my-4">
-    <h2 class="font-weight-bold">Manage Addresses</h2>
-  </div>
-
-  <!-- Address Grid -->
-  <div
-    class="container d-flex flex-wrap justify-content-start p-0 column-gap-5"
-  >
-    <% if (addresses.length > 0) { %> <% addresses.forEach((address) => { %>
-    <div class="col-md-5 col-12 mb-4">
-      <div class="address-card <%= address.isDefault ? 'default' : '' %>" data-id="<%= address._id %>">
-        <div class="icons d-flex align-items-center gap-3">
-          <i class="fa-solid fa-square-pen edit-icon"></i>
-          <i class="fa-solid fa-square-minus delete-icon"></i>
-        </div>
-        <h5 class="font-weight-bold">
-          <% if (address.isDefault) { %>
-            <%= address.customName || address.addressType.charAt(0).toUpperCase() + address.addressType.slice(1) %> (Default)
-          <% } else { %>
-            <%= address.customName || address.addressType.charAt(0).toUpperCase() + address.addressType.slice(1) %>
-          <% } %>
-        </h5>
-        <div class="details d-flex flex-column align-items-start gap-1 mt-2">
-          <span><%= address.location %></span>
-          <span
-            ><%= address.city %>, <%= address.state %>, <%= address.zip %></span
-          >
-          <span><%= address.country %></span>
-        </div>
-      </div>
+    <div class="section-header mb-4">
+      <h1 class="shopping-title mb-0">Saved Addresses</h1>
     </div>
-    <% }); %> <% } else { %>
-    <h6 class="px-5">No address found.</h6>
-    <% } %>
 
-    <!-- Add New Address Button -->
-    <div class="col-md-5 col-12 mb-4">
+    <div class="address-grid">
+      <!-- Add New Address Card -->
       <div
-        class="add-address-card"
+        class="add-address-card-modern"
         data-bs-toggle="modal"
         data-bs-target="#addAddressModal"
       >
-        <h4 class="font-weight-bold text-primary">+ Add New Address</h4>
+        <div class="add-icon">
+          <i class="fas fa-plus-circle"></i>
+        </div>
+        <h6 class="fw-bold mb-0">Add New Address</h6>
       </div>
+
+      <!-- Address List -->
+      <% if (addresses.length > 0) { %>
+        <% addresses.forEach((address) => { %>
+          <div class="address-card-modern <%= address.isDefault ? 'is-default' : '' %>" data-id="<%= address._id %>" id="address-card-<%= address._id %>">
+            <div>
+              <div class="address-badge">
+                <i class="fas fa-<%= address.addressType === 'home' ? 'home' : (address.addressType === 'work' ? 'briefcase' : 'map-marker-alt') %> me-1"></i>
+                <%= address.customName || address.addressType %>
+                <%= address.isDefault ? '(Default)' : '' %>
+              </div>
+              
+              <div class="address-details">
+                <div class="fw-bold mb-1 text-dark"><%= address.location %></div>
+                <div class="text-secondary small">
+                  <%= address.city %>, <%= address.state %> <%= address.zip %>
+                </div>
+                <div class="text-secondary small"><%= address.country %></div>
+              </div>
+            </div>
+
+            <div class="address-actions">
+              <a href="/account/addresses/edit/<%= address._id %>" class="btn-address-action btn-address-edit">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+              <button onclick="deleteAddress('<%= address._id %>')" class="btn-address-action btn-address-delete border-0">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            </div>
+          </div>
+        <% }); %>
+      <% } %>
     </div>
+
+    <% if (addresses.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fas fa-map-marked-alt"></i>
+        </div>
+        <h5 class="fw-bold">No addresses found</h5>
+        <p class="text-secondary">Add a new address to speed up your checkout process.</p>
+      </div>
+    <% } %>
   </div>
 </div>
 
 <!-- Modal for Adding New Address -->
-<div
-  class="modal fade"
-  id="addAddressModal"
-  tabindex="-1"
-  aria-labelledby="addAddressModalLabel"
-  aria-hidden="true"
->
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold">Add New Address</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body p-4">
         <form action="/account/addresses" method="POST" id="addressForm">
           <div class="mb-3">
-            <label for="location" class="form-label">Location</label>
-            <input
-              type="text"
-              class="form-control"
-              id="location"
-              placeholder="1234 Main St"
-              name="location"
-            />
+            <label class="form-label small fw-bold text-secondary">Address Line</label>
+            <input type="text" class="form-control" name="location" placeholder="e.g. 123 Street Name, Apartment" required />
           </div>
-          <div class="mb-3">
-            <label for="city" class="form-label">City</label>
-            <input
-              type="text"
-              class="form-control"
-              id="city"
-              placeholder="City"
-              name="city"
-            />
+          
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-bold text-secondary">City</label>
+              <input type="text" class="form-control" name="city" required />
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold text-secondary">State</label>
+              <input type="text" class="form-control" name="state" required />
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="state" class="form-label">State</label>
-            <input
-              type="text"
-              class="form-control"
-              id="state"
-              placeholder="State"
-              name="state"
-            />
+
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <label class="form-label small fw-bold text-secondary">Country</label>
+              <input type="text" class="form-control" name="country" required />
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold text-secondary">ZIP Code</label>
+              <input type="text" class="form-control" name="zip" required />
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="country" class="form-label">Country</label>
-            <input
-              type="text"
-              class="form-control"
-              id="country"
-              placeholder="Country"
-              name="country"
-            />
-          </div>
-          <div class="mb-3">
-            <label for="zipCode" class="form-label">ZIP Code</label>
-            <input
-              type="text"
-              class="form-control"
-              id="zipCode"
-              placeholder="ZIP Code"
-              name="zip"
-            />
-          </div>
-          <fieldset class="mb-3">
-            <legend class="col-form-label">Address Type</legend>
-            <div class="d-flex gap-4">
-              <div class="form-check">
-                <input
-                  class="form-check-input custom-radio"
-                  type="radio"
-                  name="addressType"
-                  id="home"
-                  value="home"
-                />
-                <label class="form-check-label" for="home"> Home </label>
+
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-secondary mb-2 d-block">Address Type</label>
+            <div class="d-flex gap-3">
+              <div class="form-check custom-option">
+                <input class="form-check-input" type="radio" name="addressType" id="typeHome" value="home" checked />
+                <label class="form-check-label" for="typeHome">Home</label>
               </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input custom-radio"
-                  type="radio"
-                  name="addressType"
-                  id="work"
-                  value="work"
-                />
-                <label class="form-check-label" for="work"> Work </label>
+              <div class="form-check custom-option">
+                <input class="form-check-input" type="radio" name="addressType" id="typeWork" value="work" />
+                <label class="form-check-label" for="typeWork">Work</label>
               </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input custom-radio"
-                  type="radio"
-                  name="addressType"
-                  id="custom"
-                  value="custom"
-                />
-                <label class="form-check-label" for="custom"> Custom </label>
+              <div class="form-check custom-option">
+                <input class="form-check-input" type="radio" name="addressType" id="typeOther" value="other" />
+                <label class="form-check-label" for="typeOther">Other</label>
               </div>
             </div>
-            <div class="mb-3" id="customNameContainer" style="display: none">
-              <label for="customName" class="form-label">Custom Name</label>
-              <input
-                type="text"
-                class="form-control"
-                id="customName"
-                name="customName"
-                placeholder="Custom Address Name"
-              />
-            </div>
-          </fieldset>
-          <div class="mb-3 form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              id="defaultAddress"
-            />
-            <label class="form-check-label" for="defaultAddress">
-              Make this the default address?
-            </label>
           </div>
-          <input type="hidden" name="isDefault" value="false" />
-          <div>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Close
-            </button>
-            <button type="submit" class="btn btn-primary" id="saveAddressBtn">
-              Save Address
-            </button>
+
+          <div class="mb-4 form-check">
+            <input class="form-check-input" type="checkbox" id="isDefaultCheck" />
+            <label class="form-check-label small" for="isDefaultCheck">Set as default address</label>
+            <input type="hidden" name="isDefault" id="isDefaultHidden" value="false" />
           </div>
+
+          <button type="submit" class="btn btn-primary-modern w-100 justify-content-center py-2" id="saveAddressBtn">
+            Save Address
+          </button>
         </form>
       </div>
     </div>
@@ -211,3 +143,55 @@
 
 <script src="/js/addNewAddress.js"></script>
 <script src="/js/defaultAddress.js"></script>
+
+<script>
+  // Simple listener for the default checkbox
+  const check = document.getElementById('isDefaultCheck');
+  const hidden = document.getElementById('isDefaultHidden');
+  if(check && hidden) {
+    check.addEventListener('change', () => {
+      hidden.value = check.checked ? 'true' : 'false';
+    });
+  }
+
+  // Modernize the delete confirmation
+  async function deleteAddress(addressId) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#2563EB',
+      cancelButtonColor: '#f43f5e',
+      confirmButtonText: 'Yes, delete it!',
+      customClass: {
+        popup: 'rounded-4 border-0 shadow-lg'
+      }
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/account/addresses/delete/${addressId}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          document.getElementById(`address-card-${addressId}`).remove();
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Your address has been removed.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          
+          // Refresh if no addresses left to show empty state
+          if(document.querySelectorAll('.address-card-modern').length === 0) {
+            location.reload();
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+  }
+</script>

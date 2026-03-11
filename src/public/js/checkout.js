@@ -7,41 +7,51 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─── Address Card Selection ───────────────────────────────────────────────────
 
 function setupAddressSelection() {
-  const addressCards = document.querySelectorAll('.address-card');
+  const addressCards = document.querySelectorAll('.address-card-modern');
   const selectedAddressIdInput = document.getElementById('selectedAddressId');
+  const shippingSection = document.getElementById('shippingDetailsSection');
 
   addressCards.forEach((card) => {
     card.addEventListener('click', async () => {
       const isAlreadySelected = card.classList.contains('active-address');
 
       if (isAlreadySelected) {
-        deselectAddress(card, selectedAddressIdInput);
+        deselectAddress(card, selectedAddressIdInput, shippingSection);
       } else {
         const currentlySelected = document.querySelector(
-          '.address-card.active-address'
+          '.address-card-modern.active-address'
         );
         if (currentlySelected) {
-          deselectAddress(currentlySelected, selectedAddressIdInput);
+          deselectAddress(
+            currentlySelected,
+            selectedAddressIdInput,
+            shippingSection
+          );
         }
-        await selectAddress(card, selectedAddressIdInput);
+        await selectAddress(card, selectedAddressIdInput, shippingSection);
       }
     });
   });
 }
 
-function deselectAddress(card, inputElement) {
+function deselectAddress(card, inputElement, shippingSection) {
   card.classList.remove('active-address');
   inputElement.value = '';
+  shippingSection.classList.add('d-none');
   clearAddressForm();
 }
 
-async function selectAddress(card, inputElement) {
+async function selectAddress(card, inputElement, shippingSection) {
   card.classList.add('active-address');
   inputElement.value = card.dataset.id;
+  shippingSection.classList.remove('d-none');
 
   try {
     const addressData = await fetchAddressDetails(card.dataset.id);
     fillAddressForm(addressData);
+
+    // Smooth scroll to shipping details
+    shippingSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } catch (error) {
     console.error('Error fetching address details:', error);
   }
@@ -76,7 +86,8 @@ function clearAddressForm() {
     'landmark',
     'zip',
   ].forEach((id) => {
-    document.getElementById(id).value = '';
+    const el = document.getElementById(id);
+    if (el) el.value = '';
   });
 }
 

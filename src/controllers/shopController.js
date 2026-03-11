@@ -197,7 +197,7 @@ const getWishList = asyncHandler(async (req, res) => {
     title: 'Wishlist',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/wishlist',
-    activePage: 'Shop',
+    activePage: 'shop',
     isAdmin: false,
     wishlist,
   });

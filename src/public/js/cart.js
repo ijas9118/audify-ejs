@@ -14,36 +14,55 @@ function getToast() {
   });
 }
 
-// ── Quantity change ────────────────────────────────────────────────────────────
+// ── Quantity change (with Debouncing and Optimistic UI) ────────────────────────
+const quantityUpdateTimers = {};
+
 function changeQuantity(productId, change) {
   const quantityInput = document.getElementById(`quantity-${productId}`);
-  let newQuantity = parseInt(quantityInput.value, 10) + change;
+  const currentQuantity = parseInt(quantityInput.value, 10);
+  let newQuantity = currentQuantity + change;
 
-  if (newQuantity < 1) {
-    newQuantity = 1;
+  // Local validation
+  if (newQuantity < 1) return;
+  if (newQuantity > 5) {
+    getToast().fire({ icon: 'warning', title: 'Maximum 5 units allowed' });
+    return;
   }
 
-  fetch(`/shop/stock?productId=${productId}`)
-    .then((response) => response.json())
-    .then((stockData) => {
-      const maxQuantity = Math.min(stockData.stock, 5); // enforce per-item cap
+  // 1. Instant UI update (Optimistic)
+  quantityInput.value = newQuantity;
 
-      if (newQuantity > maxQuantity) {
-        newQuantity = maxQuantity;
-        getToast().fire({
-          icon: 'warning',
-          title: `Maximum ${maxQuantity} unit(s) available for this item`,
-        });
-      }
+  // 2. Clear previous timer for this specific product
+  if (quantityUpdateTimers[productId]) {
+    clearTimeout(quantityUpdateTimers[productId]);
+  }
 
-      updateQuantityInDatabase(productId, newQuantity);
-    })
-    .catch(() => {
-      getToast().fire({
-        icon: 'error',
-        title: 'Error fetching stock information',
+  // 3. Set a new timer (Debounce)
+  quantityUpdateTimers[productId] = setTimeout(() => {
+    // 4. Background check and sync
+    fetch(`/shop/stock?productId=${productId}`)
+      .then((response) => response.json())
+      .then((stockData) => {
+        if (newQuantity > stockData.stock) {
+          // Revert if stock is insufficient
+          quantityInput.value = stockData.stock;
+          updateQuantityInDatabase(productId, stockData.stock);
+          getToast().fire({
+            icon: 'warning',
+            title: `Only ${stockData.stock} units available`,
+          });
+        } else {
+          updateQuantityInDatabase(productId, newQuantity);
+        }
+      })
+      .catch(() => {
+        // Revert to something safe if stock API fails
+        getToast().fire({ icon: 'error', title: 'Error checking stock' });
       });
-    });
+
+    // Cleanup timer reference
+    delete quantityUpdateTimers[productId];
+  }, 500); // 500ms delay
 }
 
 // ── Persist quantity to database ─────────────────────────────────────────────
@@ -130,41 +149,33 @@ function updateCartUI(cart) {
     const quantityInput = document.getElementById(`quantity-${item.productId}`);
     if (quantityInput) {
       quantityInput.value = item.quantity;
-      quantityInput.dataset.lastValid = item.quantity; // store for revert on error
+      quantityInput.dataset.lastValid = item.quantity;
     }
 
-    const subtotalEl = document.querySelector(
-      `.cart-item[data-product-id="${item.productId}"] #subtotal-${item.productId}`
-    );
+    const subtotalEl = document.getElementById(`subtotal-${item.productId}`);
     if (subtotalEl) {
       subtotalEl.textContent = item.subtotal.toFixed(2);
     }
   });
 
   // Summary: items subtotal
-  const subtotalSummaryEl = document.querySelector(
-    '.cart-summary .d-flex.justify-content-between span:nth-of-type(2)'
-  );
-  if (subtotalSummaryEl) {
+  const summaryRows = document.querySelectorAll('.summary-card .summary-row');
+  if (summaryRows.length >= 2) {
     const rawSubtotal = cart.items.reduce(
       (acc, item) => acc + item.subtotal,
       0
     );
-    subtotalSummaryEl.textContent = `₹${rawSubtotal.toFixed(2)}`;
-  }
+    summaryRows[0].querySelector('span:last-child').textContent =
+      `₹${rawSubtotal.toFixed(2)}`;
 
-  // Summary: shipping
-  const shippingEl = document.querySelector(
-    '.cart-summary .d-flex.justify-content-between:nth-of-type(2) span:nth-of-type(2)'
-  );
-  if (shippingEl) {
-    shippingEl.textContent = `₹${cart.shippingCharge.toFixed(2)}`;
+    // Summary: shipping
+    const shippingVal =
+      cart.shippingCharge === 0 ? 'FREE' : `₹${cart.shippingCharge.toFixed(2)}`;
+    summaryRows[1].querySelector('span:last-child').textContent = shippingVal;
   }
 
   // Summary: grand total
-  const totalEl = document.querySelector(
-    '.cart-summary .total span:nth-of-type(2)'
-  );
+  const totalEl = document.querySelector('.summary-total span:last-child');
   if (totalEl) {
     totalEl.textContent = `₹${cart.total.toFixed(2)}`;
   }
@@ -186,13 +197,23 @@ function deleteItem(productId) {
         getToast().fire({ icon: 'info', title: 'Item removed from cart' });
 
         if (data.cart.items.length === 0) {
-          // Cart now empty — show the empty state instead of stale summary
-          const itemsContainer = document.querySelector('.col-md-8.pe-5');
-          if (itemsContainer) {
-            itemsContainer.innerHTML = '<p>Your cart is empty.</p>';
+          // Cart now empty — show the modern empty state
+          const container = document.querySelector(
+            '.shopping-container .container'
+          );
+          if (container) {
+            container.innerHTML = `
+              <h1 class="shopping-title">Your Cart</h1>
+              <div class="empty-state">
+                <div class="empty-state-icon">
+                  <i class="fa-solid fa-cart-shopping"></i>
+                </div>
+                <h3 class="fw-bold">Your cart is empty</h3>
+                <p class="text-secondary mb-4">Seems like you haven't added anything to your cart yet.</p>
+                <a href="/shop" class="btn btn-primary-modern px-5 justify-content-center">Shop Now</a>
+              </div>
+            `;
           }
-          // Zero out the summary
-          updateCartUI({ items: [], shippingCharge: 0, total: 0 });
         } else {
           updateCartUI(data.cart);
         }

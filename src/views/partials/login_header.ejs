@@ -1,12 +1,10 @@
-<nav class="navbar navbar-expand-lg bg-light shadow-sm sticky-top">
-  <div class="container-fluid mx-md-5 my-2">
-    <div class="logo col-md-3 mb-2 mb-md-0">
-      <a href="/">
-        <img src="/images/svg/logo.svg" alt="Logo" />
-      </a>
-    </div>
+<nav class="navbar navbar-expand-lg navbar-modern sticky-top">
+  <div class="container py-2">
+    <a class="navbar-brand" href="/">
+      <img src="/images/svg/logo.svg" alt="Audify" height="32" />
+    </a>
     <button
-      class="navbar-toggler"
+      class="navbar-toggler border-0"
       type="button"
       data-bs-toggle="collapse"
       data-bs-target="#navbarSupportedContent"
@@ -17,103 +15,51 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav gap-4 mx-auto mb-2 mb-lg-0 justify-content-center">
+      <ul class="navbar-nav gap-lg-4 mx-auto mb-2 mb-lg-0 mobile-nav-list">
         <li class="nav-item">
           <a
-            class="nav-link <% if (activePage === 'home') { %> active <% } %>"
-            aria-current="page"
+            class="nav-link nav-link-modern <% if (activePage === 'home') { %> active <% } %>"
             href="/"
             >Home</a
           >
         </li>
         <li class="nav-item">
           <a
-            class="nav-link <% if (activePage === 'shop') { %> active <% } %>"
+            class="nav-link nav-link-modern <% if (activePage === 'shop') { %> active <% } %>"
             href="/shop"
             >Shop</a
           >
         </li>
         <li class="nav-item">
           <a
-            class="nav-link <% if (activePage === 'about') { %> active <% } %>"
+            class="nav-link nav-link-modern <% if (activePage === 'about') { %> active <% } %>"
             href="#"
             >About</a
           >
         </li>
         <li class="nav-item">
           <a
-            class="nav-link <% if (activePage === 'contact') { %> active <% } %>"
+            class="nav-link nav-link-modern <% if (activePage === 'contact') { %> active <% } %>"
             href="#"
             >Contact</a
           >
         </li>
       </ul>
-      <form class="d-flex col-md-4" role="search">
-        <input
-          class="form-control me-2"
-          type="search"
-          placeholder="Search"
-          aria-label="Search"
-        />
-        <button class="btn btn-dark" type="submit">Search</button>
-      </form>
-      <div class="col-md-4 d-flex justify-content-end align-items-center">
-        <div class="d-flex gap-4">
-          <a href="/shop/wishlist">
-            <img src="/images/svg/love.svg" alt="Favorites" class="icon" />
-          </a>
-          <a href="/shop/cart">
-            <img src="/images/svg/cart.svg" alt="Cart" class="icon" />
-          </a>
-          <a href="/account">
-            <img src="/images/svg/user.svg" alt="User" class="icon" />
-          </a>
-        </div>
+
+      <!-- Icons row -->
+      <div class="d-flex align-items-center justify-content-center gap-2 gap-lg-3 mobile-icon-row">
+        <a href="/shop/wishlist" class="nav-icon-link" title="Wishlist">
+          <i class="fa-solid fa-heart nav-icon-fa"></i>
+        </a>
+        <a href="/shop/cart" class="nav-icon-link" title="Cart">
+          <i class="fa-solid fa-cart-shopping nav-icon-fa"></i>
+        </a>
+        <a href="/account" class="nav-icon-link profile-icon-link" title="Profile">
+          <i class="fa-solid fa-user nav-icon-fa"></i>
+        </a>
       </div>
+
+
     </div>
   </div>
 </nav>
-
-<style>
-  .navbar {
-    background-color: #f8f9fa; /* Light background color for the navbar */
-  }
-
-  .navbar-nav .nav-link {
-    color: #333; /* Dark color for the nav links */
-  }
-
-  .navbar-nav .nav-link.active {
-    color: #5a2b81; /* Dark purple color for the active link */
-    font-weight: bold;
-  }
-
-  .btn-dark {
-    background-color: #5a2b81; /* Dark purple background for button */
-    border-color: #5a2b81; /* Dark purple border for button */
-  }
-
-  .btn-dark:hover {
-    background-color: #7a479b; /* Slightly lighter dark purple for hover */
-    border-color: #7a479b; /* Border color match hover background */
-  }
-
-  .btn-outline-dark {
-    border-color: #5a2b81; /* Dark purple border for outline button */
-    color: #5a2b81; /* Dark purple text color for outline button */
-  }
-
-  .btn-outline-dark:hover {
-    background-color: #7a479b; /* Dark purple background on hover */
-    color: #fff; /* White text color on hover */
-  }
-
-  .icon {
-    width: 24px; /* Adjust icon size */
-    height: 24px; /* Adjust icon size */
-  }
-
-  .navbar {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Shadow at the bottom of the navbar */
-  }
-</style>

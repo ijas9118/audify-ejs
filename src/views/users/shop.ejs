@@ -1,32 +1,37 @@
-<div class="hero-section text-center">
-  <div class="container">
-    <h1 class="display-3">Discover Your Perfect Product</h1>
-    <p class="lead">Browse our collection of top-rated items, carefully selected to suit your needs.</p>
-  </div>
-</div>
+<!-- Filter backdrop overlay -->
+<div class="filter-backdrop" id="filterBackdrop" onclick="closeFilterDrawer()"></div>
 
-<div class="container-fluid my-5">
-  <div class="row">
-    <!-- ── Filter Sidebar ──────────────────────────────────────────────────── -->
-    <div class="col-md-3">
-      <div class="card shadow-sm border-1 position-sticky" style="top: 100px;">
-        <div class="card-body py-4">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="card-title mb-0">Filter Products</h5>
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-secondary"
-              id="clear-filters-btn"
-              onclick="clearFilters()"
-              title="Reset all filters"
-            >
-              <i class="fa-solid fa-rotate-left me-1"></i>Reset
-            </button>
+<div class="shop-layout">
+  <div class="container-fluid px-lg-5">
+    <div class="row g-4">
+      <!-- ── Filter Sidebar / Drawer ── -->
+      <div class="col-lg-3 filter-col" id="filterCol">
+        <div class="filter-panel">
+          <div class="filter-heading">
+            <span>Filters</span>
+            <div class="d-flex align-items-center gap-2">
+              <button
+                type="button"
+                class="btn-reset-filter"
+                id="clear-filters-btn"
+                onclick="clearFilters()"
+              >
+                <i class="fa-solid fa-rotate-left me-1"></i>Reset
+              </button>
+              <button
+                type="button"
+                class="btn-close-filter d-lg-none"
+                onclick="closeFilterDrawer()"
+                aria-label="Close filters"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
 
-          <!-- Category Filter — dynamic from DB -->
+          <!-- Category -->
           <div class="mb-4">
-            <label for="filter-category" class="form-label fw-semibold">Category</label>
+            <label for="filter-category" class="form-label">Category</label>
             <select class="form-select" id="filter-category" onchange="applyFilters()">
               <option value="">All Categories</option>
               <% categories.forEach(cat => { %>
@@ -37,13 +42,13 @@
             </select>
           </div>
 
-          <!-- Price Range Slider -->
+          <!-- Price Range -->
           <div class="mb-4">
-            <label class="form-label fw-semibold">Price Range</label>
+            <label class="form-label">Price Range</label>
             <div id="price-slider"></div>
             <div class="d-flex justify-content-between mt-2">
-              <span id="minPriceValue">₹<%= minPrice %></span>
-              <span id="maxPriceValue">₹<%= maxPrice %></span>
+              <span id="minPriceValue" class="small fw-semibold">₹<%= minPrice %></span>
+              <span id="maxPriceValue" class="small fw-semibold">₹<%= maxPrice %></span>
             </div>
             <input type="hidden" id="filter-minPrice" value="<%= minPrice %>">
             <input type="hidden" id="filter-maxPrice" value="<%= maxPrice %>">
@@ -55,8 +60,8 @@
           </div>
 
           <!-- Sort By -->
-          <div class="mb-4">
-            <label for="filter-sort" class="form-label fw-semibold">Sort By</label>
+          <div class="mb-0">
+            <label for="filter-sort" class="form-label">Sort By</label>
             <select class="form-select" id="filter-sort" onchange="applyFilters()">
               <option value="new"         <%= sortBy === 'new'         ? 'selected' : '' %>>New Arrivals</option>
               <option value="popularity"  <%= sortBy === 'popularity'  ? 'selected' : '' %>>Popularity</option>
@@ -66,152 +71,161 @@
               <option value="z-a"         <%= sortBy === 'z-a'         ? 'selected' : '' %>>Z – A</option>
             </select>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- ── Products Section ───────────────────────────────────────────────── -->
-    <div class="col-md-9">
-
-      <!-- Search bar -->
-      <div class="d-flex gap-2 mb-3 col-md-6">
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0">
-            <i class="fa-solid fa-magnifying-glass text-muted"></i>
-          </span>
-          <input
-            type="search"
-            id="search-input"
-            class="form-control border-start-0 ps-0"
-            placeholder="Search products by name or description…"
-            oninput="debouncedSearch()"
-            onkeydown="if(event.key==='Enter') applyFilters()"
+          <!-- Apply button (mobile only) -->
+          <button
+            type="button"
+            class="btn btn-primary-modern w-100 justify-content-center mt-4 d-lg-none"
+            onclick="applyFilters(); closeFilterDrawer();"
           >
+            Apply Filters
+          </button>
         </div>
       </div>
 
-      <!-- Result count + loading indicator -->
-      <div class="d-flex align-items-center gap-3 mb-3">
-        <span id="result-count" class="text-muted small">
-          <%= totalProducts > 0 ? `${totalProducts} product${totalProducts === 1 ? '' : 's'} found` : '' %>
-        </span>
-        <span id="search-spinner" class="spinner-border spinner-border-sm text-secondary d-none" role="status"></span>
-      </div>
+      <!-- ── Products Section ── -->
+      <div class="col-lg-9">
 
-      <div
-        id="shop-pagination-config"
-        data-total-products="<%= totalProducts || 0 %>"
-        data-current-page="<%= currentPage || 1 %>"
-        data-page-size="<%= pageSize || 12 %>"
-        data-has-more="<%= hasMore ? 'true' : 'false' %>"
-      ></div>
+        <!-- Mobile filter toggle + Search -->
+        <div class="d-flex gap-3 mb-4 align-items-stretch">
+          <button
+            type="button"
+            class="btn-filter-toggle d-lg-none"
+            onclick="openFilterDrawer()"
+          >
+            <i class="fas fa-sliders-h"></i>
+            <span>Filters</span>
+          </button>
+          <div class="shop-search flex-fill" style="max-width: 480px;">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fa-solid fa-magnifying-glass text-muted"></i>
+            </span>
+            <input
+              type="search"
+              id="search-input"
+              class="form-control"
+              placeholder="Search products…"
+              oninput="debouncedSearch()"
+              onkeydown="if(event.key==='Enter') applyFilters()"
+            >
+          </div>
+        </div>
+        </div>
+        <!-- Result count -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <span id="result-count" class="result-count">
+            <%= totalProducts > 0 ? `${totalProducts} product${totalProducts === 1 ? '' : 's'} found` : '' %>
+          </span>
+          <span id="search-spinner" class="spinner-border spinner-border-sm text-secondary d-none" role="status"></span>
+        </div>
 
-      <!-- Product grid -->
-      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="search-results">
-        <% products.forEach(product => { %>
-        <div class="col">
-          <div class="card h-100 shadow-sm border-1 <%= product.isOutOfStock ? 'out-of-stock' : '' %>">
-            <div class="position-relative">
-              <a href="/shop/product/<%= product._id %>" class="card-link">
-                <%
-                  const now = new Date();
-                  const isOfferValid = (o) =>
-                    o && o.status === 'active' &&
-                    new Date(o.validFrom) <= now &&
-                    new Date(o.validUntil) >= now;
+        <div
+          id="shop-pagination-config"
+          data-total-products="<%= totalProducts || 0 %>"
+          data-current-page="<%= currentPage || 1 %>"
+          data-page-size="<%= pageSize || 12 %>"
+          data-has-more="<%= hasMore ? 'true' : 'false' %>"
+        ></div>
 
-                  const pOffer = isOfferValid(product.productOfferDetails) ? product.productOfferDetails : null;
-                  const cOffer = isOfferValid(product.categoryOfferDetails) ? product.categoryOfferDetails : null;
+        <!-- Product grid -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4" id="search-results">
+          <% products.forEach(product => { %>
+          <div class="col">
+            <div class="product-card h-100 <%= product.isOutOfStock ? 'is-out-of-stock' : '' %>">
+              <a href="/shop/product/<%= product._id %>" class="text-decoration-none">
+                <div class="product-img-wrap">
+                  <%
+                    const now = new Date();
+                    const isOfferValid = (o) =>
+                      o && o.status === 'active' &&
+                      new Date(o.validFrom) <= now &&
+                      new Date(o.validUntil) >= now;
 
-                  let badgeOffer = null;
-                  if (pOffer && cOffer) {
-                    const pPrice = pOffer.discountType === 'percentage'
-                      ? product.price * (1 - pOffer.discountValue / 100)
-                      : product.price - pOffer.discountValue;
-                    const cPrice = cOffer.discountType === 'percentage'
-                      ? product.price * (1 - cOffer.discountValue / 100)
-                      : product.price - cOffer.discountValue;
-                    badgeOffer = pPrice <= cPrice ? pOffer : cOffer;
-                  } else {
-                    badgeOffer = pOffer || cOffer;
-                  }
-                %>
-                <% if (badgeOffer && product.discountedPrice < product.price) { %>
-                  <span class="badge bg-danger position-absolute top-0 start-0 m-2">
-                    <% if (badgeOffer.discountType === 'percentage') { %>
-                      -<%= badgeOffer.discountValue %>%
-                    <% } else { %>
-                      -₹<%= badgeOffer.discountValue.toFixed(2) %>
-                    <% } %>
-                  </span>
-                <% } %>
-                <img
-                  src="<%= product.images.main %>"
-                  class="card-img-top img-fluid"
-                  style="height: 200px; object-fit: contain"
-                  alt="<%= product.name %>"
-                />
+                    const pOffer = isOfferValid(product.productOfferDetails) ? product.productOfferDetails : null;
+                    const cOffer = isOfferValid(product.categoryOfferDetails) ? product.categoryOfferDetails : null;
+
+                    let badgeOffer = null;
+                    if (pOffer && cOffer) {
+                      const pPrice = pOffer.discountType === 'percentage'
+                        ? product.price * (1 - pOffer.discountValue / 100)
+                        : product.price - pOffer.discountValue;
+                      const cPrice = cOffer.discountType === 'percentage'
+                        ? product.price * (1 - cOffer.discountValue / 100)
+                        : product.price - cOffer.discountValue;
+                      badgeOffer = pPrice <= cPrice ? pOffer : cOffer;
+                    } else {
+                      badgeOffer = pOffer || cOffer;
+                    }
+                  %>
+                  <% if (badgeOffer && product.discountedPrice < product.price) { %>
+                    <span class="product-badge">
+                      <% if (badgeOffer.discountType === 'percentage') { %>
+                        -<%= badgeOffer.discountValue %>%
+                      <% } else { %>
+                        -₹<%= badgeOffer.discountValue.toFixed(2) %>
+                      <% } %>
+                    </span>
+                  <% } %>
+                  <img
+                    src="<%= product.images.main %>"
+                    alt="<%= product.name %>"
+                  />
+                </div>
               </a>
-            </div>
-            <div class="card-body">
-              <h5 class="card-title text-truncate"><%= product.name %></h5>
-              <div class="d-flex align-items-center gap-2">
-                <% if (product.discountedPrice && product.discountedPrice < product.price) { %>
-                  <h6 class="card-price mb-0">₹<%= product.discountedPrice.toFixed(2) %></h6>
-                  <span class="text-muted small"><del>₹<%= product.price.toFixed(2) %></del></span>
-                <% } else { %>
-                  <h6 class="card-price mb-0">₹<%= product.price.toFixed(2) %></h6>
-                <% } %>
+              <div class="product-info">
+                <div class="product-name">
+                  <a href="/shop/product/<%= product._id %>"><%= product.name %></a>
+                </div>
+                <div class="d-flex align-items-baseline">
+                  <% if (product.discountedPrice && product.discountedPrice < product.price) { %>
+                    <span class="product-price">₹<%= product.discountedPrice.toFixed(2) %></span>
+                    <span class="product-price-original">₹<%= product.price.toFixed(2) %></span>
+                  <% } else { %>
+                    <span class="product-price">₹<%= product.price.toFixed(2) %></span>
+                  <% } %>
+                </div>
+                <div class="mt-auto pt-2">
+                  <span class="product-stock <%= (product.stock === 0 || product.isOutOfStock) ? 'out-of-stock' : 'in-stock' %>">
+                    <%= (product.stock === 0 || product.isOutOfStock) ? 'Out of Stock' : product.stock + ' Available' %>
+                  </span>
+                </div>
               </div>
-              <div class="mt-1">
-                <span class="<%= (product.stock === 0 || product.isOutOfStock) ? 'text-danger' : 'text-success' %> small">
-                  <%= (product.stock === 0 || product.isOutOfStock) ? 'Out of Stock' : product.stock + ' Available' %>
-                </span>
-              </div>
-            </div>
-            <div class="card-footer bg-white border-0">
-              <div class="btn-group w-100" role="group">
+              <div class="product-actions">
                 <button
-                  class="btn btn-dark-purple w-100 <%= product.isOutOfStock ? 'disabled' : '' %>"
+                  class="btn-add-cart <%= product.isOutOfStock ? 'disabled' : '' %>"
                   onclick="addToCart('<%= product._id %>')"
-                >Add to Cart</button>
+                >
+                  <i class="fas fa-shopping-bag"></i> Add to Cart
+                </button>
                 <button
-                  class="btn btn-outline-dark-purple w-100"
+                  class="btn-wishlist"
                   onclick="addToWishList('<%= product._id %>')"
-                ><i class="fas fa-heart"></i> Wishlist</button>
+                  title="Add to wishlist"
+                >
+                  <i class="far fa-heart"></i>
+                </button>
               </div>
             </div>
           </div>
+          <% }) %>
         </div>
-        <% }) %>
-      </div>
 
-      <div id="infinite-scroll-loader" class="text-center py-4 d-none">
-        <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
-      </div>
-      <div id="infinite-scroll-sentinel" style="height: 1px;"></div>
+        <div id="infinite-scroll-loader" class="text-center py-4 d-none">
+          <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
+        </div>
+        <div id="infinite-scroll-sentinel" style="height: 1px;"></div>
 
-      <!-- Empty state (hidden until needed) -->
-      <div id="no-results" class="text-center py-5 d-none">
-        <i class="fa-solid fa-box-open fa-3x text-muted mb-3"></i>
-        <p class="text-muted">No products match your search. Try adjusting your filters.</p>
-        <button class="btn btn-outline-dark btn-sm" onclick="clearFilters()">Clear Filters</button>
+        <!-- Empty state -->
+        <div id="no-results" class="shop-empty-state d-none">
+          <i class="fa-solid fa-box-open"></i>
+          <p>No products match your search. Try adjusting your filters.</p>
+          <button class="btn btn-secondary-modern btn-sm" onclick="clearFilters()">Clear Filters</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
-
-<style>
-  .card.out-of-stock { opacity: 0.55; }
-  .card.out-of-stock .btn { pointer-events: none; }
-  .hero-section {
-    background: url('/images/banner.jpg') no-repeat center center;
-    background-size: cover;
-    color: white;
-    padding: 60px 0;
-  }
-  .hero-section h1 { font-size: 3rem; }
-</style>
 
 <script src="/js/cart.js"></script>
 <script src="/js/wishlist.js"></script>
