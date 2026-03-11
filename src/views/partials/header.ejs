@@ -1,10 +1,10 @@
-<nav class="navbar navbar-expand-lg bg-light shadow-sm sticky-top">
-  <div class="container-fluid mx-md-5 py-2">
-    <div class="logo col-md-3 mb-2 mb-md-0">
-      <img src="/images/svg/logo.svg" alt="Logo" />
-    </div>
+<nav class="navbar navbar-expand-lg navbar-modern sticky-top">
+  <div class="container py-2">
+    <a class="navbar-brand" href="/">
+      <img src="/images/svg/logo.svg" alt="Audify" height="32" />
+    </a>
     <button
-      class="navbar-toggler"
+      class="navbar-toggler border-0"
       type="button"
       data-bs-toggle="collapse"
       data-bs-target="#navbarSupportedContent"
@@ -15,83 +15,42 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav gap-4 mx-auto mb-2 mb-lg-0 justify-content-center">
+      <ul class="navbar-nav gap-lg-4 mx-auto mb-2 mb-lg-0">
         <li class="nav-item">
           <a
-            class="nav-link <% if (activePage === 'home') { %> active <% } %>"
+            class="nav-link nav-link-modern <% if (activePage === 'home') { %> active <% } %>"
             href="/"
             >Home</a
           >
         </li>
         <li class="nav-item">
           <a
-            class="nav-link <% if (activePage === 'shop') { %> active <% } %>"
+            class="nav-link nav-link-modern <% if (activePage === 'shop') { %> active <% } %>"
             href="/shop"
             >Shop</a
           >
         </li>
         <li class="nav-item">
           <a
-            class="nav-link <% if (activePage === 'about') { %> active <% } %>"
+            class="nav-link nav-link-modern <% if (activePage === 'about') { %> active <% } %>"
             href="#"
             >About</a
           >
         </li>
         <li class="nav-item">
           <a
-            class="nav-link <% if (activePage === 'contact') { %> active <% } %>"
+            class="nav-link nav-link-modern <% if (activePage === 'contact') { %> active <% } %>"
             href="#"
             >Contact</a
           >
         </li>
       </ul>
-      <div class="col-md-3 text-end">
-        <a href="/login">
-          <button type="button" class="btn btn-outline-dark me-2">Login</button>
-        </a>
-        <a href="/signup">
-          <button type="button" class="btn btn-dark">Sign-up</button>
-        </a>
+      <div class="d-flex align-items-center gap-3">
+        <a href="/login" class="btn btn-secondary-modern">Login</a>
+        <a href="/signup" class="btn btn-primary-modern">Sign Up</a>
       </div>
     </div>
   </div>
 </nav>
 
-<style>
-  .navbar {
-    background-color: #f8f9fa; /* Light background color for the navbar */
-  }
 
-  .navbar-nav .nav-link {
-    color: #333; /* Dark color for the nav links */
-  }
-
-  .navbar-nav .nav-link.active {
-    color: #5a2b81; /* Dark purple color for the active link */
-    font-weight: bold;
-  }
-
-  .btn-outline-dark {
-    border-color: #5a2b81; /* Dark purple border for outline button */
-    color: #5a2b81; /* Dark purple text color for outline button */
-  }
-
-  .btn-outline-dark:hover {
-    background-color: #7a479b; /* Dark purple background on hover */
-    color: #fff; /* White text color on hover */
-  }
-
-  .btn-dark {
-    background-color: #5a2b81; /* Dark purple background for button */
-    border-color: #5a2b81; /* Dark purple border for button */
-  }
-
-  .btn-dark:hover {
-    background-color: #7a479b; /* Slightly lighter dark purple for hover */
-    border-color: #7a479b; /* Border color match hover background */
-  }
-
-  .navbar {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Shadow at the bottom of the navbar */
-  }
-</style>

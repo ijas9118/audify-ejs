@@ -1,6 +1,5 @@
-body {
-  background: linear-gradient(to right, #f3f9fe, #faf3fe);
-}
+/* Body background handled by user-ui/main.css */
+
 
 .order-status-pill {
   display: inline-flex;

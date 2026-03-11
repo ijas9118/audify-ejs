@@ -1,149 +1,92 @@
-<div class="container col-xxl-8 px-4 py-5">
-  <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
-    <div class="col-10 col-sm-8 col-lg-6">
-      <img
-        src="images/Home-Banner.png"
-        class="d-block mx-lg-auto img-fluid"
-        alt="Bootstrap Themes"
-        width="700"
-        height="500"
-        loading="lazy"
-      />
-    </div>
-    <div class="col-lg-6">
-      <h1 class="display-5 fw-bold text-body-emphasis lh-1 mb-3">
-        Discover Premium Sound Experiences
-      </h1>
-      <p class="lead">
-        Explore our extensive range of high-quality audio products, from
-        cutting-edge headphones and sleek earbuds to versatile smartwatches.
-        Whether you're a music enthusiast or need top-notch audio for your daily
-        activities, we have the perfect products to enhance your listening
-        experience.
-      </p>
-      <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-        <button type="button" class="btn btn-custom btn-lg px-4 me-md-2">
-          <img src="images/svg/bag.svg" alt="" />
-          Shop Now
-        </button>
-        <button type="button" class="btn btn-outline-primary btn-lg px-4">
-          Categories
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="container my-5 py-5">
-  <h2 class="text-center mb-4">Explore Our Categories</h2>
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-    <!-- Earbuds Category -->
-    <div class="col">
-      <div class="card bg-dark-purple text-white shadow-sm">
-        <img
-          src="images/Home-Category-4-Smart-Watches.png"
-          class="card-img-top"
-          alt="Earbuds"
-        />
-        <div class="card-body text-center">
-          <h5 class="card-title">Earbuds</h5>
-          <p class="card-text">
-            Discover a wide range of earbuds designed for comfort and superior sound quality. Perfect for on-the-go listening.
-          </p>
-          <a href="/shop?category=earbuds" class="btn btn-outline-light">Shop Earbuds</a>
+<div class="hero-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <h1 class="hero-title">
+          Discover Premium <br />
+          <span style="color: var(--primary-color)">Sound Experiences</span>
+        </h1>
+        <p class="hero-subtitle">
+          Explore our extensive range of high-quality audio products, from
+          cutting-edge headphones and sleek earbuds to versatile smartwatches.
+        </p>
+        <div class="d-flex gap-3">
+          <a href="/shop" class="btn btn-primary-modern btn-lg">
+            Shop Collection
+            <i class="fas fa-arrow-right"></i>
+          </a>
+          <a href="#categories" class="btn btn-secondary-modern btn-lg">
+            Browse Categories
+          </a>
         </div>
       </div>
-    </div>
-    <!-- Headphones Category -->
-    <div class="col">
-      <div class="card bg-dark-blue text-white shadow-sm">
-        <img
-          src="images/Home-Category-3-Smart-Watches.png"
-          class="card-img-top"
-          alt="Headphones"
-        />
-        <div class="card-body text-center">
-          <h5 class="card-title">Headphones</h5>
-          <p class="card-text">
-            Explore our collection of headphones for an immersive audio experience. Ideal for both casual and professional use.
-          </p>
-          <a href="/shop?category=headphones" class="btn btn-outline-light">Shop Headphones</a>
-        </div>
-      </div>
-    </div>
-    <!-- Speakers Category -->
-    <div class="col">
-      <div class="card bg-dark-purple text-white shadow-sm">
-        <img
-          src="images/Home-Category-1-Party-Speaker.png"
-          class="card-img-top"
-          alt="Speakers"
-        />
-        <div class="card-body text-center">
-          <h5 class="card-title">Speakers</h5>
-          <p class="card-text">
-            Find high-quality speakers that deliver powerful sound for any occasion. From portable to home audio systems.
-          </p>
-          <a href="/shop?category=speakers" class="btn btn-outline-light">Shop Speakers</a>
-        </div>
-      </div>
-    </div>
-    <!-- Smartwatches Category -->
-    <div class="col">
-      <div class="card bg-dark-blue text-white shadow-sm">
-        <img
-          src="images/Home-Category-2-Smart-Watches.png"
-          class="card-img-top"
-          alt="Smartwatches"
-        />
-        <div class="card-body text-center">
-          <h5 class="card-title">Smartwatches</h5>
-          <p class="card-text">
-            Browse our selection of smartwatches that combine technology and style. Track your fitness and stay connected.
-          </p>
-          <a href="/shop?category=smartwatches" class="btn btn-outline-light">Shop Smartwatches</a>
+      <div class="col-lg-6">
+        <div class="position-relative">
+          <img
+            src="images/Home-Banner.png"
+            class="img-fluid"
+            alt="Hero Image"
+            loading="lazy"
+          />
+          <!-- Decorative elements could go here -->
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Custom Styles -->
-<style>
-  .bg-dark-purple {
-    background-color: #5a2b81;
-  }
-
-  .bg-dark-blue {
-    background-color: #003366;
-  }
-
-  .btn-outline-light {
-    color: #fff;
-    border-color: #fff;
-  }
-
-  .btn-outline-light:hover {
-    background-color: #fff;
-    color: #5a2b81;
-  }
-
-  .card-img-top {
-    height: 200px;
-    object-fit: contain;
-    padding: 5px 10px;
-  }
-
-  .card-body {
-    padding: 2rem;
-  }
-
-  .card-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-  }
-
-  .card-text {
-    font-size: 1rem;
-  }
-</style>
+<div class="section-padding bg-surface" id="categories">
+  <div class="container">
+    <h2 class="section-title">Explore Our Categories</h2>
+    <div class="row g-4">
+      <!-- Earbuds -->
+      <div class="col-6 col-lg-3">
+        <a href="/shop?category=earbuds" class="category-card h-100">
+          <div class="category-img-wrap">
+            <img src="images/Home-Category-4-Smart-Watches.png" alt="Earbuds" />
+          </div>
+          <div class="category-content">
+            <h3 class="category-name">Earbuds</h3>
+            <span class="category-link">Shop Now <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </a>
+      </div>
+      <!-- Headphones -->
+      <div class="col-6 col-lg-3">
+        <a href="/shop?category=headphones" class="category-card h-100">
+          <div class="category-img-wrap">
+            <img src="images/Home-Category-3-Smart-Watches.png" alt="Headphones" />
+          </div>
+          <div class="category-content">
+            <h3 class="category-name">Headphones</h3>
+            <span class="category-link">Shop Now <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </a>
+      </div>
+      <!-- Speakers -->
+      <div class="col-6 col-lg-3">
+        <a href="/shop?category=speakers" class="category-card h-100">
+          <div class="category-img-wrap">
+            <img src="images/Home-Category-1-Party-Speaker.png" alt="Speakers" />
+          </div>
+          <div class="category-content">
+            <h3 class="category-name">Speakers</h3>
+            <span class="category-link">Shop Now <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </a>
+      </div>
+      <!-- Smartwatches -->
+      <div class="col-6 col-lg-3">
+        <a href="/shop?category=smartwatches" class="category-card h-100">
+          <div class="category-img-wrap">
+            <img src="images/Home-Category-2-Smart-Watches.png" alt="Smartwatches" />
+          </div>
+          <div class="category-content">
+            <h3 class="category-name">Smartwatches</h3>
+            <span class="category-link">Shop Now <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

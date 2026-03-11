@@ -57,7 +57,7 @@ router.get('/signup', (req, res) => {
     title: 'Sign Up',
     header: 'partials/header',
     viewName: 'users/signup',
-    activePage: 'home',
+    activePage: 'signup',
     isAdmin: false,
   });
 });
@@ -82,7 +82,7 @@ router.get('/login', (req, res) => {
     title: 'Login',
     header: 'partials/header',
     viewName: 'users/login',
-    activePage: 'home',
+    activePage: 'login',
     isAdmin: false,
   });
 });
