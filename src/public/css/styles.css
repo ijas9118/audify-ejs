@@ -76,27 +76,4 @@ a {
   padding: 16px;
 }
 
-.modal-content {
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
 
-.modal-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-}
-
-.modal-body {
-  padding: 2rem;
-}
-
-.form-label {
-  font-weight: 500;
-}

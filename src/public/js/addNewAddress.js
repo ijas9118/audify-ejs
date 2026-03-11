@@ -1,65 +1,32 @@
+// Custom name field visibility
 document.querySelectorAll('input[name="addressType"]').forEach((radio) => {
   radio.addEventListener('change', () => {
-    document.getElementById('customNameContainer').style.display =
-      radio.id === 'custom' ? 'block' : 'none';
+    const customContainer = document.getElementById('customNameContainer');
+    if (customContainer) {
+      customContainer.style.display = radio.value === 'other' ? 'block' : 'none';
+    }
   });
 });
 
+// Redirect to edit page
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.edit-icon').forEach((icon) => {
-    icon.addEventListener('click', (event) => {
-      event.stopPropagation();
-      const addressId = event.target.closest('.address-card').dataset.id;
-      window.location.href = `/account/addresses/edit/${addressId}`;
+  document.querySelectorAll('.btn-address-edit').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      // If it's a link, it will just follow the href. 
+      // This is here as a fallback if needed.
     });
   });
 });
 
-document.getElementById('addressForm').addEventListener('submit', (event) => {
-  const checkbox = document.getElementById('defaultAddress');
-  const hiddenInput = document.querySelector(
-    'input[name="isDefault"][type="hidden"]'
-  );
+// Sync default checkbox with hidden input
+const addressForm = document.getElementById('addressForm');
+if (addressForm) {
+  addressForm.addEventListener('submit', () => {
+    const checkbox = document.getElementById('isDefaultCheck');
+    const hiddenInput = document.getElementById('isDefaultHidden');
 
-  if (checkbox.checked) {
-    hiddenInput.value = true;
-  } else {
-    hiddenInput.value = false;
-  }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.delete-icon').forEach((icon) => {
-    icon.addEventListener('click', async (event) => {
-      event.stopPropagation();
-
-      const addressCard = event.target.closest('.address-card');
-      const addressId = addressCard.dataset.id;
-
-      if (confirm('Are you sure you want to delete this address?')) {
-        try {
-          const response = await fetch(
-            `/account/addresses/delete/${addressId}`,
-            {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-
-          if (response.ok) {
-            addressCard.remove();
-            alert('Address deleted successfully.');
-            window.location.reload();
-          } else {
-            alert('Failed to delete address.');
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          alert('An error occurred while deleting the address.');
-        }
-      }
-    });
+    if (checkbox && hiddenInput) {
+      hiddenInput.value = checkbox.checked ? 'true' : 'false';
+    }
   });
-});
+}

@@ -11,7 +11,7 @@ const getUserAccount = asyncHandler(async (req, res) => {
     title: 'My Audify Account',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/userAccount',
-    activePage: 'Home',
+    activePage: 'account',
     isAdmin: false,
     user,
   });
@@ -51,7 +51,7 @@ const getAddresses = asyncHandler(async (req, res) => {
     title: 'Manage Address',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/manageAddress',
-    activePage: 'Home',
+    activePage: 'account',
     isAdmin: false,
     addresses,
   });
@@ -105,7 +105,7 @@ const editAddressPage = asyncHandler(async (req, res) => {
     title: 'Edit Address',
     header: req.session.user ? 'partials/login_header' : 'partials/header',
     viewName: 'users/editAddress',
-    activePage: 'Home',
+    activePage: 'account',
     isAdmin: false,
     address,
   });
@@ -144,7 +144,7 @@ const walletTransactions = asyncHandler(async (req, res) => {
       title: 'My Audify Account',
       header: req.session.user ? 'partials/login_header' : 'partials/header',
       viewName: 'users/walletTransaction',
-      activePage: 'Home',
+      activePage: 'account',
       isAdmin: false,
       user,
     });

@@ -1,79 +1,95 @@
-<div
-  class="container my-5 col-md-10 col-sm-12"
-  style="min-height: 50vh"
->
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/account">My Account</a></li>
-      <li class="breadcrumb-item active" aria-current="page">
-        Order History
-      </li>
-    </ol>
-  </nav>
-  <h2 class="mb-4">Order History</h2>
+<div class="account-container">
+  <div class="container px-lg-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="breadcrumb-modern">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/account">My Account</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Order History</li>
+      </ol>
+    </nav>
 
-  <% if (orders.length === 0) { %>
-    <div class="alert alert-info text-center" role="alert">No orders found.</div>
-  <% } else { %>
-    <div class="table-responsive">
-      <table class="table table-hover table-bordered">
-        <thead>
-          <tr>
-            <th scope="col">Order #</th>
-            <th scope="col">Order date</th>
-            <th scope="col">Status</th>
-            <th scope="col">Total</th>
-            <th scope="col">Items</th>
-            <th scope="col"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% orders.forEach((order) => { %>
-            <%
-              // Prefer human-readable orderId; fall back to MongoDB _id for legacy orders
-              const displayId = order.orderId || order._id;
-              const statusBadgeClass = order.status === 'Delivered'
-                ? 'order-status-pill is-delivered'
-                : order.status === 'Cancelled'
-                  ? 'order-status-pill is-cancelled'
-                  : order.status === 'Shipped'
-                    ? 'order-status-pill is-shipped'
-                    : order.status === 'Processed'
-                      ? 'order-status-pill is-processed'
-                      : 'order-status-pill is-pending';
-            %>
-            <tr onclick="window.location.href='/account/order-history/<%= displayId %>'" style="cursor: pointer;">
-              <td class="align-middle"><%= displayId %></td>
-              <td class="align-middle"><%= new Date(order.createdAt).toLocaleDateString() %></td>
-              <td class="align-middle">
-                <span class="<%= statusBadgeClass %>">
+    <div class="section-header mb-4">
+      <h1 class="shopping-title mb-0">My Orders</h1>
+    </div>
+
+    <% if (orders.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="fas fa-shopping-bag"></i>
+        </div>
+        <h5 class="fw-bold">No orders found</h5>
+        <p class="text-secondary">Seems like you haven't placed any orders yet.</p>
+        <a href="/shop" class="btn btn-primary-modern px-5 justify-content-center mt-3 text-white">Start Shopping</a>
+      </div>
+    <% } else { %>
+      <div class="order-list">
+        <% orders.forEach((order) => { %>
+          <%
+            const displayId = order.orderId || order._id;
+            const statusClass = order.status === 'Delivered'
+              ? 'status-delivered'
+              : order.status === 'Cancelled'
+                ? 'status-cancelled'
+                : order.status === 'Shipped'
+                  ? 'status-shipped'
+                  : order.status === 'Processed'
+                    ? 'status-processed'
+                    : 'status-pending';
+          %>
+          <a href="/account/order-history/<%= displayId %>" class="order-card-modern">
+            <div class="order-header-row">
+              <div>
+                <span class="order-id">Order #<%= displayId %></span>
+                <span class="order-date ms-2">• Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %></span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="status-pill <%= statusClass %>">
+                  <i class="fas fa-<%= order.status === 'Delivered' ? 'check-circle' : (order.status === 'Cancelled' ? 'times-circle' : 'clock') %>"></i>
                   <%= order.status %>
                 </span>
                 <% if (order.cancellationRequested && order.status !== 'Cancelled') { %>
-                  <span class="order-status-pill order-status-pill-requested ms-1" title="Cancellation request pending admin review">
-                    <i class="fa-solid fa-clock"></i> Cancel Requested
+                  <span class="status-pill status-requested">
+                    <i class="fas fa-hourglass-half"></i> Cancel Requested
                   </span>
                 <% } %>
-              </td>
-              <td class="align-middle">₹<%= order.finalTotal %></td>
-              <td class="align-middle">
-                <div class="d-flex align-items-center">
-                  <% order.orderItems.slice(0, 3).forEach(item => { %>
-                    <img src="<%= item.product.images.main %>" class="img-fluid me-2" style="width: 50px; height: 50px; object-fit: cover;" alt="<%= item.product.name %>">
-                  <% }); %>
-                  <% if (order.orderItems.length > 3) { %>
-                    <span>+<%= order.orderItems.length - 3 %></span>
+              </div>
+            </div>
+
+            <div class="order-content-row">
+              <div class="order-images-preview">
+                <% order.orderItems.slice(0, 4).forEach(item => { %>
+                  <% if (item.product && item.product.images && item.product.images.main) { %>
+                    <img src="<%= item.product.images.main %>" class="order-img-sm" alt="<%= item.product.name %>">
+                  <% } else { %>
+                    <div class="order-img-sm d-flex align-items-center justify-content-center bg-light">
+                      <i class="fas fa-image text-muted"></i>
+                    </div>
                   <% } %>
-                </div>
-              </td>
-              <td class="align-middle">
-                <a href="/account/order-history/<%= displayId %>" class="btn btn-outline-primary btn-sm">View Details</a>
-              </td>
-            </tr>
-          <% }); %>
-        </tbody>
-      </table>
-    </div>
-  <% } %>
+                <% }); %>
+                <% if (order.orderItems.length > 4) { %>
+                  <div class="order-img-sm d-flex align-items-center justify-content-center bg-light border-0 text-secondary fw-bold small">
+                    +<%= order.orderItems.length - 4 %>
+                  </div>
+                <% } %>
+              </div>
+
+              <div class="order-brief-info">
+                <p class="text-secondary small mb-1">
+                  <%= order.orderItems.length %> <%= order.orderItems.length === 1 ? 'item' : 'items' %>
+                </p>
+                <div class="order-total-amount">₹<%= order.finalTotal.toFixed(2) %></div>
+              </div>
+
+              <div class="d-none d-md-block ms-auto">
+                <span class="btn btn-outline-primary border-0 fw-bold">
+                  View Details <i class="fas fa-chevron-right ms-1 small"></i>
+                </span>
+              </div>
+            </div>
+          </a>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
 </div>

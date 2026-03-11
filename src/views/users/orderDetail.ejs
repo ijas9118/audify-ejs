@@ -1,145 +1,218 @@
-<div class="container my-5">
-  <!-- Breadcrumb -->
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-        <a href="/" class="text-decoration-none">Home</a>
-      </li>
-      <li class="breadcrumb-item">
-        <a href="/account" class="text-decoration-none">My Account</a>
-      </li>
-      <li class="breadcrumb-item">
-        <a href="/account/order-history" class="text-decoration-none">Order History</a>
-      </li>
-      <%
-        // Prefer human-readable orderId; fall back to MongoDB _id for legacy orders
-        const displayId = order.orderId || order._id;
-      %>
-      <li class="breadcrumb-item active" aria-current="page"><%= displayId %></li>
-    </ol>
-  </nav>
+<div class="account-container">
+  <div class="container px-lg-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="breadcrumb-modern">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/account">My Account</a></li>
+        <li class="breadcrumb-item"><a href="/account/order-history">Order History</a></li>
+        <% const displayId = order.orderId || order._id; %>
+        <li class="breadcrumb-item active" aria-current="page">Order #<%= displayId %></li>
+      </ol>
+    </nav>
 
-  <!-- Order Details Card -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="card-title mb-0">Order Details</h5>
-      <span class="badge bg-primary"><%= order.status %></span>
-    </div>
-    <div class="card-body">
-      <div class="row mb-4">
-        <div class="col-md-6">
-          <p class="mb-2">
-            <strong>Order ID:</strong> <%= displayId %>
-          </p>
-          <p class="mb-2">
-            <strong>Order Date:</strong> <%= new Date(order.createdAt).toDateString() %>
-          </p>
-          <p class="mb-2">
-            <strong>Payment Method:</strong> <%= order.paymentMethod %>
-          </p>
-        </div>
-        <div class="col-md-6">
-          <p class="mb-2">
-            <strong>Total Amount:</strong> ₹<%= order.totalAmount%>
-          </p>
-          <p class="mb-2">
-            <strong>Shipping Charge:</strong> ₹<%= order.shippingCharge %>
-          </p>
-          <p class="mb-2 text-success">
-            <strong>Discount Applied:</strong> ₹<%= order.discountApplied%>
-          </p>
-          <p>
-            <strong>Final Total:</strong> ₹<%= order.finalTotal%>
-          </p>
-        </div>
+    <div class="order-detail-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+      <div>
+        <h1 class="shopping-title mb-1">Order Details</h1>
+        <p class="text-secondary mb-0">Ordered on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) %></p>
       </div>
-      <h6 class="border-bottom pb-2 mb-3">Shipping Address</h6>
-      <p class="mb-2">
-        <strong>Name:</strong> <%= order.name %>
-      </p>
-      <p class="mb-2">
-        <strong>Address:</strong> <%= order.location %>, <%= order.city %>, <%= order.state %> - <%= order.zip %>
-      </p>
-      <p class="mb-2">
-        <strong>Mobile:</strong> <%= order.mobile %> <% if(order.alternateMobile){ %> (Alternate: <%= order.alternateMobile %>) <% } %>
-      </p>
-    </div>
-    <!-- Download Invoice Button -->
-    <div class="text-end p-2">
-      <button onclick="downloadInvoice('<%= displayId %>')" class="btn btn-dark">Download Invoice</button>
+      <div class="d-flex gap-2">
+        <button onclick="downloadInvoice('<%= displayId %>')" class="btn btn-secondary-modern">
+          <i class="fas fa-file-invoice me-2"></i> Download Invoice
+        </button>
+      </div>
     </div>
 
-  </div>
+    <div class="order-detail-grid">
+      <!-- Left Column: Tracking & Items -->
+      <div class="order-main-info">
+        
+        <!-- Tracking Stepper -->
+        <div class="order-tracking-card">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0">Order Tracking</h5>
+            <span class="status-pill <%= 
+              order.status === 'Delivered' ? 'status-delivered' : 
+              (order.status === 'Cancelled' ? 'status-cancelled' : 'status-pending') 
+            %>">
+              <%= order.status %>
+            </span>
+          </div>
 
-  <!-- Ordered Items Card -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header">
-      <h5 class="card-title mb-0">Ordered Items</h5>
-    </div>
-    <div class="card-body">
-      <div class="row g-3">
-        <% order.orderItems.forEach(item => { %>
-        <div class="col-12 col-md-6 d-flex">
-          <img src="<%= item.product.images.main %>" class="img-fluid me-3 rounded" alt="<%= item.product.name %>" style="max-width: 100px; object-fit: cover;">
-          <div>
-            <h6 class="mb-1"><%= item.product.name %></h6>
-            <p class="mb-0">x<%= item.quantity %> - ₹<%= item.product.price %></p>
+          <div class="tracking-stepper">
+            <% 
+              const statuses = ['Pending', 'Processed', 'Shipped', 'Delivered'];
+              const currentIndex = statuses.indexOf(order.status);
+              const isCancelled = order.status === 'Cancelled';
+            %>
+            
+            <% if (isCancelled) { %>
+               <div class="alert alert-danger border-0 rounded-4 d-flex align-items-center gap-3 w-100">
+                  <div class="avatar-initial m-0 bg-danger text-white" style="width: 40px; height: 40px;"><i class="fas fa-times"></i></div>
+                  <div>
+                    <h6 class="mb-0 fw-bold">Order Cancelled</h6>
+                    <p class="small mb-0 opacity-75">This order has been cancelled and will not be processed further.</p>
+                  </div>
+               </div>
+            <% } else { %>
+              <% statuses.forEach((status, index) => { %>
+                <div class="step-item <%= index <= currentIndex ? 'completed' : '' %> <%= index === currentIndex ? 'active' : '' %>">
+                  <div class="step-dot">
+                    <% if (index < currentIndex) { %>
+                      <i class="fas fa-check"></i>
+                    <% } else { %>
+                      <%= index + 1 %>
+                    <% } %>
+                  </div>
+                  <div class="step-label"><%= status %></div>
+                </div>
+              <% }) %>
+            <% } %>
           </div>
         </div>
-        <% }); %>
+
+        <!-- Info Grid (Shipping & Payment) -->
+        <div class="info-cards-row">
+          <div class="mini-info-card">
+            <h6>Shipping Address</h6>
+            <p class="fw-bold mb-1"><%= order.name %></p>
+            <p class="info-text">
+              <%= order.location %><br>
+              <%= order.city %>, <%= order.state %> - <%= order.zip %><br>
+              <i class="fas fa-phone-alt me-1 small opacity-50"></i> <%= order.mobile %>
+            </p>
+          </div>
+          <div class="mini-info-card">
+            <h6>Payment Method</h6>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="fas fa-credit-card text-primary"></i>
+              <span class="fw-bold"><%= order.paymentMethod %></span>
+            </div>
+            <p class="info-text opacity-75 small">
+              Safe & secure transaction processed via our encrypted gateway.
+            </p>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="account-section-card">
+          <div class="section-header border-bottom pb-3 mb-3">
+            <h5 class="fw-bold mb-0">Items in Order</h5>
+          </div>
+          
+          <div class="order-items-list">
+            <% order.orderItems.forEach(item => { %>
+              <div class="order-item-detail">
+                <img src="<%= item.product.images.main %>" alt="<%= item.product.name %>">
+                <div class="flex-grow-1">
+                  <h6 class="mb-1 fw-bold"><%= item.product.name %></h6>
+                  <p class="text-secondary small mb-0">Quantity: <%= item.quantity %></p>
+                  <p class="fw-bold mt-1">₹<%= item.product.price %></p>
+                </div>
+                <div class="text-end">
+                  <p class="fw-bold mb-0">₹<%= (item.product.price * item.quantity).toFixed(2) %></p>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
       </div>
+
+      <!-- Right Column: Order Summary -->
+      <aside class="order-summary-sidebar">
+        <div class="summary-card shadow-sm border-0">
+          <h5 class="summary-title">Order Summary</h5>
+          
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>₹<%= (order.totalAmount - order.shippingCharge).toFixed(2) %></span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping</span>
+            <span><%= order.shippingCharge === 0 ? 'Free' : '₹' + order.shippingCharge.toFixed(2) %></span>
+          </div>
+          <% if (order.discountApplied > 0) { %>
+            <div class="summary-row text-success fw-medium">
+              <span>Discount</span>
+              <span>-₹<%= order.discountApplied.toFixed(2) %></span>
+            </div>
+          <% } %>
+          
+          <div class="summary-total mt-4 pt-4 border-top">
+            <span>Total</span>
+            <span class="text-primary">₹<%= order.finalTotal.toFixed(2) %></span>
+          </div>
+
+          <div class="mt-4 pt-2">
+            <%
+              const canRequestCancel = ['Pending', 'Processed', 'Shipped'].includes(order.status)
+                && !order.cancellationRequested;
+              const cancelPending = order.cancellationRequested && order.status !== 'Cancelled';
+            %>
+
+            <% if (cancelPending) { %>
+              <div class="alert alert-warning border-0 rounded-4 small py-3 mb-0">
+                <i class="fas fa-clock me-1"></i> Cancellation Request Pending
+              </div>
+            <% } else if (canRequestCancel) { %>
+              <button 
+                id="cancel-order-btn"
+                onclick="cancelOrder('<%= order._id %>')"
+                class="btn btn-outline-danger w-100 py-3 rounded-4 fw-bold"
+              >
+                Request Cancellation
+              </button>
+            <% } else if (order.status === 'Pending') { %>
+               <button class="btn btn-primary-modern w-100 justify-content-center py-3" onclick="redirectToPayment('<%= order._id %>')">
+                Complete Payment
+              </button>
+            <% } %>
+          </div>
+        </div>
+      </aside>
     </div>
   </div>
-
-  <!-- Order Action Area -->
-  <%
-    const canRequestCancel = ['Pending', 'Processed', 'Shipped'].includes(order.status)
-      && !order.cancellationRequested;
-    const cancelPending = order.cancellationRequested && order.status !== 'Cancelled';
-  %>
-
-  <% if (cancelPending) { %>
-    <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
-      <i class="fa-solid fa-clock"></i>
-      <span>
-        <strong>Cancellation Requested</strong> — Your request is awaiting admin review.
-        We'll process it shortly.
-      </span>
-    </div>
-  <% } else if (canRequestCancel) { %>
-    <div class="text-end">
-      <button
-        id="cancel-order-btn"
-        onclick="cancelOrder('<%= order._id %>')"
-        class="btn btn-outline-danger"
-      >
-        <i class="fa-solid fa-xmark me-1"></i>Request Cancellation
-      </button>
-    </div>
-  <% } else if (order.status === 'Pending') { %>
-    <div class="text-end">
-      <button class="btn btn-success" onclick="redirectToPayment('<%= order._id %>')">
-        Proceed to Payment
-      </button>
-    </div>
-  <% } %>
 </div>
 
 <script>
   function redirectToPayment(orderId) {
-  const paymentUrl = `/checkout/payment/${orderId}`;
-  window.location.href = paymentUrl;
-}
+    window.location.href = `/checkout/payment/${orderId}`;
+  }
+
+  async function downloadInvoice(orderId) {
+    window.location.href = `/account/order/${orderId}/invoice`;
+  }
+
+  async function cancelOrder(orderId) {
+    const result = await Swal.fire({
+      title: 'Cancel Order?',
+      text: "Do you really want to request cancellation for this order?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#2563EB',
+      cancelButtonColor: '#f43f5e',
+      confirmButtonText: 'Yes, cancel it!',
+      customClass: { popup: 'rounded-4 border-0 shadow-lg' }
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/account/order-history/cancel/${orderId}`);
+        const data = await response.json();
+        if (data.success) {
+          Swal.fire({
+            title: 'Requested!',
+            text: 'Your cancellation request has been submitted.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          }).then(() => location.reload());
+        } else {
+          Swal.fire('Error', data.message || 'Action failed', 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', 'Something went wrong', 'error');
+      }
+    }
+  }
 </script>
-
-<style>
-  .card-header h5 {
-    font-size: 1.25rem;
-    margin-bottom: 0;
-  }
-  .breadcrumb-item a:hover {
-    color: #5a31a8;
-  }
-</style>
-
-<script src="/js/orderDetil.js"></script>

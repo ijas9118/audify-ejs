@@ -36,13 +36,15 @@
     />
     <link rel="stylesheet" href="/css/styles.css" />
     <% if (!isAdmin) { %> <!-- Custom Stylesheet for Users -->
-    <link rel="stylesheet" href="/css/user.css" />
     <link rel="stylesheet" href="/css/user-ui/main.css" />
     <% if (activePage === 'home') { %>
     <link rel="stylesheet" href="/css/user-ui/home.css" />
     <% } %>
     <% if (activePage === 'login' || activePage === 'signup') { %>
     <link rel="stylesheet" href="/css/user-ui/auth.css" />
+    <% } %>
+    <% if (activePage === 'account') { %>
+    <link rel="stylesheet" href="/css/user-ui/account.css" />
     <% } %>
     <% if (activePage === 'shop') { %>
     <link rel="stylesheet" href="/css/user-ui/shop.css" />

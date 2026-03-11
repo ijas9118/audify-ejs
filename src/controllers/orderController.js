@@ -50,7 +50,7 @@ const getOrderHistory = asyncHandler(async (req, res) => {
     title: 'Order History',
     header: 'partials/login_header',
     viewName: 'users/orderHistory',
-    activePage: 'Order History',
+    activePage: 'account',
     isAdmin: false,
     orders,
   });
@@ -66,7 +66,7 @@ const getOrderDetail = asyncHandler(async (req, res) => {
     title: 'Order Detail',
     header: 'partials/login_header',
     viewName: 'users/orderDetail',
-    activePage: 'Order',
+    activePage: 'account',
     isAdmin: false,
     order,
   });
